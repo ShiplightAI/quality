@@ -1,0 +1,17 @@
+{
+  "name": "shiplight-quality",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Open-source, evidence-backed quality maps for software.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "scripts": {
+    "build": "pnpm --recursive --if-present build",
+    "test": "pnpm --recursive --if-present test",
+    "typecheck": "pnpm --recursive --if-present typecheck"
+  }
+}
