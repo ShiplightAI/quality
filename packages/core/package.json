@@ -1,40 +1,73 @@
 {
   "name": "@shiplightai/quality-core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
+  "description": "Deterministic analysis engine for evidence-backed software quality maps.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./analytics": "./src/analytics/index.ts",
-    "./evidence-view": "./src/evidence-view/index.ts",
-    "./fix-prompts": "./src/fix-prompts/index.ts",
-    "./observation-sets": "./src/observation-sets/index.ts",
-    "./gap-triage": "./src/gap-triage/index.ts",
-    "./observation-sources": "./src/observation-sources/index.ts",
-    "./observations": "./src/observations/index.ts",
-    "./operations": "./src/operations/index.ts",
-    "./recommendation-export": "./src/recommendation-export/index.ts",
-    "./owner-view": "./src/owner-view/index.ts",
-    "./project-map": "./src/project-map/index.ts",
-    "./project-index": "./src/project-index/index.ts",
-    "./priority": "./src/quality-structure/priority.ts",
-    "./assessment": "./src/quality-structure/assessment.ts",
-    "./views": "./src/views/index.ts",
-    "./views/server": "./src/views/server.ts",
-    "./workspace": "./src/workspace/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./analytics": { "types": "./dist/analytics.d.ts", "import": "./dist/analytics.js", "default": "./dist/analytics.js" },
+    "./evidence-view": { "types": "./dist/evidence-view.d.ts", "import": "./dist/evidence-view.js", "default": "./dist/evidence-view.js" },
+    "./fix-prompts": { "types": "./dist/fix-prompts.d.ts", "import": "./dist/fix-prompts.js", "default": "./dist/fix-prompts.js" },
+    "./observation-sets": { "types": "./dist/observation-sets.d.ts", "import": "./dist/observation-sets.js", "default": "./dist/observation-sets.js" },
+    "./gap-triage": { "types": "./dist/gap-triage.d.ts", "import": "./dist/gap-triage.js", "default": "./dist/gap-triage.js" },
+    "./observation-sources": { "types": "./dist/observation-sources.d.ts", "import": "./dist/observation-sources.js", "default": "./dist/observation-sources.js" },
+    "./observations": { "types": "./dist/observations.d.ts", "import": "./dist/observations.js", "default": "./dist/observations.js" },
+    "./operations": { "types": "./dist/operations.d.ts", "import": "./dist/operations.js", "default": "./dist/operations.js" },
+    "./recommendation-export": { "types": "./dist/recommendation-export.d.ts", "import": "./dist/recommendation-export.js", "default": "./dist/recommendation-export.js" },
+    "./owner-view": { "types": "./dist/owner-view.d.ts", "import": "./dist/owner-view.js", "default": "./dist/owner-view.js" },
+    "./project-map": { "types": "./dist/project-map.d.ts", "import": "./dist/project-map.js", "default": "./dist/project-map.js" },
+    "./project-index": { "types": "./dist/project-index.d.ts", "import": "./dist/project-index.js", "default": "./dist/project-index.js" },
+    "./priority": { "types": "./dist/priority.d.ts", "import": "./dist/priority.js", "default": "./dist/priority.js" },
+    "./assessment": { "types": "./dist/assessment.d.ts", "import": "./dist/assessment.js", "default": "./dist/assessment.js" },
+    "./views": { "types": "./dist/views.d.ts", "import": "./dist/views.js", "default": "./dist/views.js" },
+    "./views/server": { "types": "./dist/views-server.d.ts", "import": "./dist/views-server.js", "default": "./dist/views-server.js" },
+    "./workspace": { "types": "./dist/workspace.d.ts", "import": "./dist/workspace.js", "default": "./dist/workspace.js" },
+    "./observation-sets.schema.json": "./dist/observation-sets.schema.json",
+    "./observation-sources.schema.json": "./dist/observation-sources.schema.json",
+    "./quality-observations.schema.json": "./dist/quality-observations.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShiplightAI/quality.git",
+    "directory": "packages/core"
+  },
+  "author": "Shiplight",
+  "engines": {
+    "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm -w test && pnpm build",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@shiplightai/quality-map": "workspace:*",
+    "@shiplightai/quality-map": "workspace:^",
     "adm-zip": "0.5.16",
     "fast-xml-parser": "4.5.3",
     "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/adm-zip": "0.5.7",
+    "@types/node": "25.9.1",
+    "tsup": "8.3.5",
     "typescript": "5.9.3"
   }
 }

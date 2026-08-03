@@ -91,7 +91,7 @@ importers:
   packages/core:
     dependencies:
       '@shiplightai/quality-map':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../quality-map
       adm-zip:
         specifier: 0.5.16
@@ -106,6 +106,12 @@ importers:
       '@types/adm-zip':
         specifier: 0.5.7
         version: 0.5.7
+      '@types/node':
+        specifier: 25.9.1
+        version: 25.9.1
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(postcss@8.5.25)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -116,6 +122,12 @@ importers:
         specifier: 2.9.0
         version: 2.9.0
     devDependencies:
+      '@types/node':
+        specifier: 25.9.1
+        version: 25.9.1
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(postcss@8.5.25)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

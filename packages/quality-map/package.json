@@ -1,20 +1,55 @@
 {
   "name": "@shiplightai/quality-map",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
+  "description": "Schema, parser, validation, normalization, and diagnostics for Shiplight quality maps.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./gap-categories": "./src/gap-categories.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./gap-categories": {
+      "types": "./dist/gap-categories.d.ts",
+      "import": "./dist/gap-categories.js",
+      "default": "./dist/gap-categories.js"
+    },
+    "./quality-map.schema.json": "./dist/quality-map.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShiplightAI/quality.git",
+    "directory": "packages/quality-map"
+  },
+  "author": "Shiplight",
+  "engines": {
+    "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm -w test && pnpm build",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "yaml": "2.9.0"
   },
   "devDependencies": {
+    "@types/node": "25.9.1",
+    "tsup": "8.3.5",
     "typescript": "5.9.3"
   }
 }
