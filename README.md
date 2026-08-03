@@ -1,126 +1,175 @@
 # Shiplight Quality
 
-Open-source, evidence-backed quality maps for software.
+AI can generate code, tests, and reviews faster than people can inspect them.
+Traditional line-by-line review will not scale with that volume.
 
-Shiplight Quality answers two questions:
+As agents take on routine work, human responsibility moves higher: people
+approve what the software should do and how it will be verified. Coding agents
+can draft specifications and tests, while the Quality agent proposes checks and
+maps existing proof. People retain control by reviewing and ratifying the
+important decisions and any accepted risk.
 
-1. What must a product or feature do?
-2. What independent evidence proves that it does it?
+Shiplight Quality provides an open-source process and toolset for this model. It
+connects product intent to independent, repeatable proof:
 
-Projects keep that model in a version-controlled `.quality/` directory. The
-deterministic engine reads the declared checks, their evidence, runtime
-observations, and human ratification to compute four separate measures:
-
-- quality
-- coverage
-- evidence confidence
-- structure confidence
-
-Tests are one evidence source among many. Manual verification, telemetry,
-static analysis, CI artifacts, and other review records can all contribute when
-their provenance is explicit.
-
-## What's included
-
-This repository contains the quality-map contract, deterministic engine, CLI,
-agent skill, and Quality Explorer. Quality Explorer is the open-source,
-read-only web UI for inspecting a local project's quality maps.
-
-Analyze a project that already has a `.quality/` directory:
-
-```bash
-cd /path/to/project
-npx @shiplightai/quality-tools analyze .
+```text
+requirements (PRDs)
+        ↓
+features (specs)
+        ↓
+quality checks
+        ↓
+proof definitions (tests and other evidence)
+        ↓
+runtime observations (did the proof pass?)
 ```
 
-To run Quality Explorer, see [Development](#development). The `quality-tools ui`
-convenience command and extraction of reusable React components into
-`packages/ui` are planned; they are not available yet.
+Requirements define the desired outcomes, specifications break them into
+features, and quality checks state what must hold. Tests, workflows, telemetry,
+and other auditable artifacts can provide proof. Runtime observations record
+whether that proof passed. Quality maps these relationships in `.quality/`,
+finds gaps, and evaluates the result independently.
 
-## Install the agent skills
+## Principles
 
-`agent-skills/` holds two skills:
+### Let agents construct; let people control
 
-| Skill | Purpose |
+Coding agents should perform routine development work such as drafting
+specifications and creating tests. The Quality agent maps features, proposes
+checks, and connects existing proof without creating or changing that proof.
+People should review product intent and the model used to verify it, not attempt
+to read every line of AI-generated code. Quality makes feature maps, checks,
+proof, priorities, and verification gaps visible so people can review and
+ratify the key decisions without becoming the delivery bottleneck.
+
+### Start with the behavior that matters
+
+Quality begins with product expectations, not test counts. A quality check
+describes something that must remain true for a user, a system, or an operating
+team. Proof is then connected to that check. This makes missing proof visible
+even when every existing test passes.
+
+### Keep proof separate from judgment
+
+The systems that build and test software produce facts, proof artifacts, and
+runtime results. Quality evaluates those artifacts and observations, but does
+not control the result they report. This one-way flow prevents a system from
+grading its own work.
+
+### Make scoring reproducible
+
+Scores come from a deterministic engine using declared checks, mapped proof,
+runtime observations, and recorded human decisions. An agent or user interface
+cannot invent a score or adjust one by opinion.
+
+### Make human approval explicit
+
+Agents can propose features, checks, and priorities, but they cannot approve
+their own proposals or accept risk for a person. Quality preserves the origin
+of generated work and records human review separately. Approval is an explicit
+event, not something inferred from a passing test or an agent's confidence.
+
+### Show what is uncertain
+
+Quality reports four measures instead of blending different kinds of confidence
+into a single number:
+
+| Measure | Question it answers |
 | --- | --- |
-| `quality` | Construct, assess, and improve a repository's quality project graph and four-score quality index. Commands: `start`, `status`, `map-project`, `map-feature`, `assess`, `improve`, `help`. |
-| `speckit-project` | Drive spec-driven or spec-less project development: PRD, feature breakdown, and the specify → clarify → plan → tasks → analyze → implement lifecycle. It produces evidence rather than scoring it, and hands test creation to `/shiplight cover`. |
+| Quality | Is the current proving evidence passing? |
+| Coverage | Does every declared check have proof? |
+| Evidence confidence | Is the mapped proof strong enough? |
+| Structure confidence | Are these the right features, checks, and priorities? |
 
-Install with the [`skills`](https://www.npmjs.com/package/skills) CLI, run from
-the target project's root. Naming a skill installs only that one, which is what
-you usually want:
+Keeping these measures separate makes the next action clearer. A low quality
+score calls for a different response from weak evidence or an unreviewed set of
+requirements.
+
+## What is included
+
+This repository contains:
+
+- [`@shiplightai/quality-map`](packages/quality-map/README.md), the schema,
+  parser, and validator for quality maps;
+- [`@shiplightai/quality-core`](packages/core/README.md), the deterministic
+  analysis engine;
+- [`@shiplightai/quality-tools`](packages/quality-tools/README.md), the command
+  line interface and public programmatic API;
+- the [`quality` agent skill](agent-skills/quality/SKILL.md), which helps create
+  and maintain a project's `.quality/` graph; and
+- [Quality Explorer](apps/explorer/README.md), a local, read-only web interface
+  for inspecting the result.
+
+Quality Explorer never writes to the project it displays. Changes to quality
+maps go through the same version control and review process as other project
+files.
+
+## Get started
+
+### Use the agent skill
+
+From the project you want to map, install the `quality` skill with the
+[`skills`](https://www.npmjs.com/package/skills) CLI:
 
 ```bash
-npx skills add ShiplightAI/quality/agent-skills --skill quality -a claude-code -y
+npx skills add ShiplightAI/quality/agent-skills --skill quality --all -y
 ```
 
-Omitting `--skill` installs **both**. Change `-a` for a different
-`skills`-supported agent, or use `--all` for every agent the CLI detects:
+Then ask your agent to run `/quality start`. The skill inventories the project,
+creates the smallest useful quality graph, and keeps inferred structure
+unapproved until a person reviews it.
+
+The installer creates agent-specific files and `skills-lock.json` in the target
+project. Treat them as generated installation state unless your project has
+chosen to version them.
+
+### Use the command line
+
+Validate an existing quality map:
 
 ```bash
-npx skills add ShiplightAI/quality/agent-skills --skill speckit-project -a codex -y
-npx skills add ShiplightAI/quality/agent-skills --all
+npx --yes @shiplightai/quality-tools@^0.3.0 validate \
+  .quality/evidence/<feature>/quality-map.yaml
 ```
 
-To update, re-run the same command. Useful flags include `-a/--agent`,
-`-s/--skill`, `-g/--global`, `--copy`, `--all`, and `-y/--yes`.
+Analyze a project after it has a saved observation set:
 
-Installation writes `skills-lock.json` and an agent directory such as
-`.agents/` or `.claude/` into the target project. Those are generated state —
-keep them out of version control.
+```bash
+npx --yes @shiplightai/quality-tools@^0.3.0 analyze \
+  --project-path . \
+  --observation-set <set-id>
+```
 
-This repository is not public yet, so the `skills` CLI needs GitHub access to
-`ShiplightAI/quality` when it clones. Both skills previously shipped from
-`ShiplightAI/internal-tools/agent-skills`; projects still installing from there
-should repoint at this repository.
+See the [`quality-tools` documentation](packages/quality-tools/README.md) for
+observation formats, saved scopes, and generated recommendations.
 
 ## Repository layout
 
 ```text
-agent-skills/
-  quality/           Agent workflow for constructing and maintaining quality maps
-  speckit-project/   Agent workflow for spec-driven project and feature development
-apps/
-  explorer/          Local, read-only Quality Explorer web application
-packages/
-  quality-map/       Map schema, parser, validator, normalization, and diagnostics
-  core/              Deterministic analysis, observations, recommendations, and operations
-  quality-tools/     Published CLI and public programmatic API
-  ui/                Planned shared React presentation package
+agent-skills/quality/  Agent workflow for creating and maintaining quality maps
+apps/explorer/         Local, read-only Quality Explorer application
+packages/quality-map/ Quality-map contract, parser, and validation
+packages/core/        Deterministic analysis engine
+packages/quality-tools/ Published CLI and public API
+packages/ui/          Shared presentation package under development
 docs/                 Architecture and contributor documentation
-examples/             Example `.quality/` projects
-scripts/              Repository check scripts run by CI
+examples/             Example quality projects
+scripts/              Repository checks used by CI
 tests/                Cross-package contract and integration tests
 ```
-
-## Architecture
 
 The dependency direction is deliberate:
 
 ```text
-agent skill ─┐
-explorer UI ─┼──> quality-tools / core ───> quality-map
+quality agent ─┐
+explorer UI ──┼──▶ quality-tools / core ──▶ quality-map
 
-evidence producers ───> evidence artifacts ───> Quality
+proof producers ──▶ proof artifacts ──▶ Quality
 ```
 
-Quality consumes and evaluates evidence. It does not own the test runners,
-telemetry systems, or other tools that produce that evidence. The deterministic
-engine computes scores; an LLM never invents or adjusts them. Human-only
-ratification fields remain human-controlled.
-
-`agent-skills/speckit-project` is the exception to that boundary, and only in
-where it is stored. It is a producer-side workflow: it drives specs and
-implementation and hands test creation to `/shiplight cover`. It does not read
-or write quality maps, and the engine has no dependency on it. It ships from
-this repository for distribution convenience, not because it is part of the
-oracle. Its `/shiplight` references resolve only in projects that also have the
-Shiplight skills installed.
-
-Quality Explorer reads a project from the local filesystem and presents the
-engine's results without modifying the repository.
-
-See [docs/architecture.md](docs/architecture.md) for the package boundaries.
+Lower-level packages do not depend on the UI, agent workflows, or the systems
+that produce proof. See [the architecture guide](docs/architecture.md) for
+the full package boundaries.
 
 ## Development
 
@@ -129,7 +178,7 @@ Requirements:
 - Node.js 24 or newer
 - pnpm 11
 
-Install dependencies and run the repository gates:
+Install dependencies and run the repository checks:
 
 ```bash
 pnpm install
@@ -138,15 +187,17 @@ pnpm typecheck
 pnpm build
 ```
 
-To inspect another local repository, start the Explorer with its absolute path:
+To inspect another local repository with Quality Explorer, start the application
+with an absolute project path:
 
 ```bash
-QUALITY_PROJECT_ROOT=/absolute/path/to/project pnpm --filter @shiplightai/quality-explorer dev
+QUALITY_PROJECT_ROOT=/absolute/path/to/project \
+  pnpm --filter @shiplightai/quality-explorer dev
 ```
 
-Open <http://127.0.0.1:4173/quality-explorer>. The project root is fixed when the
-process starts and cannot be changed by browser requests.
+Then open <http://127.0.0.1:4173/quality-explorer>. The project root is fixed
+when the process starts and cannot be changed by a browser request.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Shiplight Quality is available under the MIT License. See [LICENSE](LICENSE).
