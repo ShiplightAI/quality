@@ -1,0 +1,23 @@
+target:
+  id: 002-feature-two
+  name: Feature Two
+  scope: feature
+  source_refs:
+    - path: specs/002-feature-two/spec.md
+      label: Feature spec
+expectations:
+  - id: feature-gap
+    title: Feature gap
+    description: Deferred live evidence is still missing.
+    source_type: SOURCE
+    category: ops
+    priority: P1
+    evidence:
+      - id: feature-evidence
+        type: manual
+        path: specs/feature-two/test-report.md
+        contexts:
+          - manual-review
+    proof_gap:
+      summary: Deferred live evidence remains unresolved.
+      next_step: Record the deferred live verification.

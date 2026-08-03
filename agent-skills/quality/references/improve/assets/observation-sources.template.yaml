@@ -1,0 +1,44 @@
+profiles:
+  - id: "example-workflow"
+    name: "Example workflow"
+    description: "Fetch the canonical observations published by one workflow."
+    transport: "github-actions"
+    observation_path: "quality-observations.json"
+
+    source_refs:
+      - path: ".github/workflows/publish.yml"
+        label: "Workflow source"
+      - path: ".quality/evidence/002-example-feature/quality-map.yaml"
+        label: "Feature quality map"
+
+    auth:
+      required_env:
+        - "GITHUB_TOKEN"
+
+    github:
+      repo: "org/repo"
+      workflow: "publish.yml"
+      artifact_names:
+        - "quality-observations-*"
+      # branch: "main"
+
+    # For a local source:
+    # - change `transport` above to `"local-folder"`
+    # - remove both `auth` and `github`
+    # - add this block:
+    # local_folder:
+    #   path: "artifacts/quality"
+
+# Authoring rules:
+# - One profile represents one workflow or local folder.
+# - observation_path is relative to the downloaded artifact or local_folder.
+# - GitHub artifact_names may select several uploaded archives from one run.
+#   Every matching observation_path uses the same canonical contract; Quality
+#   merges their observations.
+# - A local-folder profile reads exactly one observation_path.
+# - Raw JUnit, Playwright, telemetry, or custom reports are producer inputs.
+#   Convert them in the workflow with `quality-tools observations`; source
+#   configuration contains no parser or format selection.
+# - Derive github.repo from the repository's git remote.
+# - Add a profile only when the canonical file exists or its emit/upload step is
+#   part of the same authorized change.

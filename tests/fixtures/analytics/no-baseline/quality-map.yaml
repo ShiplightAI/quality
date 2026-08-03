@@ -1,0 +1,16 @@
+target:
+  id: "analytics-no-baseline"
+  name: "Analytics No Baseline"
+  scope: "feature"
+expectations:
+  - id: "p0"
+    title: "P0 no baseline"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    evidence:
+      - id: "proof"
+        type: "contract"
+        path: "tests/contract/no-baseline.test.ts"
+        contexts:
+          - "pr-ci"

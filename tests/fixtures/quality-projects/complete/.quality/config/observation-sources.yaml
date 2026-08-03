@@ -1,0 +1,26 @@
+profiles:
+  - id: 'monots-cli-release'
+    name: 'Monots CLI Release Gate'
+    transport: 'github-actions'
+    observation_path: 'quality-observations.json'
+    github:
+      repo: 'ShiplightAI/monots'
+      workflow: 'publish-cli.yml'
+      artifact_names:
+        - 'qc-observations-cli'
+    auth:
+      required_env:
+        - 'GITHUB_TOKEN'
+  - id: 'monots-mcp-release'
+    name: 'Monots MCP Release Gate'
+    transport: 'github-actions'
+    observation_path: 'quality-observations.json'
+    github:
+      repo: 'ShiplightAI/monots'
+      workflow: 'publish-mcp.yml'
+      artifact_names:
+        - 'qc-observations-mcp'
+    auth:
+      required_env:
+        - 'GITHUB_TOKEN'
+        - 'SHIPLIGHT_SESSION_TOKEN'

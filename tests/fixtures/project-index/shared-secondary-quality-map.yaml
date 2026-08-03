@@ -1,0 +1,10 @@
+target:
+  id: "secondary"
+  name: "Secondary Shared Map"
+  scope: "feature"
+expectations:
+  - id: "secondary-expectation"
+    title: "Secondary expectation"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"

@@ -1,0 +1,6 @@
+target:
+  id: "mixed-invalid"
+  name: "Mixed Invalid"
+expectations:
+  - id: "mixed-invalid-expectation"
+    title: "Invalid map is isolated"

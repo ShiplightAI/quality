@@ -1,0 +1,137 @@
+"use client";
+
+import { ExternalLink, X } from "lucide-react";
+import { ActionIcon, Anchor, Badge, Code, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { useMemo, useState } from "react";
+import type { ObservationResolutionAuditRow } from "@shiplightai/quality-core";
+
+type MatchFilter = "all" | ObservationResolutionAuditRow["matchStatus"];
+
+interface ObservationAuditPanelProps {
+  readonly rows: readonly ObservationResolutionAuditRow[];
+  onClose(): void;
+}
+
+function sourceLabel(row: ObservationResolutionAuditRow): string {
+  return row.testFile ?? row.testClass ?? row.observationId;
+}
+
+function shortLabel(value: string): string {
+  const segments = value.split("/");
+  return segments[segments.length - 1] ?? value;
+}
+
+function titleCase(value: string): string {
+  return value
+    .split("-")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function filterLabel(filter: MatchFilter): string {
+  switch (filter) {
+    case "matched":
+      return "Matched";
+    case "ambiguous":
+      return "Ambiguous";
+    case "unmatched":
+      return "Unmatched";
+    default:
+      return "All";
+  }
+}
+
+function countFor(rows: readonly ObservationResolutionAuditRow[], filter: MatchFilter): number {
+  if (filter === "all") {
+    return rows.length;
+  }
+
+  return rows.filter((row) => row.matchStatus === filter).length;
+}
+
+export function ObservationAuditPanel({
+  rows,
+  onClose
+}: ObservationAuditPanelProps): React.ReactElement {
+  const [filter, setFilter] = useState<MatchFilter>("all");
+  const filteredRows = useMemo(
+    () => rows.filter((row) => filter === "all" || row.matchStatus === filter),
+    [filter, rows]
+  );
+
+  return (
+    <aside className="workspace-detail-panel" aria-label="Proof-source join audit panel">
+      <Group justify="space-between" align="flex-start">
+        <Stack gap={2}>
+          <Text size="xs" c="dimmed" tt="uppercase">Runtime audit</Text>
+          <Title order={2}>Proof-source join audit</Title>
+          <Text size="sm" c="dimmed">Each runtime observation is joined onto structured evidence by canonical repo-relative test file path.</Text>
+        </Stack>
+        <ActionIcon aria-label="Close audit panel" variant="subtle" color="gray" onClick={onClose}>
+          <X aria-hidden size={18} />
+        </ActionIcon>
+      </Group>
+
+      <Group gap="sm" mt="sm">
+        <Text size="sm">{rows.length} audit row{rows.length === 1 ? "" : "s"}</Text>
+        <Code>runtime-proof-join</Code>
+      </Group>
+
+      <div className="audit-filter-row" aria-label="Join audit filters">
+        {(["all", "matched", "ambiguous", "unmatched"] as const).map((option) => (
+          <button
+            className={filter === option ? "audit-filter-button audit-filter-button-active" : "audit-filter-button"}
+            key={option}
+            aria-pressed={filter === option}
+            onClick={() => setFilter(option)}
+            type="button"
+          >
+            <span>{filterLabel(option)}</span>
+            <strong>{countFor(rows, option)}</strong>
+          </button>
+        ))}
+      </div>
+
+      {filteredRows.length === 0 ? (
+        <Text c="dimmed" mt="md">No audit rows match the current filter.</Text>
+      ) : (
+        <Stack gap="sm" mt="md" aria-label="Join audit rows">
+          {filteredRows.map((row) => (
+            <Paper
+              p="md"
+              key={`${row.observationId}:${row.evidenceId ?? row.matchStatus}:${row.targetId ?? "none"}`}
+            >
+              <Group justify="space-between">
+                <Text fw={600}>{shortLabel(sourceLabel(row))}</Text>
+                <Badge color={row.matchStatus === "matched" ? "green" : row.matchStatus === "ambiguous" ? "yellow" : row.matchStatus === "unmatched" ? "red" : "gray"}>
+                  {filterLabel(row.matchStatus)}
+                </Badge>
+              </Group>
+              {row.testCase !== undefined ? <Text size="sm" mt={4}>{row.testCase}</Text> : null}
+
+              <Stack gap={2} mt="xs">
+                <Text size="sm"><strong>Proof source</strong> {sourceLabel(row)}</Text>
+                <Text size="sm"><strong>Observation</strong> {titleCase(row.status)}</Text>
+                {row.targetLocalId !== undefined && row.evidenceLocalId !== undefined ? (
+                  <Text size="sm"><strong>Matched evidence</strong> {row.targetLocalId} / {row.evidenceLocalId}</Text>
+                ) : null}
+                {row.evidencePath !== undefined ? (
+                  <Text size="sm"><strong>Evidence path</strong> {row.evidencePath}</Text>
+                ) : null}
+                {row.runId !== undefined ? (
+                  <Text size="sm"><strong>Run id</strong> {row.runId}</Text>
+                ) : null}
+              </Stack>
+
+              {row.runUrl !== undefined ? (
+                <Anchor href={row.runUrl} target="_blank" rel="noopener noreferrer" mt="xs">
+                  Open workflow result <ExternalLink aria-hidden size={14} />
+                </Anchor>
+              ) : null}
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </aside>
+  );
+}

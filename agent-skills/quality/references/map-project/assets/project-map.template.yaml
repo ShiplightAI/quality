@@ -1,0 +1,78 @@
+# Canonical location: .quality/project-map.yaml
+project:
+  id: "<project-slug>"
+  name: "<Project Name>"
+  summary: "<User-facing project purpose and assessment boundary>"
+  # Reference to the dev-owned proof-strategy artifact, when one exists.
+  quality_policy_path: "TESTING.md"
+  source_refs:
+    - path: "README.md"
+      label: "Project README"
+    - path: "docs/prd.md"
+      label: "Accepted project requirements"
+    - path: "docs/feature-breakdown.md"
+      label: "Feature breakdown"
+
+intent_docs:
+  - id: "prd"
+    path: "docs/prd.md"
+    role: "accepted_requirements"
+    status: "current"
+  - id: "feature-breakdown"
+    path: "docs/feature-breakdown.md"
+    role: "feature_catalog"
+    status: "current"
+
+active_feature:
+  id: null
+  branch: null
+  spec_path: null
+  phase: null
+  updated_at: null
+
+features:
+  - id: "001-example-feature"
+    name: "Example Feature"
+    description: "<User-facing feature promise or workflow>"
+    status: "candidate" # gate 2: keep candidate while agent-proposed. After human ratification, use the accurate lifecycle status, such as planned, specified, or implemented.
+    priority: "P1"
+    priority_provenance: "agent" # gate 3: agent | human. Set to human once a person sets/adjusts priority; the agent must not overwrite a human-set priority on rebuild.
+    source_type: "INFERRED"
+    dependencies: []
+    implements_prd_refs:
+      - path: "docs/prd.md"
+        anchor: null
+    artifacts:
+      spec_path: "specs/001-example-feature/spec.md"
+      plan_path: "specs/001-example-feature/plan.md"
+      tasks_path: "specs/001-example-feature/tasks.md"
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/001-example-feature/quality-map.yaml"
+      test_report_path: "specs/001-example-feature/test-report.md"
+    code_refs: []
+    evidence_refs: []
+    open_questions: []
+    residual_risks: []
+
+cross_feature_concerns:
+  - id: "example-concern"
+    title: "Example concern"
+    status: "open"
+    feature_ids: []
+    source_refs: []
+    notes: "<User-facing concern summary>"
+
+discovery:
+  mode: "greenfield"
+  source_types:
+    - "SOURCE"
+    - "IMPLEMENTATION"
+    - "INFERRED"
+    - "LEGACY"
+    - "DEPRECATED"
+  orphan_code_refs: []
+  specs_without_implementation: []
+  implementation_without_specs: []
+  tests_without_specs: []
+  evidence_gaps: []
+  unresolved_drift: []

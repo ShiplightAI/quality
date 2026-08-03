@@ -1,0 +1,17 @@
+future_field: true
+target:
+  id: "structured-partial"
+  name: "Structured Partial"
+  scope: "feature"
+expectations:
+  - id: "partial"
+    title: "Usable partial graph wins"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P2"
+    evidence:
+      - id: "partial-proof"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        contexts:
+          - "local"

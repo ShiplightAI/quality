@@ -1,0 +1,41 @@
+target:
+  id: "duplicates"
+  name: "Duplicate IDs"
+  scope: "feature"
+expectations:
+  - id: "duplicate-expectation"
+    title: "First duplicate"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Duplicate IDs must not merge expectations."
+    evidence:
+      - id: "duplicate-evidence"
+        type: "contract"
+        path: "tests/contract/first.test.ts"
+  - id: "duplicate-expectation"
+    title: "Second duplicate"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Duplicate IDs must not merge expectations."
+    evidence:
+      - id: "duplicate-evidence"
+        type: "integration"
+        path: "tests/integration/second.test.ts"
+  - id: "kept-expectation"
+    title: "Valid expectation survives"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 2
+      rationale: "Independent expectations should survive duplicate neighbors."
+    evidence:
+      - id: "kept-evidence"
+        type: "contract"
+        path: "tests/contract/kept.test.ts"

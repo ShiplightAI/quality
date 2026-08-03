@@ -1,0 +1,15 @@
+future_top_level: true
+target:
+  id: "unknown-field"
+  name: "Unknown Field"
+  scope: "feature"
+expectations:
+  - id: "known-expectation"
+    title: "Supported data survives unknown fields"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Unknown fields should not hide known structural data."
+    future_expectation_field: "ignored with warning"

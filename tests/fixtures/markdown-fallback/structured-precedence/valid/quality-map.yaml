@@ -1,0 +1,16 @@
+target:
+  id: "structured-valid"
+  name: "Structured Valid"
+  scope: "feature"
+expectations:
+  - id: "structured-expectation"
+    title: "Structured graph wins"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    evidence:
+      - id: "structured-proof"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        contexts:
+          - "pr-ci"

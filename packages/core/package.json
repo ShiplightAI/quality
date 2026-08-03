@@ -1,0 +1,40 @@
+{
+  "name": "@shiplightai/quality-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./analytics": "./src/analytics/index.ts",
+    "./evidence-view": "./src/evidence-view/index.ts",
+    "./fix-prompts": "./src/fix-prompts/index.ts",
+    "./observation-sets": "./src/observation-sets/index.ts",
+    "./gap-triage": "./src/gap-triage/index.ts",
+    "./observation-sources": "./src/observation-sources/index.ts",
+    "./observations": "./src/observations/index.ts",
+    "./operations": "./src/operations/index.ts",
+    "./recommendation-export": "./src/recommendation-export/index.ts",
+    "./owner-view": "./src/owner-view/index.ts",
+    "./project-map": "./src/project-map/index.ts",
+    "./project-index": "./src/project-index/index.ts",
+    "./priority": "./src/quality-structure/priority.ts",
+    "./assessment": "./src/quality-structure/assessment.ts",
+    "./views": "./src/views/index.ts",
+    "./views/server": "./src/views/server.ts",
+    "./workspace": "./src/workspace/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@shiplightai/quality-map": "workspace:*",
+    "adm-zip": "0.5.16",
+    "fast-xml-parser": "4.5.3",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "0.5.7",
+    "typescript": "5.9.3"
+  }
+}

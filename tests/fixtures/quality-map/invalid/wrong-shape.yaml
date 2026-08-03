@@ -1,0 +1,6 @@
+target:
+  id: "wrong-shape"
+  name: "Wrong Shape"
+  scope: "feature"
+expectations:
+  id: "not-an-array"

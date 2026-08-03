@@ -1,0 +1,14 @@
+schema_version: 99
+target:
+  id: "future"
+  name: "Future Schema"
+  scope: "feature"
+expectations:
+  - id: "future-expectation"
+    title: "Future schema is blocked"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Unknown version fields are ignored; required structural fields still apply."

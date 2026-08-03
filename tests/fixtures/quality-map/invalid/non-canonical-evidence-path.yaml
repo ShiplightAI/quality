@@ -1,0 +1,29 @@
+target:
+  id: "path-format-target"
+  name: "Path Format Target"
+  scope: "feature"
+expectations:
+  - id: "path-format-expectation"
+    title: "Evidence path stays canonical"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Runtime proof joins depend on canonical repo-relative test file paths."
+    evidence:
+      - id: "windows-slashes"
+        type: "e2e"
+        path: ".\\packages\\sdk-core\\tests\\specs\\engine-fixture.spec.ts"
+        contexts:
+          - "pr-ci"
+      - id: "absolute-path"
+        type: "e2e"
+        path: "/tmp/absolute.spec.ts"
+        contexts:
+          - "pr-ci"
+      - id: "parent-traversal"
+        type: "e2e"
+        path: "../outside.spec.ts"
+        contexts:
+          - "pr-ci"

@@ -1,0 +1,73 @@
+target:
+  id: "evidence-target"
+  name: "Evidence Target"
+  scope: "feature"
+  source_refs:
+    - path: "specs/006-evidence-graph-drawer/spec.md"
+      label: "Evidence spec"
+expectations:
+  - id: "checkout"
+    title: "Checkout evidence is traceable"
+    description: "Engineers can trace checkout expectations to proof."
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    tasks:
+      - id: "T-checkout"
+        path: "specs/006-evidence-graph-drawer/tasks.md"
+        status: "done"
+        title: "Implement evidence graph"
+    evidence:
+      - id: "contract-proof"
+        type: "contract"
+        path: "reports/evidence contract.html"
+        command: "pnpm test -- tests/contract/evidence-view.contract.test.ts"
+        contexts:
+          - "pr-ci"
+          - "release-gate"
+        notes: "Contract report artifact stays directly linked."
+      - id: "state-disagreement"
+        type: "integration"
+        path: "reports/evidence/state-disagreement.log"
+        command: "pnpm test -- tests/integration/evidence-view.test.ts"
+        contexts:
+          - "manual-review"
+        notes: "Absolute log paths stay traceable without preview support."
+    proof_gap:
+      summary: "Only artifact content preview is deferred."
+      next_step: "Run Playwright drawer coverage."
+  - id: "owner-drilldown"
+    title: "Owner drilldown keeps full evidence"
+    description: "A focused owner expectation still shows the full target evidence graph."
+    source_type: "SOURCE"
+    category: "navigation"
+    priority: "P1"
+    tasks:
+      - id: "T-owner-drilldown"
+        path: "apps/web/src/components/OwnerTargetView.tsx"
+        status: "done"
+        title: "Wire owner drilldown"
+    evidence:
+      - id: "e2e-proof"
+        type: "e2e"
+        url: "https://quality.example.test/evidence"
+        command: "pnpm test:e2e -- tests/e2e/evidence-view.spec.ts"
+        contexts:
+          - "pr-ci"
+        notes: "Remote evidence dashboards remain linkable from the drawer."
+    proof_gap:
+      summary: "Large graph performance needs periodic review."
+      next_step: "Run large graph fixture."
+  - id: "missing-proof"
+    title: "Missing proof remains visible"
+    description: "Rows with no evidence remain auditable."
+    source_type: "SOURCE"
+    category: "gap"
+    priority: "P2"
+    tasks:
+      - id: "T-missing"
+        path: "specs/006-evidence-graph-drawer/tasks.md"
+        status: "todo"
+        title: "Keep missing evidence visible"
+    proof_gap:
+      summary: "No executable proof has been attached."

@@ -1,0 +1,41 @@
+target:
+  id: "owner-target"
+  name: "Owner Target"
+  scope: "feature"
+  source_refs:
+    - path: "specs/005-owner-risk-view/spec.md"
+      label: "Owner spec"
+expectations:
+  - id: "p0-covered"
+    title: "P0 checkout remains available"
+    description: "Owners can see the release-critical path first."
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    evidence:
+      - id: "covered-evidence"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        contexts:
+          - "pr-ci"
+          - "release-gate"
+  - id: "p1-risk"
+    title: "P1 risk is visible"
+    description: "Residual risk is owner-readable."
+    source_type: "SOURCE"
+    category: "risk"
+    priority: "P1"
+    evidence:
+      - id: "risk-evidence"
+        type: "integration"
+        path: "tests/integration/owner-view.test.ts"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Manual review remains open."
+      next_step: "Run release review."
+  - id: "unknown-priority"
+    title: "Unknown priority remains visible"
+    description: "Missing priority is unavailable, not hidden."
+    source_type: "SOURCE"
+    category: "other"

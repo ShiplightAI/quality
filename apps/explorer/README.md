@@ -1,7 +1,17 @@
 # Quality Explorer
 
-The planned local, read-only web UI for inspecting a project's quality maps,
-evidence, observations, recommendations, and four quality-index measures.
+Local, read-only web UI for a repository's `.quality/` backbone.
 
-It will use a startup-selected filesystem root and consume shared presentation
-from `packages/ui`.
+During development, select the repository at process startup:
+
+```bash
+QUALITY_PROJECT_ROOT=/absolute/path/to/project pnpm --filter @shiplightai/quality-explorer dev
+```
+
+The server binds to `127.0.0.1:4173`. API handlers ignore client-supplied project
+paths and always operate on `QUALITY_PROJECT_ROOT`. Repository authoring remains
+the responsibility of the `quality` agent skill and normal code review.
+
+The current component source lives in the application while standalone parity
+is established. Reusable presentation will move incrementally into
+`packages/ui`.

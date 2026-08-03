@@ -1,0 +1,13 @@
+target:
+  id: "feature-two"
+  name: "Feature Two"
+  scope: "feature"
+expectations:
+  - id: "feature-two-proof"
+    title: "Feature Two proof"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    proof_gap:
+      summary: "No automated proof exists."
+      next_step: "Add automated release proof."

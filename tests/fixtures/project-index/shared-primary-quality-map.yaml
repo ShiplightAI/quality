@@ -1,0 +1,10 @@
+target:
+  id: "primary"
+  name: "Primary Shared Map"
+  scope: "feature"
+expectations:
+  - id: "primary-expectation"
+    title: "Primary expectation"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"

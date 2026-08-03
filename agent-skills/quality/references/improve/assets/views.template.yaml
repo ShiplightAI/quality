@@ -1,0 +1,14 @@
+views:
+  - id: "example-slice"
+    name: "Example slice"
+    description: "Reusable assessment scope selecting related project features."
+    feature_ids:
+      - "001-example-feature"
+      - "002-example-feature"
+
+# Authoring notes:
+# - A view selects a reusable feature scope; it does not select runtime sources or identify a build.
+# - Views may overlap when independently releasable scopes share features.
+# - Do not create a saved view for Whole project; the built-in scope exists automatically.
+# - feature_ids must match features[].id values from the primary project-map.yaml exactly.
+# - Keep this file as a reader filter only; do not duplicate quality checks, evidence, or observation-source config here.

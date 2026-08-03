@@ -1,0 +1,22 @@
+target:
+  id: 001-feature-one
+  name: Feature One
+  scope: feature
+  source_refs:
+    - path: specs/001-feature-one/spec.md
+      label: Feature spec
+expectations:
+  - id: feature-gap
+    title: Feature gap
+    source_type: SOURCE
+    category: release
+    priority: P1
+    evidence:
+      - id: feature-evidence
+        type: static
+        path: specs/feature-one/test-report.md
+        contexts:
+          - pr-ci
+    proof_gap:
+      summary: Feature evidence remains deferred.
+      next_step: Refresh feature evidence.

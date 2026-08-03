@@ -1,0 +1,7 @@
+observation_sets:
+  - id: "release-gate"
+    name: "Release Gate"
+    description: "Combine CLI and MCP release observations for shared review."
+    profiles:
+      - profile_id: "monots-cli-release"
+      - profile_id: "monots-mcp-release"

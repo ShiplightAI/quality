@@ -20,21 +20,22 @@ Tests are one evidence source among many. Manual verification, telemetry,
 static analysis, CI artifacts, and other review records can all contribute when
 their provenance is explicit.
 
-## Repository status
+## What's included
 
-This repository is being extracted from the Shiplight monorepo. The initial
-goal is to preserve the existing map contract and scoring behavior while moving
-the engine, CLI, agent skill, and shared UI into one independently releasable
-project.
+This repository contains the quality-map contract, deterministic engine, CLI,
+agent skill, and Quality Explorer. Quality Explorer is the open-source,
+read-only web UI for inspecting a local project's quality maps.
 
-The first usable local workflow will be:
+Analyze a project that already has a `.quality/` directory:
 
 ```bash
+cd /path/to/project
 npx @shiplightai/quality-tools analyze .
-npx @shiplightai/quality-tools ui .
 ```
 
-The `ui` command is planned; it is not available yet.
+To run Quality Explorer, see [Development](#development). The `quality-tools ui`
+convenience command and extraction of reusable React components into
+`packages/ui` are planned; they are not available yet.
 
 ## Repository layout
 
@@ -47,7 +48,7 @@ packages/
   quality-map/       Map schema, parser, validator, normalization, and diagnostics
   core/              Deterministic analysis, observations, recommendations, and operations
   quality-tools/     Published CLI and public programmatic API
-  ui/                Shared React presentation used by local and hosted applications
+  ui/                Planned shared React presentation package
 docs/                 Architecture and contributor documentation
 examples/             Example `.quality/` projects
 tests/                Cross-package contract and integration tests
@@ -60,7 +61,6 @@ The dependency direction is deliberate:
 ```text
 agent skill ─┐
 explorer UI ─┼──> quality-tools / core ───> quality-map
-hosted UI  ──┘
 
 evidence producers ───> evidence artifacts ───> Quality
 ```
@@ -70,9 +70,8 @@ telemetry systems, or other tools that produce that evidence. The deterministic
 engine computes scores; an LLM never invents or adjusts them. Human-only
 ratification fields remain human-controlled.
 
-The local Explorer reads a project from the filesystem. Shiplight Quality
-Center is the managed counterpart and supplies authentication, organizations,
-GitHub connectivity, and hosted project access through a separate adapter.
+Quality Explorer reads a project from the local filesystem and presents the
+engine's results without modifying the repository.
 
 See [docs/architecture.md](docs/architecture.md) for the package boundaries.
 
@@ -83,7 +82,7 @@ Requirements:
 - Node.js 24 or newer
 - pnpm 11
 
-Install dependencies after the source packages have been migrated:
+Install dependencies and run the repository gates:
 
 ```bash
 pnpm install
@@ -91,6 +90,15 @@ pnpm test
 pnpm typecheck
 pnpm build
 ```
+
+To inspect another local repository, start the Explorer with its absolute path:
+
+```bash
+QUALITY_PROJECT_ROOT=/absolute/path/to/project pnpm --filter @shiplightai/quality-explorer dev
+```
+
+Open <http://127.0.0.1:4173/quality-explorer>. The project root is fixed when the
+process starts and cannot be changed by browser requests.
 
 ## License
 

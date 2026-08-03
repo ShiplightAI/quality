@@ -1,0 +1,11 @@
+schema_version: 1
+target:
+  id: "broken"
+  name: "Broken"
+expectations:
+  - id: "missing-close"
+    title: "Broken YAML"
+    evidence:
+      - id: "evidence"
+        type: "contract"
+        path: [

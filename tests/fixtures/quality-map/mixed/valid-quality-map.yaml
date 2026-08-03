@@ -1,0 +1,10 @@
+target:
+  id: "mixed-valid"
+  name: "Mixed Valid"
+  scope: "feature"
+expectations:
+  - id: "mixed-expectation"
+    title: "Valid map survives beside invalid maps"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"

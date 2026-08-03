@@ -1,0 +1,57 @@
+target:
+  id: "checkout-quality"
+  name: "Checkout Quality"
+  scope: "feature"
+  aliases:
+    - "checkout"
+  source_refs:
+    - path: "specs/checkout/spec.md"
+      label: "Feature specification"
+
+expectations:
+  - id: "checkout-happy-path"
+    title: "Checkout succeeds with a valid cart"
+    description: "The core purchase path remains available for valid shoppers."
+    source_type: "SOURCE"
+    source_refs:
+      - path: "specs/checkout/spec.md"
+        anchor: "FR-001"
+    category: "workflow"
+    priority: "P1"
+    tasks:
+      - id: "T010"
+        path: "specs/checkout/tasks.md"
+        status: "done"
+    evidence:
+      - id: "contract-checkout"
+        type: "contract"
+        path: "tests/contract/checkout.contract.test.ts"
+        command: "pnpm test"
+        contexts:
+          - "pr-ci"
+          - "release-gate"
+        notes: "Primary structural proof for checkout."
+    proof_gap:
+      summary: "Payment provider sandbox drift is reviewed manually."
+      next_step: "Run payment provider sandbox smoke test."
+
+  - id: "checkout-recovery"
+    title: "Checkout reports recoverable payment failures"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P2"
+    tasks:
+      - id: "T011"
+        path: "specs/checkout/tasks.md"
+        status: "done"
+    evidence:
+      - id: "integration-payment-recovery"
+        type: "integration"
+        path: "tests/integration/payment-recovery.test.ts"
+        command: "pnpm test"
+        contexts:
+          - "local"
+          - "manual-review"
+    proof_gap:
+      summary: "Manual payment processor review is not automated."
+      next_step: "Add a repeatable recovery check for the payment processor review."

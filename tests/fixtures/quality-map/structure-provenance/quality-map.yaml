@@ -1,0 +1,44 @@
+structure_provenance: "spec"
+target:
+  id: "provenance-target"
+  name: "Provenance Target"
+  scope: "feature"
+expectations:
+  - id: "exp-spec"
+    title: "Spec-authored check"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    evidence:
+      - id: "ev-1"
+        type: "integration"
+        path: "tests/integration/a.test.ts"
+        command: "pnpm test"
+        contexts:
+          - "pr-ci"
+  - id: "exp-brownfield"
+    title: "Brownfield check"
+    source_type: "SOURCE"
+    structure_provenance: "inferred_brownfield"
+    category: "workflow"
+    priority: "P1"
+    evidence:
+      - id: "ev-2"
+        type: "integration"
+        path: "tests/integration/b.test.ts"
+        command: "pnpm test"
+        contexts:
+          - "pr-ci"
+  - id: "exp-unspecified"
+    title: "Unspecified check"
+    source_type: "SOURCE"
+    structure_provenance: "unspecified"
+    category: "workflow"
+    priority: "P1"
+    evidence:
+      - id: "ev-3"
+        type: "integration"
+        path: "tests/integration/c.test.ts"
+        command: "pnpm test"
+        contexts:
+          - "pr-ci"

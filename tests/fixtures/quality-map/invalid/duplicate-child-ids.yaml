@@ -1,0 +1,53 @@
+target:
+  id: "duplicate-child-ids"
+  name: "Duplicate Child IDs"
+  scope: "feature"
+expectations:
+  - id: "task-owner-a"
+    title: "First duplicate task owner"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 2
+      rationale: "Duplicate nested IDs must not leak ambiguous links."
+    tasks:
+      - id: "shared-task"
+        path: "specs/shared/tasks.md"
+        status: "done"
+    evidence:
+      - id: "shared-evidence"
+        type: "contract"
+        path: "tests/contract/shared-a.test.ts"
+  - id: "task-owner-b"
+    title: "Second duplicate task owner"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 2
+      rationale: "Duplicate nested IDs must not leak ambiguous links."
+    tasks:
+      - id: "shared-task"
+        path: "specs/shared/tasks.md"
+        status: "todo"
+    evidence:
+      - id: "shared-evidence"
+        type: "integration"
+        path: "tests/integration/shared-b.test.ts"
+  - id: "unique-owner"
+    title: "Unique nested records survive"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P2"
+    risk:
+      weight: 1
+      rationale: "Unique nested records should survive duplicate neighbors."
+    tasks:
+      - id: "unique-task"
+        path: "specs/unique/tasks.md"
+        status: "done"
+    evidence:
+      - id: "unique-evidence"
+        type: "contract"
+        path: "tests/contract/unique.test.ts"

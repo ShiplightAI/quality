@@ -1,0 +1,22 @@
+target:
+  id: project
+  name: Project Rollup
+  scope: project
+  source_refs:
+    - path: .quality/evidence/feature-one/quality-map.yaml
+      label: Feature quality map
+expectations:
+  - id: project-rollup-gap
+    title: Project rollup gap
+    source_type: SOURCE
+    category: release
+    priority: P0
+    evidence:
+      - id: project-rollup-evidence
+        type: static
+        path: .quality/evidence/feature-one/quality-map.yaml
+        contexts:
+          - local
+    proof_gap:
+      summary: Project rollup evidence remains deferred and stale.
+      next_step: Refresh the project rollup.

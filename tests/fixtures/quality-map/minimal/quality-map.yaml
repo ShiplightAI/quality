@@ -1,0 +1,10 @@
+target:
+  id: "minimal-target"
+  name: "Minimal Target"
+  scope: "feature"
+expectations:
+  - id: "minimal-expectation"
+    title: "Minimal expectation is represented"
+    source_type: "INFERRED"
+    category: "baseline"
+    priority: "P2"

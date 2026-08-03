@@ -1,0 +1,122 @@
+target:
+  id: "analytics-target"
+  name: "Analytics Target"
+  scope: "feature"
+  aliases:
+    - "baseline:release-2026-05"
+  source_refs:
+    - path: "specs/008-analytics-release-confidence/spec.md"
+      label: "Analytics spec"
+expectations:
+  - id: "p0-direct-gated"
+    title: "P0 direct gated expectation"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    evidence:
+      - id: "direct-gated-proof"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        contexts:
+          - "pr-ci"
+          - "release-gate"
+  - id: "p0-missing"
+    title: "P0 missing expectation"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    proof_gap:
+      summary: "Missing direct proof."
+      next_step: "Add direct P0 contract test."
+  - id: "p1-manual"
+    title: "P1 manual-only expectation"
+    source_type: "SOURCE"
+    category: "ux"
+    priority: "P1"
+    evidence:
+      - id: "manual-proof"
+        type: "manual"
+        path: "docs/manual.md"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Manual-only exposure remains."
+      next_step: "Add a repeatable automated UX check."
+  - id: "p1-blocked"
+    title: "P1 blocked expectation"
+    source_type: "SOURCE"
+    category: "payments"
+    priority: "P1"
+    evidence:
+      - id: "blocked-proof"
+        type: "integration"
+        command: "pnpm test -- blocked"
+        contexts:
+          - "local"
+    proof_gap:
+      summary: "Blocked by external sandbox."
+      next_step: "Restore sandbox access or replace the dependency."
+  - id: "p1-stale"
+    title: "P1 stale expectation"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    evidence:
+      - id: "stale-proof"
+        type: "e2e"
+        path: "tests/e2e/analytics.spec.ts"
+        contexts:
+          - "staging-gate"
+    proof_gap:
+      summary: "Source explicitly marks stale evidence."
+      next_step: "Refresh the staging-gate proof."
+  - id: "p1-accepted"
+    title: "P1 accepted risk expectation"
+    source_type: "SOURCE"
+    category: "risk"
+    priority: "P1"
+    evidence:
+      - id: "accepted-proof"
+        type: "contract"
+        path: "tests/contract/accepted.test.ts"
+        contexts:
+          - "release-gate"
+    proof_gap:
+      summary: "Accepted risk: rollout proceeds with known manual follow-up."
+      next_step: "Keep the accepted risk visible in release review."
+  - id: "p1-deferred"
+    title: "P1 deferred risk expectation"
+    source_type: "SOURCE"
+    category: "risk"
+    priority: "P1"
+    evidence:
+      - id: "deferred-proof"
+        type: "manual"
+        path: "docs/deferred.md"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Deferred risk: vendor proof is not available."
+      next_step: "Replace the deferred manual proof with a repeatable vendor check."
+  - id: "p2-excluded"
+    title: "P2 excluded from P0/P1 metrics"
+    source_type: "SOURCE"
+    category: "other"
+    priority: "P2"
+    evidence:
+      - id: "p2-proof"
+        type: "contract"
+        path: "tests/contract/p2.test.ts"
+        contexts:
+          - "pr-ci"
+  - id: "critical-not-mapped"
+    title: "Critical vocabulary is not inferred"
+    source_type: "SOURCE"
+    category: "priority"
+    priority: "Critical"
+    evidence:
+      - id: "critical-proof"
+        type: "contract"
+        path: "tests/contract/critical.test.ts"
+        contexts:
+          - "pr-ci"

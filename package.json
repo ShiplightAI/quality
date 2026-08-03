@@ -11,7 +11,23 @@
   "packageManager": "pnpm@11.1.2",
   "scripts": {
     "build": "pnpm --recursive --if-present build",
-    "test": "pnpm --recursive --if-present test",
+    "generate:quality-map-schema": "tsx packages/quality-map/src/generate.ts",
+    "test": "vitest run",
+    "test:contract": "vitest run tests/contract",
+    "test:integration": "vitest run tests/integration",
+    "test:unit": "vitest run tests/unit",
     "typecheck": "pnpm --recursive --if-present typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "adm-zip": "0.5.16",
+    "ajv": "6.14.0",
+    "jsdom": "^29.1.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9",
+    "yaml": "2.9.0"
   }
 }

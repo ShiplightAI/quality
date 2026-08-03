@@ -1,0 +1,19 @@
+target:
+  id: "unknown-metachar"
+  name: "Unknown Metachar"
+  scope: "feature"
+  "": "ignored empty key"
+  "meta.extra": "ignored dotted key"
+  meta:
+    nested: true
+expectations:
+  - id: "known-expectation"
+    title: "Supported data survives odd unknown fields"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+    risk:
+      weight: 3
+      rationale: "Unknown field keys should not hide known structural data."
+    "weird(field": "ignored with warning"
+    "weird[x]": "ignored bracketed key"

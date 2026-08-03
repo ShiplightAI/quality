@@ -1,0 +1,37 @@
+target:
+  id: "ci-runner"
+  name: "CI Runner Release"
+  scope: "feature"
+expectations:
+  - id: "runner-image-smoke"
+    title: "The baked CI runner image boots and ships a usable agent payload"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P0"
+    evidence:
+      - id: "ci-runner-agent-payload"
+        type: "smoke"
+        path: ".github/workflows/release-ci-runner.yml"
+        test_case: "agent_payload"
+        command: "Smoke baked runner image"
+        contexts:
+          - "ci"
+      - id: "ci-runner-image-inspect"
+        type: "smoke"
+        path: ".github/workflows/release-ci-runner.yml"
+        test_case: "image_inspect"
+        command: "Smoke baked runner image"
+        contexts:
+          - "ci"
+  - id: "vm-testbox-smoke"
+    title: "The workspace testbox serves traffic after baking"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    evidence:
+      - id: "vm-testbox-health"
+        type: "smoke"
+        path: ".github/workflows/release-vm-image.yml"
+        command: "Smoke test testbox image"
+        contexts:
+          - "ci"

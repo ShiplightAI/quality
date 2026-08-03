@@ -1,0 +1,16 @@
+target:
+  id: "analytics-non-p0p1"
+  name: "Analytics Non P0P1"
+  scope: "feature"
+expectations:
+  - id: "critical"
+    title: "Critical priority without mapping"
+    source_type: "SOURCE"
+    category: "priority"
+    priority: "Critical"
+    evidence:
+      - id: "critical-proof"
+        type: "contract"
+        path: "tests/contract/critical.test.ts"
+        contexts:
+          - "pr-ci"

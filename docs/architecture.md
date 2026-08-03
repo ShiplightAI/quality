@@ -25,9 +25,9 @@ dependency leakage.
 
 ### `packages/ui`
 
-Owns reusable React/Mantine presentation. It receives data and capabilities
-through an injected client interface. It does not know whether a project came
-from a local filesystem or a hosted Git repository.
+Planned home for reusable React/Mantine presentation extracted from Quality
+Explorer. It will receive data and capabilities through an injected client
+interface.
 
 ## Applications
 
@@ -36,11 +36,6 @@ from a local filesystem or a hosted Git repository.
 The local, read-only web application. It fixes the project root at process
 startup, exposes only the read and observation operations needed by the UI, and
 binds to the loopback interface by default.
-
-Shiplight's managed Quality Center is not implemented here. It consumes the
-shared UI and engine packages while retaining its authentication,
-organization, GitHub App, repository-materialization, billing, and entitlement
-adapters in the Shiplight platform repository.
 
 ## Agent skill
 
@@ -55,5 +50,5 @@ validation and scoring so the authoring and runtime contracts cannot drift.
 3. The UI is read-only; repository authoring happens through normal code-review
    workflows and the agent skill.
 4. Human ratification cannot be inferred or promoted by an agent.
-5. Local filesystem and hosted Git access implement the same read contract but
-   remain environment-specific adapters.
+5. Filesystem access stays behind a data-source boundary so new sources can be
+   added without changing scoring behavior.

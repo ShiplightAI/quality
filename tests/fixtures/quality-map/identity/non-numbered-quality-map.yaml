@@ -1,0 +1,15 @@
+target:
+  id: "freeform-target"
+  name: "Duplicate Display Name"
+  scope: "module"
+expectations:
+  - id: "same-title-a"
+    title: "Duplicate Display Name"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"
+  - id: "same-title-b"
+    title: "Duplicate Display Name"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P1"

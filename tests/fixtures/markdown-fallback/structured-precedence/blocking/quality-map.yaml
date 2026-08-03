@@ -1,0 +1,7 @@
+target:
+  id: "structured-blocking"
+  name: "Structured Blocking"
+expectations:
+  - id: "blocked"
+    title: "Unsupported schema"
+    source_type: "SOURCE"

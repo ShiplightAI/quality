@@ -1,0 +1,96 @@
+# How this map's STRUCTURE (its set of quality checks AND their declared
+# priorities) was produced. Drives the structure-confidence score, reported
+# separately from evidence confidence. Set it honestly — it answers "can this
+# check list and its priorities be trusted?", not "is each check proven?".
+# It also vouches for the `priority` on each check: the same provenance that
+# says "these are the right checks" says "these priorities are right".
+# spec/user_authored = trusted (1.0), agent_generated = medium (0.7),
+# inferred_brownfield = low (0.4), unspecified = 0 (counted, earns no trust).
+structure_provenance: "unspecified" # spec | user_authored | agent_generated | inferred_brownfield | unspecified — set honestly; left as the scores-0 default so a copied template never over-claims trust
+# Gate 4 (map-level human review): a human reviewed and approved this whole check
+# list. Combined with a confirmed feature (gate 2), it lifts the feature's checks to
+# HIGH structure confidence, overriding the per-check provenance ladder. Orthogonal
+# to structure_provenance (origin), which review never overwrites. HUMAN-GATED: an
+# agent may propose the reviewed list but must never set this on the owner's behalf.
+checks_reviewed: false # Optional; true only when a human has ratified the check list
+target:
+  id: "001-example-feature"
+  name: "<Display target name>"
+  scope: "feature" # feature | module | pr | ticket
+  aliases: [] # Legacy or alternate slugs, for example ["enterprise-rate-card"].
+  source_refs:
+    - path: "<path/to/spec-or-prd.md>"
+      label: "<optional source label>"
+
+expectations:
+  - id: "<stable-expectation-id>"
+    title: "<Behavior, invariant, workflow, or operational promise>"
+    description: "<Short user-facing quality check>"
+    source_type: "SOURCE" # SOURCE | IMPLEMENTATION | INFERRED
+    # Optional: override the map-level structure_provenance for THIS check only,
+    # e.g. one hand-verified check in an otherwise inferred_brownfield map.
+    # structure_provenance: "user_authored"
+    source_refs:
+      - path: "<path/to/source.md>"
+        anchor: "<optional-anchor-or-line-ref>"
+
+    category: "other" # billing | auth | security | data | ui | api | ops | performance | privacy | compliance | other
+    # Declared importance — a FACT read from a dev artifact (PRD,
+    # feature-breakdown, spec, or per-behavior in test-spec.md), never invented
+    # here. priority is the proof-effort driver (P0 = strongest posture). Its
+    # trust rides on structure_provenance above. Use UNKNOWN only when no
+    # artifact declares it; do not guess a level and record it as fact.
+    priority: "P1" # P0 | P1 | P2 | P3 | UNKNOWN
+
+    tasks:
+      - id: "<task-id>"
+        path: "<path/to/tasks.md>"
+        status: "unknown" # planned | in_progress | done | deferred | blocked | unknown
+
+    policy_override:
+      preferred_modalities: [] # Optional: unit | contract | integration | e2e | agent | manual | telemetry | static | smoke | script | other
+      discouraged_modalities: [] # Optional: modalities to avoid unless no better option exists
+      required_modalities: [] # Optional: modalities that must appear in the proof set
+      required_contexts: [] # Optional: ["local", "pr-ci", "staging-gate"]
+      require_gate: false # Optional: at least one proof should be suitable for a gate context
+      notes: "<Optional per-check proof-strategy override>"
+
+    # Accepted risk (HUMAN-GATED): gap categories a human has reviewed and accepted
+    # as tolerated risk for this check. An accepted gap stays visible but stops
+    # counting as an open gap; accepting the category that drives the check's status
+    # (missing / manual-only / weak) also lifts its quality/coverage score. Accepting
+    # a state gap (blocked/stale/deferred/unavailable/failing) is count-only. An agent
+    # may PROPOSE an acceptance but must never accept a risk on the owner's behalf.
+    accepted_gaps: [] # Optional: subset of [missing, blocked, stale, deferred, manual-only, weak, failing, unavailable]
+
+    # A proof definition is just the test TYPE (a fact about the artifact) at a
+    # PATH. Evidence confidence is derived downstream from `type` via a
+    # transparent rubric — do not hand-author depth or reliability here.
+    # Flakiness, staleness, and pass/fail come from runtime observations joined
+    # on `path` (+ optional `test_case`), never from a typed-in label.
+    evidence:
+      - id: "<stable-evidence-id>"
+        type: "integration" # unit | contract | integration | e2e | agent | manual | telemetry | static | smoke | script | other
+        path: "<test-or-proof-path>"
+        url: "<optional dashboard, runbook, or external reference>"
+        command: "<command used to author or run this proof>"
+        contexts: ["local"] # Contexts where this proof is intended to run or matter
+        notes: "<Optional structural note about this proof definition>"
+
+      # Smoke / health check that runs in CI but is not a test file. Point `path`
+      # at the workflow file so a reviewer can open it, and pin `test_case` to the
+      # unit being proven (a step name, or a finer check name when one step bundles
+      # several). The workflow's canonical quality-observations.json supplies
+      # the pass/fail; test_case here must match the emitted test_case.
+      # Matching is case-insensitive. The output contract lives under
+      # improve/assets/quality-observations.template.json.
+      - id: "<check-evidence-id>"
+        type: "smoke"
+        path: ".github/workflows/<workflow-file>.yml"
+        test_case: "<step-or-check-name>" # Must match the observation record's test_case
+        command: "<human pointer to the workflow step>"
+        contexts: ["ci"]
+
+    proof_gap:
+      summary: "<What proof is still missing, weak, deferred, or intentionally not bought yet>"
+      next_step: "<Highest-value next proof to add, or null if none>"

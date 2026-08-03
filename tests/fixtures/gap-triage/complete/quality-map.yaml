@@ -1,0 +1,179 @@
+target:
+  id: "gap-target"
+  name: "Gap Target"
+  scope: "feature"
+  source_refs:
+    - path: "specs/007-qa-gap-triage/spec.md"
+      label: "Gap triage spec"
+expectations:
+  - id: "missing"
+    title: "Missing evidence expectation"
+    source_type: "SOURCE"
+    category: "checkout"
+    priority: "P0"
+    proof_gap:
+      summary: "No executable proof exists."
+      next_step: "Add a contract test."
+  - id: "blocked"
+    title: "Blocked expectation"
+    source_type: "SOURCE"
+    category: "billing"
+    priority: "P1"
+    evidence:
+      - id: "blocked-proof"
+        type: "integration"
+        command: "pnpm test -- blocked"
+        contexts:
+          - "local"
+    proof_gap:
+      summary: "Blocked by unavailable staging credentials."
+      next_step: "Restore staging credentials."
+  - id: "stale"
+    title: "Stale expectation"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    evidence:
+      - id: "stale-proof"
+        type: "e2e"
+        path: "tests/e2e/stale.spec.ts"
+        contexts:
+          - "staging-gate"
+    proof_gap:
+      summary: "Source explicitly marks this evidence stale."
+      next_step: "Refresh stale browser coverage."
+  - id: "deferred"
+    title: "Deferred expectation"
+    source_type: "SOURCE"
+    category: "analytics"
+    priority: "P2"
+    evidence:
+      - id: "deferred-proof"
+        type: "manual"
+        path: "docs/deferred-check.md"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Deferred until vendor sandbox is available."
+  - id: "covered-stale-cache"
+    title: "Covered stale-cache wording expectation"
+    source_type: "SOURCE"
+    category: "security"
+    priority: "P0"
+    evidence:
+      - id: "covered-stale-cache-proof"
+        type: "integration"
+        path: "tests/integration/stale-cache-covered.test.ts"
+        contexts:
+          - "pr-ci"
+  - id: "manual-only"
+    title: "Manual only expectation"
+    source_type: "SOURCE"
+    category: "ux"
+    priority: "P1"
+    evidence:
+      - id: "manual-proof"
+        type: "manual"
+        path: "docs/manual-check.md"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Manual review is not release-gated."
+  - id: "static-only"
+    title: "Static only expectation"
+    source_type: "SOURCE"
+    category: "schema"
+    priority: "P2"
+    evidence:
+      - id: "static-proof"
+        type: "static"
+        command: "pnpm typecheck"
+    proof_gap:
+      summary: "Static checks do not exercise runtime behavior."
+      next_step: "Add integration coverage."
+  - id: "indirect-only"
+    title: "Indirect expectation"
+    source_type: "SOURCE"
+    category: "workflow"
+    priority: "P2"
+    evidence:
+      - id: "indirect-proof"
+        type: "integration"
+        path: "tests/integration/indirect.test.ts"
+    proof_gap:
+      summary: "The behavior is only covered through a broad workflow."
+      next_step: "Add direct contract proof."
+  - id: "unknown-depth"
+    title: "Unknown depth expectation"
+    source_type: "SOURCE"
+    category: "import"
+    priority: "P3"
+    evidence:
+      - id: "unknown-proof"
+        type: "contract"
+        path: "tests/contract/unknown.test.ts"
+    proof_gap:
+      summary: "Proof metadata is underspecified and not ready to rerun."
+  - id: "failing"
+    title: "Failing expectation"
+    source_type: "SOURCE"
+    category: "payments"
+    priority: "P0"
+    evidence:
+      - id: "failing-proof"
+        type: "contract"
+        path: "tests/contract/failing.test.ts"
+        contexts:
+          - "pr-ci"
+    proof_gap:
+      summary: "Current proof is failing."
+      next_step: "Fix failing contract test."
+  - id: "unavailable"
+    title: "Unavailable evidence expectation"
+    source_type: "SOURCE"
+    category: "ops"
+    priority: "P3"
+    evidence:
+      - id: "unavailable-proof"
+        type: "unknown"
+    proof_gap:
+      summary: "Evidence metadata is unavailable."
+  - id: "direct-with-static"
+    title: "Direct proof suppresses weak classification"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P1"
+    evidence:
+      - id: "direct-pass"
+        type: "contract"
+        path: "tests/contract/direct.test.ts"
+        contexts:
+          - "pr-ci"
+      - id: "static-sidecar"
+        type: "static"
+        command: "pnpm typecheck"
+  - id: "old-not-stale"
+    title: "Old timestamp without stale marker"
+    source_type: "SOURCE"
+    category: "release"
+    priority: "P2"
+    evidence:
+      - id: "old-proof"
+        type: "contract"
+        path: "tests/contract/old.test.ts"
+        contexts:
+          - "pr-ci"
+  - id: "multi-category"
+    title: "Multi category expectation"
+    source_type: "SOURCE"
+    category: "risk"
+    priority: "P0"
+    evidence:
+      - id: "multi-proof"
+        type: "manual"
+        path: "docs/multi.md"
+        contexts:
+          - "manual-review"
+    proof_gap:
+      summary: "Blocked, stale, and deferred context is source-provided."
+      next_step: "Unblock the deferred stale check."

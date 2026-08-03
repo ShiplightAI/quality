@@ -1,0 +1,59 @@
+{
+  "name": "@shiplightai/quality-tools",
+  "version": "0.3.1",
+  "type": "module",
+  "description": "Quality graph analysis and canonical workflow-observation tools.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "quality-tools": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./quality-map.schema.json": "./dist/quality-map.schema.json",
+    "./quality-observations.schema.json": "./dist/quality-observations.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShiplightAI/quality.git",
+    "directory": "packages/quality-tools"
+  },
+  "author": "Shiplight",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "check:size": "node scripts/check-package-size.mjs",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm -w test && pnpm build && pnpm check:size",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "adm-zip": "0.5.16",
+    "fast-xml-parser": "4.5.3",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@shiplightai/quality-core": "workspace:*",
+    "@shiplightai/quality-map": "workspace:*",
+    "@types/node": "25.9.1",
+    "tsup": "8.3.5",
+    "typescript": "5.9.3"
+  }
+}
