@@ -37,6 +37,39 @@ To run Quality Explorer, see [Development](#development). The `quality-tools ui`
 convenience command and extraction of reusable React components into
 `packages/ui` are planned; they are not available yet.
 
+## Install the agent skill
+
+The `quality` agent skill lives in `agent-skills/quality`. Install it into a
+target project with the [`skills`](https://www.npmjs.com/package/skills) CLI,
+run from that project's root:
+
+```bash
+npx skills add ShiplightAI/quality/agent-skills -a claude-code -y
+```
+
+Install for a different `skills`-supported agent by changing the `-a` value, or
+for every agent the CLI detects:
+
+```bash
+npx skills add ShiplightAI/quality/agent-skills -a codex -y
+npx skills add ShiplightAI/quality/agent-skills --all
+```
+
+To update, re-run the same command. Useful flags include `-a/--agent`,
+`-g/--global`, `--copy`, `--all`, and `-y/--yes`.
+
+The skill installs as `/quality`. Its commands are `start`, `status`,
+`map-project`, `map-feature`, `assess`, `improve`, and `help`.
+
+Installation writes `skills-lock.json` and an agent directory such as
+`.agents/` or `.claude/` into the target project. Those are generated state —
+keep them out of version control.
+
+This repository is not public yet, so the `skills` CLI needs GitHub access to
+`ShiplightAI/quality` when it clones. The skill previously shipped from
+`ShiplightAI/internal-tools/agent-skills`; projects still installing from there
+should repoint at this repository.
+
 ## Repository layout
 
 ```text
@@ -51,6 +84,7 @@ packages/
   ui/                Planned shared React presentation package
 docs/                 Architecture and contributor documentation
 examples/             Example `.quality/` projects
+scripts/              Repository check scripts run by CI
 tests/                Cross-package contract and integration tests
 ```
 
