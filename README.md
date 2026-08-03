@@ -37,36 +37,40 @@ To run Quality Explorer, see [Development](#development). The `quality-tools ui`
 convenience command and extraction of reusable React components into
 `packages/ui` are planned; they are not available yet.
 
-## Install the agent skill
+## Install the agent skills
 
-The `quality` agent skill lives in `agent-skills/quality`. Install it into a
-target project with the [`skills`](https://www.npmjs.com/package/skills) CLI,
-run from that project's root:
+`agent-skills/` holds two skills:
+
+| Skill | Purpose |
+| --- | --- |
+| `quality` | Construct, assess, and improve a repository's quality project graph and four-score quality index. Commands: `start`, `status`, `map-project`, `map-feature`, `assess`, `improve`, `help`. |
+| `speckit-project` | Drive spec-driven or spec-less project development: PRD, feature breakdown, and the specify → clarify → plan → tasks → analyze → implement lifecycle. It produces evidence rather than scoring it, and hands test creation to `/shiplight cover`. |
+
+Install with the [`skills`](https://www.npmjs.com/package/skills) CLI, run from
+the target project's root. Naming a skill installs only that one, which is what
+you usually want:
 
 ```bash
-npx skills add ShiplightAI/quality/agent-skills -a claude-code -y
+npx skills add ShiplightAI/quality/agent-skills --skill quality -a claude-code -y
 ```
 
-Install for a different `skills`-supported agent by changing the `-a` value, or
-for every agent the CLI detects:
+Omitting `--skill` installs **both**. Change `-a` for a different
+`skills`-supported agent, or use `--all` for every agent the CLI detects:
 
 ```bash
-npx skills add ShiplightAI/quality/agent-skills -a codex -y
+npx skills add ShiplightAI/quality/agent-skills --skill speckit-project -a codex -y
 npx skills add ShiplightAI/quality/agent-skills --all
 ```
 
 To update, re-run the same command. Useful flags include `-a/--agent`,
-`-g/--global`, `--copy`, `--all`, and `-y/--yes`.
-
-The skill installs as `/quality`. Its commands are `start`, `status`,
-`map-project`, `map-feature`, `assess`, `improve`, and `help`.
+`-s/--skill`, `-g/--global`, `--copy`, `--all`, and `-y/--yes`.
 
 Installation writes `skills-lock.json` and an agent directory such as
 `.agents/` or `.claude/` into the target project. Those are generated state —
 keep them out of version control.
 
 This repository is not public yet, so the `skills` CLI needs GitHub access to
-`ShiplightAI/quality` when it clones. The skill previously shipped from
+`ShiplightAI/quality` when it clones. Both skills previously shipped from
 `ShiplightAI/internal-tools/agent-skills`; projects still installing from there
 should repoint at this repository.
 
@@ -75,6 +79,7 @@ should repoint at this repository.
 ```text
 agent-skills/
   quality/           Agent workflow for constructing and maintaining quality maps
+  speckit-project/   Agent workflow for spec-driven project and feature development
 apps/
   explorer/          Local, read-only Quality Explorer web application
 packages/
@@ -103,6 +108,14 @@ Quality consumes and evaluates evidence. It does not own the test runners,
 telemetry systems, or other tools that produce that evidence. The deterministic
 engine computes scores; an LLM never invents or adjusts them. Human-only
 ratification fields remain human-controlled.
+
+`agent-skills/speckit-project` is the exception to that boundary, and only in
+where it is stored. It is a producer-side workflow: it drives specs and
+implementation and hands test creation to `/shiplight cover`. It does not read
+or write quality maps, and the engine has no dependency on it. It ships from
+this repository for distribution convenience, not because it is part of the
+oracle. Its `/shiplight` references resolve only in projects that also have the
+Shiplight skills installed.
 
 Quality Explorer reads a project from the local filesystem and presents the
 engine's results without modifying the repository.
