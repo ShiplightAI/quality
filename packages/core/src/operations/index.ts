@@ -1,4 +1,4 @@
-// Quality Explorer application operations (spec 045). The data operations behind the
+// Shared quality application operations. The data operations behind the
 // QC UI, as pure functions over a project directory + an injected committer for
 // writes. Shared by the local web tier (LocalFsDataAccess) and the on-VM `qc serve`
 // so there is one implementation, deployed two ways. HTTP/route concerns live in the

@@ -378,7 +378,7 @@ export function detailForArtifact(record: ArtifactExplorerRecord): DetailPanelRe
         ? { label: record.label, url: record.pathOrUrl }
         : { label: record.label, path: record.pathOrUrl }
     ],
-    summary: "Display-only artifact reference. Quality Explorer does not upload or mutate this file.",
+    summary: "Display-only artifact reference. The quality scanner does not upload or mutate this file.",
     fields: [
       field("Kind", record.artifactKind),
       field("Path or URL", record.pathOrUrl),

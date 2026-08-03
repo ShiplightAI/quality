@@ -938,7 +938,7 @@ describe("modern quality workspace", () => {
       status: "warning",
       guidance: {
         recommendedAction: expect.any(String),
-        agentPrompt: expect.stringContaining("Quality Explorer scan diagnostic")
+        agentPrompt: expect.stringContaining("Quality scan diagnostic")
       }
     });
     expect(gapWorkspace.detailRecord).toMatchObject({

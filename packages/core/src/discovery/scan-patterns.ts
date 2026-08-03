@@ -11,7 +11,7 @@ export interface SupportedArtifactPattern {
   readonly kind: ArtifactKind;
 }
 
-// The Quality Explorer backbone lives under .quality/: the project index at
+// The quality backbone lives under .quality/: the project index at
 // the top, per-feature quality maps under evidence/, and runtime-review wiring
 // under config/. Dev-bundle artifacts (test-spec / test-report) stay in specs/.
 export const supportedArtifactPatterns = [
