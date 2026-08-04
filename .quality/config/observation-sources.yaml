@@ -1,0 +1,32 @@
+# Transport only: these profiles say where an already-determined canonical
+# result file lives. They select no parser and reinterpret no status — the CI
+# workflow converts its own JUnit output with `quality-tools observations`
+# before anything here reads it.
+profiles:
+  - id: "ci"
+    name: "CI"
+    description: >-
+      Canonical observations published by the CI workflow: the vitest suite
+      converted from JUnit, and the published-package size gate.
+    transport: "github-actions"
+    observation_path: "quality-observations.json"
+
+    source_refs:
+      - path: ".github/workflows/ci.yml"
+        label: "Workflow that emits and uploads the canonical observations"
+
+    auth:
+      required_env:
+        - "GITHUB_TOKEN"
+
+    github:
+      repo: "ShiplightAI/quality"
+      workflow: "ci.yml"
+      # Exact names, one per uploaded artifact. A single selector that matches
+      # several artifacts is rejected as ambiguous and yields no observations,
+      # so a glob such as "quality-observations-*" would silently produce an
+      # unobserved project the moment a second artifact appeared.
+      artifact_names:
+        - "quality-observations-tests"
+        - "quality-observations-size-gate"
+      branch: "main"

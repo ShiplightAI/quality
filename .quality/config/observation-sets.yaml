@@ -1,0 +1,9 @@
+observation_sets:
+  - id: "ci"
+    name: "CI"
+    description: >-
+      Every canonical result the CI workflow publishes for one revision. Whole
+      project by default; add a saved view to narrow the feature scope without
+      changing which results are read.
+    profiles:
+      - profile_id: "ci"

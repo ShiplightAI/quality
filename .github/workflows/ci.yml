@@ -65,8 +65,44 @@ jobs:
       - name: Build workspace packages
         run: pnpm build
 
+      # Reporter flags only: same `vitest run` script, same tests, same exit
+      # code. Nothing here decides a result — it just also writes the run down.
       - name: Test
-        run: pnpm test
+        run: pnpm test --reporter=default --reporter=junit --outputFile.junit=reports/junit.xml
+
+      # Publishes a FAILING run too — emitting only on success would feed the
+      # engine a diet of green runs and bias every quality score upward, the one
+      # outcome that must not happen.
+      #
+      # Gated on the report existing rather than `always()`: if the build step
+      # failed or the job was cancelled, vitest never wrote junit.xml, and an
+      # unconditional step would turn one real failure into three red steps that
+      # publish nothing. `hashFiles` is empty when the file is absent.
+      #
+      # Runs the built CLI, not the TypeScript source: `pnpm build` above
+      # already produced dist/, and `tsx` would re-transpile the whole engine
+      # graph on each call. Still the repo-local build, not the published
+      # 0.3.1, which predates the suite-separator handling these observations
+      # need in order to resolve.
+      - name: Emit canonical observations
+        if: hashFiles('reports/junit.xml') != ''
+        run: |
+          node packages/quality-tools/dist/cli.js observations from-junit \
+            reports/junit.xml \
+            --output reports/quality-observations.json
+
+      # Only `push` runs are readable: the source profile pins `branch: main`,
+      # so artifacts uploaded by a pull_request run can never be selected.
+      - name: Upload canonical observations
+        if: hashFiles('reports/quality-observations.json') != '' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          # Exact name, not a glob. A single selector matching several artifacts
+          # is rejected as ambiguous and yields zero observations; one exact name
+          # per artifact is what merges.
+          name: quality-observations-tests
+          path: reports/quality-observations.json
+          if-no-files-found: error
 
   build:
     runs-on: ubuntu-latest
@@ -90,4 +126,30 @@ jobs:
       # prepublishOnly, so a regression would surface at publish time rather
       # than on the PR that caused it. It needs the build output above.
       - name: Check published package size
+        id: package-size
         run: pnpm --filter @shiplightai/quality-ui check:size
+
+      # Serializes the outcome the step above already produced — `outcome` is
+      # read, never decided here. A real failure must still be published, so
+      # this is not gated on success; it is gated on `!cancelled()`, because a
+      # cancelled run has no verdict to report. `always()` would run this on
+      # cancellation and record the gate as failed on a commit whose gate never
+      # finished, feeding the engine a fabricated failure.
+      # `.quality/evidence/006-quality-presentation/quality-map.yaml` pins this
+      # gate by workflow path and step name; both must keep matching.
+      - name: Emit canonical observations
+        if: ${{ !cancelled() && steps.package-size.outcome != 'skipped' }}
+        run: |
+          node packages/quality-tools/dist/cli.js observations record \
+            --path .github/workflows/ci.yml \
+            --test-case "Check published package size" \
+            --status "${{ steps.package-size.outcome == 'success' && 'pass' || 'fail' }}" \
+            --output reports/quality-observations.json
+
+      - name: Upload canonical observations
+        if: hashFiles('reports/quality-observations.json') != '' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-observations-size-gate
+          path: reports/quality-observations.json
+          if-no-files-found: error
