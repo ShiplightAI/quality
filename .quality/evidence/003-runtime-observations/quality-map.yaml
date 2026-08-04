@@ -1,0 +1,560 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess. The owner declaring
+# priorities and reviewing this list are the two open ratification gates.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "003-runtime-observations"
+  name: "Runtime observations"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "AGENTS.md"
+      label: "Independence: producers write facts, Quality reads and evaluates them"
+    - path: "docs/architecture.md"
+      label: "Non-negotiable boundaries, including the data-source boundary"
+    - path: "packages/core/src/observations/quality-observations.schema.json"
+      label: "Canonical observation manifest schema"
+
+expectations:
+  - id: "canonical-format-only"
+    title: "Only the one canonical observation format is accepted"
+    description: >-
+      A producer publishing results has exactly one format to emit. Legacy shapes
+      such as a bare array or a `test_file` alias are rejected rather than
+      quietly reinterpreted, so there is no second, undocumented path by which a
+      result can enter a score.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/manifest.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "canonical-format-versioned"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "accepts the single versioned workflow output format"
+        contexts: ["local", "pr-ci"]
+      - id: "canonical-format-rejects-legacy"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "rejects legacy arrays and test_file aliases"
+        contexts: ["local", "pr-ci"]
+      - id: "canonical-format-envelope"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "accepts the versioned object-with-observations envelope"
+        contexts: ["local", "pr-ci"]
+
+  - id: "manifest-provenance-required"
+    title: "Every set of observations names the revision it observed and when"
+    description: >-
+      A score is only meaningful against a specific build. A manifest without an
+      observed revision and observation time is rejected at the boundary, so a
+      reader can always tie a reported result back to the code that produced it.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/manifest.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "provenance-required"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "requires revision and observation time at the manifest boundary"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        Provenance is enforced per manifest, but a saved observation set may
+        deliberately merge profile runs from different commits without a warning.
+        No check asserts that the resulting assessment tells a reader which
+        revisions were mixed, so a single reported score can span commits with
+        nothing surfacing that fact.
+      next_step: >-
+        Decide whether a mixed-revision assessment must be labelled, then add a
+        check asserting the assessment carries the set of observed revisions.
+
+  - id: "partial-ingestion-is-safe"
+    title: "One malformed record never discards the usable results beside it"
+    description: >-
+      A single bad entry in a results file does not throw away the observations
+      that parsed correctly. The unusable entries are reported as diagnostics and
+      recorded in the audit, so a partially broken producer degrades visibly
+      rather than silently dropping proof.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/manifest.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "partial-skips-invalid"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "warns and skips invalid entries without discarding usable observations"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-keeps-usable"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "keeps usable records when neighboring entries violate the canonical contract"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-unknown-sources-audited"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "keeps unknown proof sources in the audit without dropping the rest of the batch"
+        contexts: ["local", "pr-ci"]
+
+  - id: "unusable-input-is-explicit"
+    title: "An empty or unreadable results file is an error, never silence"
+    description: >-
+      A manifest with no usable records, or one that is not valid JSON, produces
+      an explicit diagnostic. This prevents the most dangerous failure mode for a
+      quality tool: a broken producer being read as a project with nothing to
+      observe.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/manifest.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "empty-manifest-rejected"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "rejects an empty manifest with an explicit no-usable-records diagnostic"
+        contexts: ["local", "pr-ci"]
+      - id: "invalid-json-reported"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "reports invalid JSON as an invalid ingestion"
+        contexts: ["local", "pr-ci"]
+
+  - id: "observation-identity"
+    title: "Each observed result has a distinct, non-empty identity"
+    description: >-
+      An observation is identified by the proof path and optional test case, and
+      that identity must not be empty. Results from different artifacts in one
+      run stay distinct, and when the same identity is reported twice the worse
+      status is the one kept, so a retry cannot mask a failure.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/manifest.ts"
+        anchor: "line 291"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "identity-constraint-published"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "publishes the non-empty composite observation identity constraint"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-worse-record-kept"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "keeps the whole worse record when one identity is observed twice"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-distinct-per-artifact"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "gives records from different artifacts in the same run distinct observation ids"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-case-distinct"
+        type: "contract"
+        path: "tests/contract/canonical-observation-manifest.contract.test.ts"
+        test_case: "treats test names that differ only in case as separate identities"
+        contexts: ["local", "pr-ci"]
+
+  - id: "junit-adaptation"
+    title: "JUnit results become canonical observations without losing test identity"
+    description: >-
+      JUnit XML from any runner is converted to canonical observations. Cases
+      that share a name are told apart by their enclosing suite chain, and are
+      left unqualified when the suite chain cannot separate them, so a rename or
+      a second same-named test does not silently merge two results into one.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/junit.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "junit-adapts"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "adapts JUnit XML into canonical file-backed observations"
+        contexts: ["local", "pr-ci"]
+      - id: "junit-suite-qualification"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "keeps same-named JUnit cases distinct by qualifying them with their suite chain"
+        contexts: ["local", "pr-ci"]
+      - id: "junit-bare-on-collision"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "leaves colliding JUnit cases bare when the suite prefix cannot separate them"
+        contexts: ["local", "pr-ci"]
+      - id: "junit-case-distinct"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "leaves JUnit cases that differ only in name case as separate observations"
+        contexts: ["local", "pr-ci"]
+      - id: "junit-release-artifacts"
+        type: "integration"
+        path: "tests/integration/observation-ingestion.test.ts"
+        test_case: "combines release JUnit artifacts without over-claiming missing unit proof"
+        contexts: ["local", "pr-ci"]
+
+  - id: "playwright-adaptation"
+    title: "Playwright results become canonical observations"
+    description: >-
+      Playwright JSON reports are converted to canonical observations and reach
+      evaluation, so browser-level proof can close a check the same way any other
+      proof does.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/playwright-json.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "playwright-adapts"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "adapts Playwright JSON into canonical file-backed observations"
+        contexts: ["local", "pr-ci"]
+      - id: "playwright-evaluation-ready"
+        type: "integration"
+        path: "tests/integration/observation-ingestion.test.ts"
+        test_case: "resolves Playwright JSON artifacts into evaluation-ready observations"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        Both proofs run against report fixtures authored inside this repository,
+        not against output captured from a real Playwright run. A change in the
+        reporter's actual output shape would not fail either check.
+      next_step: >-
+        Pin a reporter-generated report from a known Playwright version as a
+        fixture, and state which reporter versions the adapter supports.
+
+  - id: "path-fallback-identity"
+    title: "Results without a file path are still attributed"
+    description: >-
+      Some runners report a class or suite name but no source file. Those results
+      are matched by class name instead of being dropped, so proof from such a
+      runner still counts toward the check it belongs to.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/resolve.ts"
+        anchor: "matchesForTestClass"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "classname-fallback"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "falls back to test class names when the runtime artifact does not include a file path"
+        contexts: ["local", "pr-ci"]
+
+  - id: "check-to-result-join"
+    title: "An observed result attaches to exactly the check it proves"
+    description: >-
+      A check pinned to a named test case matches only that case, tolerating
+      differences in capitalisation and a suite prefix added by the reporter, and
+      never matches an unnamed result. A check left unpinned covers its whole
+      proof file. This join decides which check a pass or a failure lands on, and
+      a mistake in it moves a result onto the wrong promise.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/resolve.ts"
+        anchor: "caseMatches"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "join-pinned-distinct"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "joins pinned checks on the same workflow file to distinct evidence by test_case (case-insensitive)"
+        contexts: ["local", "pr-ci"]
+      - id: "join-unpinned-file-level"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "matches a file-level (unpinned) check regardless of the observation test_case"
+        contexts: ["local", "pr-ci"]
+      - id: "join-survives-suite-prefix"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "keeps a pinned check matching once the reporter qualifies the case with its suite"
+        contexts: ["local", "pr-ci"]
+      - id: "join-pinned-needs-case"
+        type: "contract"
+        path: "tests/contract/observation-checks.contract.test.ts"
+        test_case: "does not match a pinned check when the observation carries no test_case"
+        contexts: ["local", "pr-ci"]
+      - id: "join-resolves-onto-evidence-ids"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "normalizes file-backed observations and resolves them onto structural evidence ids"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        Ingestion deliberately keeps two test names that differ only in
+        capitalisation as separate results, while the join matches
+        case-insensitively, so both land on the same check. No check states which
+        status then wins. The two paths also disagree by construction: a repeated
+        identical identity keeps the worse status
+        (packages/core/src/observations/manifest.ts:291), but two results that
+        collapse onto one check at join time and share an observation time are
+        ordered by comparing their observation ids
+        (packages/core/src/observations/evaluate.ts:45), which is unrelated to
+        status. A pass and a failure in that position resolve by name order.
+      next_step: >-
+        Decide the intended rule, which is most plausibly worst-status-wins to
+        match the duplicate-identity rule, then add a check covering a passing and
+        a failing case-twin resolving onto one piece of evidence.
+
+  - id: "latest-result-wins"
+    title: "The most recent result for a check is the one that counts"
+    description: >-
+      When a check has been observed several times, the assessment uses the most
+      recent result within the selected context and commit. A stale earlier run
+      cannot override a newer one.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/evaluate.ts"
+        anchor: "selectObservation"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "latest-per-evidence"
+        type: "integration"
+        path: "tests/integration/observation-ingestion.test.ts"
+        test_case: "selects the latest matching observation per evidence within a context and commit"
+        contexts: ["local", "pr-ci"]
+
+  - id: "scoring-independent-of-report-format"
+    title: "The report format a producer uses cannot change a score"
+    description: >-
+      Evaluation accepts only normalized observations and refuses raw report
+      shapes, so adding support for a new runner or reporter cannot alter how any
+      existing result is scored. This is the boundary that keeps the choice of
+      test tooling out of the judgment.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 5"
+      - path: "packages/core/src/observations/evaluate.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "evaluator-requires-normalized"
+        type: "integration"
+        path: "tests/integration/observation-ingestion.test.ts"
+        test_case: "keeps evaluator logic independent from raw source shape by requiring normalized observations"
+        contexts: ["local", "pr-ci"]
+      - id: "multi-adapter-merge"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "merges multiple artifact adapters so one evaluation can combine observations from different files"
+        contexts: ["local", "pr-ci"]
+      - id: "evaluation-snapshot-built"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "builds a target evaluation snapshot from structural data plus resolved observations"
+        contexts: ["local", "pr-ci"]
+
+  - id: "transport-only-sources"
+    title: "A results source can only fetch a result, never decide it"
+    description: >-
+      An observation source declares where an already-determined canonical result
+      file lives and nothing more. Configuration that would let a source adapt or
+      reinterpret a result is rejected outright. This is the mechanism behind the
+      claim that Quality cannot influence the results it grades.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Independence"
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 1"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "transport-only-parse"
+        type: "contract"
+        path: "tests/contract/observation-source-profiles.contract.test.ts"
+        test_case: "parses transport-only profiles that locate canonical observation files"
+        contexts: ["local", "pr-ci"]
+      - id: "transport-only-rejects-adapters"
+        type: "contract"
+        path: "tests/contract/observation-source-profiles.contract.test.ts"
+        test_case: "rejects the legacy source_kind and adapters configuration"
+        contexts: ["local", "pr-ci"]
+      - id: "transport-only-reads-declared-file"
+        type: "integration"
+        path: "tests/integration/observation-manifest-convention.test.ts"
+        test_case: "reads only the declared quality-observations file from a local folder"
+        contexts: ["local", "pr-ci"]
+
+  - id: "source-failure-is-diagnosable"
+    title: "A source that cannot produce results says exactly why"
+    description: >-
+      Fetching results fails loudly and specifically rather than producing an
+      empty assessment: missing credentials are reported before any remote call,
+      an artifact selector matching several artifacts is rejected as ambiguous, a
+      repeated identity across artifacts is warned about, and a missing manifest
+      is explained with the run and repository to check.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observation-sources/execute.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "source-local-folder"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "executes a local-folder profile against one canonical observation file"
+        contexts: ["local", "pr-ci"]
+      - id: "source-missing-env"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "returns a deterministic missing-env diagnostic before executing a remote profile"
+        contexts: ["local", "pr-ci"]
+      - id: "source-github-actions"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "executes a GitHub Actions profile by selecting a run and reading its canonical observation file"
+        contexts: ["local", "pr-ci"]
+      - id: "source-ambiguous-selector"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "rejects several artifacts matched by one artifact selector as ambiguous"
+        contexts: ["local", "pr-ci"]
+      - id: "source-duplicate-identity-warns"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "warns when several selected artifacts publish the same observation identity"
+        contexts: ["local", "pr-ci"]
+      - id: "source-missing-manifest-repair"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "explains missing GitHub Actions manifest artifacts with selected run and target-repo repair steps"
+        contexts: ["local", "pr-ci"]
+      - id: "source-merges-artifacts"
+        type: "contract"
+        path: "tests/contract/observation-source-execution.contract.test.ts"
+        test_case: "merges canonical observation files published by several selected artifacts"
+        contexts: ["local", "pr-ci"]
+      - id: "source-end-to-end-snapshot"
+        type: "integration"
+        path: "tests/integration/observation-source-execution.test.ts"
+        test_case: "executes a scanned shared source profile and turns it into a target evaluation snapshot"
+        contexts: ["local", "pr-ci"]
+
+  - id: "set-composition-integrity"
+    title: "An assessment's set of result sources is well formed"
+    description: >-
+      A saved observation set bundles several sources into one batch for a single
+      assessment. Duplicate set identifiers and a source listed twice in one set
+      are rejected, and a reference to a source that does not exist is reported,
+      so an assessment cannot quietly run against a smaller set of results than
+      the reader believes.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observation-sets/parse.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "set-bundles-profiles"
+        type: "contract"
+        path: "tests/contract/observation-sets.contract.test.ts"
+        test_case: "parses saved observation sets that bundle multiple atomic observation source profiles"
+        contexts: ["local", "pr-ci"]
+      - id: "set-rejects-duplicates"
+        type: "contract"
+        path: "tests/contract/observation-sets.contract.test.ts"
+        test_case: "rejects duplicate set ids and duplicate profile references inside one set"
+        contexts: ["local", "pr-ci"]
+      - id: "set-merges-into-one-batch"
+        type: "contract"
+        path: "tests/contract/observation-set-execution.contract.test.ts"
+        test_case: "merges observations from multiple saved source profiles into one runtime batch"
+        contexts: ["local", "pr-ci"]
+      - id: "set-warns-missing-profile"
+        type: "contract"
+        path: "tests/contract/observation-set-execution.contract.test.ts"
+        test_case: "warns when a saved observation set references a profile that is not present"
+        contexts: ["local", "pr-ci"]
+      - id: "set-scan-warns-unknown-profile"
+        type: "contract"
+        path: "tests/contract/observation-set-scan.contract.test.ts"
+        test_case: "reports a warning when a saved observation set references an unknown source profile"
+        contexts: ["local", "pr-ci"]
+      - id: "set-allows-cross-commit"
+        type: "contract"
+        path: "tests/contract/observation-set-execution.contract.test.ts"
+        test_case: "allows merged observation sets to use profile runs from different commits without warning"
+        contexts: ["local", "pr-ci"]
+
+  - id: "results-config-is-not-a-target"
+    title: "Results configuration is never mistaken for something to assess"
+    description: >-
+      The shared source and set files are recognised as configuration during a
+      scan and kept out of the list of things being assessed, while a repository
+      holding only that configuration still counts as scannable. A reader never
+      sees the plumbing presented as a feature under assessment.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/discovery/scan-project.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "config-set-file-excluded"
+        type: "contract"
+        path: "tests/contract/observation-set-scan.contract.test.ts"
+        test_case: "discovers the shared observation-set file and keeps it out of target candidates"
+        contexts: ["local", "pr-ci"]
+      - id: "config-source-file-excluded"
+        type: "contract"
+        path: "tests/contract/observation-source-scan.contract.test.ts"
+        test_case: "discovers the shared profile file and keeps it out of target candidates"
+        contexts: ["local", "pr-ci"]
+      - id: "config-only-repo-scannable"
+        type: "contract"
+        path: "tests/contract/observation-source-scan.contract.test.ts"
+        test_case: "treats a repo with only a shared source profile file as non-empty scan input"
+        contexts: ["local", "pr-ci"]
+      - id: "config-schema-examples-valid"
+        type: "contract"
+        path: "tests/contract/observation-set-schemas.contract.test.ts"
+        test_case: "validates checked-in observation source examples against the canonical schema"
+        contexts: ["local", "pr-ci"]
+      - id: "config-set-schema-examples-valid"
+        type: "contract"
+        path: "tests/contract/observation-set-schemas.contract.test.ts"
+        test_case: "validates checked-in observation set examples against the canonical schema"
+        contexts: ["local", "pr-ci"]
+
+  - id: "human-review-reaches-the-score"
+    title: "A person's review of a check list changes what the assessment reports"
+    description: >-
+      When a human has reviewed a feature's checks, that decision is visible in
+      the per-check structure confidence of the evaluation snapshot. This is the
+      path by which human ratification, and nothing else, raises structure
+      confidence.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Agents must not set human ratification fields or accept risk for a human"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "review-in-snapshot"
+        type: "contract"
+        path: "tests/contract/observation-ingestion.contract.test.ts"
+        test_case: "reflects human review in the evaluation snapshot's per-check structure confidence"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        One check proves that a recorded review is reflected in the snapshot. No
+        check in this feature proves the negative direction, that nothing other
+        than a recorded human decision can raise structure confidence.
+      next_step: >-
+        Confirm whether that negative case is covered by
+        004-quality-scoring; if it is not, add a check asserting that ingesting
+        observations alone never changes structure confidence.
