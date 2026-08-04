@@ -1,0 +1,25 @@
+name: Spec Project skill contracts
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/spec-project-skill.yml"
+      - "agent-skills/spec-project/**"
+      - "agent-skills/speckit-project/**"
+      - "scripts/check-spec-project-skill.sh"
+  push:
+    paths:
+      - ".github/workflows/spec-project-skill.yml"
+      - "agent-skills/spec-project/**"
+      - "agent-skills/speckit-project/**"
+      - "scripts/check-spec-project-skill.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/check-spec-project-skill.sh

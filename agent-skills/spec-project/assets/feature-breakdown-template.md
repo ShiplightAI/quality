@@ -13,6 +13,12 @@
 - Specs are current snapshots, not historical logs; git history records history.
 - Replaced behavior is removed from active specs after the replacement is
   accepted.
+- Treat each change as an existing-feature retrofit until the existing roadmap
+  and feature specs prove it introduces an independent product capability.
+- Do not add a feature entry merely because a requirement is new, a change is
+  large, or a ticket calls it a feature.
+- Before adding a feature entry, record which existing features were checked and
+  why they cannot coherently own the capability.
 - Spec/code/test drift must be reconciled or clarified with the user.
 - Work on one active feature at a time.
 - Use stable feature IDs; do not renumber without explicit approval.
@@ -23,6 +29,8 @@
 
 Goal: <Product outcome or workflow promise>
 
+Priority: <P0-P3 or UNKNOWN>
+
 PRD coverage:
 
 - <PRD area or requirement>
@@ -31,7 +39,7 @@ Primary outputs:
 
 - <Spec, UI, API, data, or workflow artifact>
 
-Quality focus:
+Testing focus:
 
 - <Testing and verification expectations>
 
@@ -41,6 +49,8 @@ Dependencies: none.
 
 Goal: <Product outcome or workflow promise>
 
+Priority: <P0-P3 or UNKNOWN>
+
 PRD coverage:
 
 - <PRD area or requirement>
@@ -49,7 +59,7 @@ Primary outputs:
 
 - <Spec, UI, API, data, or workflow artifact>
 
-Quality focus:
+Testing focus:
 
 - <Testing and verification expectations>
 

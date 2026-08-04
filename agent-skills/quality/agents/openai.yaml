@@ -1,4 +1,0 @@
-interface:
-  display_name: "Quality"
-  short_description: "Map and assess evidence-backed software quality"
-  default_prompt: "Use $quality to assess this repository's quality status and identify the highest-leverage next step."
