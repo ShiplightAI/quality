@@ -287,6 +287,28 @@ describe("observation ingestion contract", () => {
     expect(manifest.document?.observations).toHaveLength(4);
   });
 
+  it("leaves colliding JUnit cases bare when the suite prefix cannot separate them", () => {
+    // Both cases sit in one <testsuite>, so qualifying them yields the same
+    // string. Prefixing would splice the suite name (here the file path, which
+    // is what vitest and jest-junit write) into test_case without resolving
+    // anything, so they stay bare and reach the manifest as real duplicates.
+    const ingested = ingestJunitXmlReport({
+      report_xml: `<?xml version="1.0"?>
+<testsuites name="vitest tests">
+  <testsuite name="tests/login.spec.ts">
+    <testcase name="login &gt; works" classname="tests/login.spec.ts" file="tests/login.spec.ts"/>
+    <testcase name="login &gt; works" classname="tests/login.spec.ts" file="tests/login.spec.ts"><failure message="boom"/></testcase>
+  </testsuite>
+</testsuites>`,
+      observed_at: "2026-08-03T00:00:00Z"
+    });
+
+    expect(ingested.observations.map((record) => record.testCase)).toEqual([
+      "login > works",
+      "login > works"
+    ]);
+  });
+
   it("leaves JUnit cases that differ only in name case as separate observations", () => {
     const ingested = ingestJunitXmlReport({
       report_xml: nodeTestCaseVariantNamesJunitFixture,
