@@ -1,0 +1,63 @@
+name: Claude Code Review
+
+# Thin caller: the prompt, severity/approval logic, checkout, and pinned action
+# refs all live in the shared ShiplightAI/internal-tools/claude-review action.
+# This file only owns the trigger, permissions, and repo-specific review focus
+# (GitHub requires the trigger + permissions in the caller, and
+# claude-code-action's tamper guard requires the token wired here).
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # submit the review (approve / request-changes / comment)
+      issues: read
+      id-token: write # required: claude-code-action mints its App token via OIDC
+    steps:
+      - uses: ShiplightAI/internal-tools/claude-review@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          review-focus: |
+            This repo is a quality oracle: it scores how well *other* projects are
+            verified. Its credibility rests on scores nobody can fake. Weight these
+            project invariants:
+            - Independence of verification: the deterministic engine computes every
+              score. Flag any path where an LLM, the Explorer, or an agent skill
+              writes, adjusts, or infers a score instead of reading one the engine
+              produced.
+            - Human-gated fields stay human-gated: `structure_provenance` rises to
+              `user_authored` / `spec` only by human ratification. Flag anything
+              that lets an agent self-promote provenance, or that treats a passing
+              test as ratification.
+            - Determinism: scores must be reproducible from the same inputs. Flag
+              `Date.now()`, `Math.random()`, unstable sort/map iteration order, or
+              filesystem-ordering dependence anywhere on the scoring path.
+            - Dependency direction: `quality-map` <- `core` <- `quality-tools`, with
+              the Explorer and agent skills on top. Lower packages must never
+              import upward, and nothing in `packages/**` may import from
+              `apps/explorer/**`.
+            - Explorer is strictly read-only against the project it inspects. Flag
+              any write, mkdir, or delete targeting the scanned project root.
+            - Project-root confinement: `QUALITY_PROJECT_ROOT` is fixed when the
+              process starts. API routes accept a `projectPath` from the client, so
+              flag any path that escapes the configured root, follows symlinks out
+              of it, or lets a browser request retarget the server.
+            - Saved-artifact compatibility: bumping a `schema_version` strands every
+              file written under the old one. A gate like
+              `value.schema_version === "5"` turns a stale artifact into a hard
+              failure, so flag version bumps that ship without a migration, a
+              tolerant read path, or an actionable non-5xx error.
+            - Published surface: `@shiplightai/quality-tools` is on npm and the
+              agent skill pins `@^0.3.0`. Flag breaking changes to its CLI flags,
+              command names, or exported API that arrive without a version bump.
+            - `agent-skills/**` are instructions an agent executes verbatim inside
+              someone else's repo. Review them like code: flag guidance that would
+              have an agent force-push, reset, delete branches, merge with
+              `--admin`, bypass review, or edit a producer's artifacts.
+            - Docs must match reality: `README.md` documents the install path and
+              the package layout, so a stale skill list, command set, or install
+              ref there is a real defect, not a nit.

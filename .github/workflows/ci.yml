@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Three parallel jobs rather than one sequential job: each gate reports its own
+  # pass/fail, so a type error and a test failure surface in the same CI round
+  # instead of the first one masking the second. The suite is 62 files / ~4s, so
+  # there is nothing to shard.
+  #
+  # Every job builds first. The workspace packages resolve to their built output
+  # (`@shiplightai/quality-map` types, `@shiplightai/quality-core/dist/index.js`),
+  # so on a clean checkout typecheck reports 122 TS2307/TS7006 errors and the
+  # suite dies on ERR_MODULE_NOT_FOUND without it. A dev machine hides this
+  # because dist/ is left over from an earlier build.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Must precede setup-node: `cache: pnpm` needs the pnpm binary to resolve
+      # the store path. Version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # The 1% size gate is otherwise only wired into quality-ui's
+      # prepublishOnly, so a regression would surface at publish time rather
+      # than on the PR that caused it. It needs the build output above.
+      - name: Check published package size
+        run: pnpm --filter @shiplightai/quality-ui check:size
