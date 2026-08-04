@@ -14,6 +14,36 @@ export const mcpBrowserJunitFixture = `<?xml version="1.0" encoding="utf-8"?>
 </testsuites>
 `;
 
+// Real `node --test --test-reporter=junit` shape: the describe() title lives
+// only in <testsuite name>, nested describes nest <testsuite>, and classname is
+// hard-coded "test". Two describes in one file repeat the same case names, so
+// the suite chain is the only thing telling them apart.
+export const nodeTestNestedSuitesJunitFixture = `<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="node:test" tests="4" failures="0" errors="0">
+	<testsuite name="OpenAI" tests="2" failures="0" errors="0">
+		<testcase name="throws when neither key is set" time="0.01" classname="test" file="/repo/packages/sdk-core/src/agent/llm/__tests__/providerProxy.test.ts"/>
+		<testsuite name="nested" tests="1" failures="0" errors="0">
+			<testcase name="throws when neither key is set" time="0.01" classname="test" file="/repo/packages/sdk-core/src/agent/llm/__tests__/providerProxy.test.ts"/>
+		</testsuite>
+	</testsuite>
+	<testsuite name="Anthropic" tests="1" failures="0" errors="0">
+		<testcase name="throws when neither key is set" time="0.01" classname="test" file="/repo/packages/sdk-core/src/agent/llm/__tests__/providerProxy.test.ts"/>
+	</testsuite>
+	<testcase name="top level test" time="0.01" classname="test" file="/repo/packages/sdk-core/src/agent/llm/__tests__/providerProxy.test.ts"/>
+</testsuites>
+`;
+
+// Two genuinely different tests in one describe whose names differ only in the
+// first letter's case. The failing one must survive as its own observation.
+export const nodeTestCaseVariantNamesJunitFixture = `<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="node:test" tests="2" failures="1" errors="0">
+	<testsuite name="parser" tests="2" failures="1" errors="0">
+		<testcase name="Returns null when the header is absent" time="0.01" classname="test" file="/repo/src/parser.test.ts"/>
+		<testcase name="returns null when the header is absent" time="0.01" classname="test" file="/repo/src/parser.test.ts"><failure message="boom"/></testcase>
+	</testsuite>
+</testsuites>
+`;
+
 export const cliExampleHomepagePlaywrightJsonFixture = JSON.stringify(
   {
     config: {

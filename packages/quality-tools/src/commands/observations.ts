@@ -4,6 +4,7 @@ import {
   ingestJunitXmlReport,
   ingestPlaywrightJsonReport,
   parseQualityObservationManifest,
+  qualityObservationIdentity,
   serializeQualityObservationManifest,
   serializeQualityObservationManifestJsonSchema,
   type NormalizedObservationRecord,
@@ -205,8 +206,10 @@ function canonicalRecord(
 }
 
 function canonicalIdentity(observation: NormalizedObservationRecord): string {
-  const path = observation.testFile ?? observation.testClass ?? "";
-  return `${path.replaceAll("\\", "/")}::${observation.testCase?.trim().toLowerCase() ?? ""}`;
+  return qualityObservationIdentity({
+    path: observation.testFile ?? observation.testClass ?? "",
+    test_case: observation.testCase
+  });
 }
 
 function throwIngestionDiagnostics(
@@ -275,13 +278,9 @@ function loadManifest(filePath: string): QualityObservationManifest {
   return parsed.document;
 }
 
-function manifestRecordIdentity(record: QualityObservationManifestRecord): string {
-  return `${record.path.replaceAll("\\", "/")}::${record.test_case?.trim().toLowerCase() ?? ""}`;
-}
-
 function manifestRecordIdentityLabel(record: QualityObservationManifestRecord): string {
   const normalizedPath = record.path.replaceAll("\\", "/");
-  const normalizedTestCase = record.test_case?.trim().toLowerCase();
+  const normalizedTestCase = record.test_case?.trim();
   return normalizedTestCase === undefined ? normalizedPath : `${normalizedPath} :: ${normalizedTestCase}`;
 }
 
@@ -304,7 +303,7 @@ function mergeManifests(paths: readonly string[], options: ProducerOptions): voi
   const duplicateIdentityLabels = new Set<string>();
   manifests.forEach((manifest) => {
     manifest.observations.forEach((record) => {
-      const identity = manifestRecordIdentity(record);
+      const identity = qualityObservationIdentity(record);
       const existingLabel = identityLabels.get(identity);
       if (existingLabel !== undefined) {
         duplicateIdentityLabels.add(existingLabel);

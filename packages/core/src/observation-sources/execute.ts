@@ -6,6 +6,7 @@ import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 import {
   ingestObservationManifest,
   mergeObservationIngestionResults,
+  qualityObservationIdentity,
   type ObservationIngestionResult
 } from "../observations";
 import { evaluateObservationSourceProfileEnv } from "./env";
@@ -486,8 +487,13 @@ function duplicateObservationIdentityDetails(
       }
 
       const normalizedPath = normalizePath(proofPath);
-      const normalizedTestCase = observation.testCase?.trim().toLowerCase() ?? "";
-      const identity = `${normalizedPath}::${normalizedTestCase}`;
+      const normalizedTestCase = observation.testCase?.trim() ?? "";
+      // Same identity rule as the canonical manifest, so a cross-artifact
+      // warning here means the same thing as a duplicate there.
+      const identity = qualityObservationIdentity({
+        path: proofPath,
+        test_case: observation.testCase
+      });
       const firstResultIndex = firstResultByIdentity.get(identity);
       if (firstResultIndex !== undefined && firstResultIndex !== resultIndex) {
         duplicateIdentities.add(
