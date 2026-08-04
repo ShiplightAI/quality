@@ -5,12 +5,15 @@ import {
   ingestPlaywrightJsonReport,
   mergeObservationIngestionResults,
   normalizeObservationBatches,
+  parseQualityObservationManifest,
   resolveObservations
 } from "@shiplightai/quality-core";
 import { analyticsStructuredResult } from "../fixtures/analytics/build-fixtures";
 import {
   cliBrowserJunitFixture,
-  cliExampleHomepagePlaywrightJsonFixture
+  cliExampleHomepagePlaywrightJsonFixture,
+  nodeTestCaseVariantNamesJunitFixture,
+  nodeTestNestedSuitesJunitFixture
 } from "../fixtures/observations/standard-artifacts";
 
 const targetId = "complete/quality-map.yaml#target:analytics-target";
@@ -245,6 +248,63 @@ describe("observation ingestion contract", () => {
         ]
       })
     );
+  });
+
+  it("keeps same-named JUnit cases distinct by qualifying them with their suite chain", () => {
+    const ingested = ingestJunitXmlReport({
+      report_xml: nodeTestNestedSuitesJunitFixture,
+      observed_at: "2026-08-03T00:00:00Z",
+      revision: {
+        commit: "367a89353a3ab9cfebaf0c0a9f70dd86b89a741f"
+      }
+    });
+
+    expect(ingested.status).toBe("valid");
+    // The colliding cases carry their full describe() chain; the unique
+    // top-level case keeps its bare name, and the <testsuites> document
+    // container ("node:test") never enters the chain.
+    expect(ingested.observations.map((record) => record.testCase)).toEqual([
+      "top level test",
+      "OpenAI › throws when neither key is set",
+      "OpenAI › nested › throws when neither key is set",
+      "Anthropic › throws when neither key is set"
+    ]);
+
+    const manifest = parseQualityObservationManifest(
+      JSON.stringify({
+        schema_version: 1,
+        revision: { commit: "367a89353a3ab9cfebaf0c0a9f70dd86b89a741f" },
+        observed_at: "2026-08-03T00:00:00.000Z",
+        observations: ingested.observations.map((record) => ({
+          path: record.testFile!,
+          test_case: record.testCase,
+          status: record.status
+        }))
+      })
+    );
+
+    expect(manifest.status).toBe("valid");
+    expect(manifest.document?.observations).toHaveLength(4);
+  });
+
+  it("leaves JUnit cases that differ only in name case as separate observations", () => {
+    const ingested = ingestJunitXmlReport({
+      report_xml: nodeTestCaseVariantNamesJunitFixture,
+      observed_at: "2026-08-03T00:00:00Z",
+      revision: {
+        commit: "367a89353a3ab9cfebaf0c0a9f70dd86b89a741f"
+      }
+    });
+
+    expect(ingested.status).toBe("valid");
+    // Distinct names, so no suite prefix is needed and the failure keeps its
+    // own record instead of being folded into the passing test.
+    expect(
+      ingested.observations.map((record) => [record.testCase, record.status])
+    ).toEqual([
+      ["Returns null when the header is absent", "pass"],
+      ["returns null when the header is absent", "fail"]
+    ]);
   });
 
   it("adapts Playwright JSON into canonical file-backed observations", () => {

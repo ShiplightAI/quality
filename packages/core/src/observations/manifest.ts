@@ -174,8 +174,27 @@ function parseStatus(value: unknown): ObservationRecordStatus | undefined {
     : undefined;
 }
 
-function observationKey(record: QualityObservationManifestRecord): string {
-  return `${record.path.replaceAll("\\", "/")}::${record.test_case?.trim().toLowerCase() ?? ""}`;
+// The identity of a canonical observation: separator-normalized path plus the
+// verbatim test_case. Deliberately case-sensitive, unlike the case-folded join
+// in resolve.ts — matching many observations onto one expectation is harmless,
+// but collapsing two identities discards a record and can reject a whole
+// artifact, so identity compares exactly and only trims whitespace.
+export function qualityObservationIdentity(record: {
+  readonly path: string;
+  readonly test_case?: string;
+}): string {
+  return `${record.path.replaceAll("\\", "/")}::${record.test_case?.trim() ?? ""}`;
+}
+
+// Ranked worst-first, consistent with expectationObservedState in evaluate.ts:
+// a failure anywhere outranks an error, and neither is ever masked by a pass.
+const STATUS_SEVERITY: readonly ObservationRecordStatus[] = ["fail", "error", "skipped", "pass"];
+
+function worstStatus(
+  left: ObservationRecordStatus,
+  right: ObservationRecordStatus
+): ObservationRecordStatus {
+  return STATUS_SEVERITY.indexOf(left) <= STATUS_SEVERITY.indexOf(right) ? left : right;
 }
 
 type ObservationEntryMode = "strict" | "tolerant";
@@ -192,7 +211,7 @@ function parseObservations(
   }
 
   const observations: QualityObservationManifestRecord[] = [];
-  const seenKeys = new Set<string>();
+  const seenKeys = new Map<string, number>();
   const entryDiagnostic = (
     message: string,
     code: ScanDiagnostic["code"] = "INVALID_OBSERVATION_ARTIFACT"
@@ -255,18 +274,27 @@ function parseObservations(
       ...(observedAt === undefined ? {} : { observed_at: observedAt }),
       ...(note === undefined ? {} : { note })
     };
-    const key = observationKey(record);
-    if (seenKeys.has(key)) {
+    const key = qualityObservationIdentity(record);
+    const seenIndex = seenKeys.get(key);
+    if (seenIndex !== undefined) {
       diagnostics.push(
         entryDiagnostic(
           `Quality observations contains duplicate path/test_case identity ${path}${testCase === undefined ? "" : ` :: ${testCase}`}.`,
           "DUPLICATE_OBSERVATION_KEY"
         )
       );
+      // Strict mode rejects the document outright, but tolerant mode keeps
+      // going: fold the dropped entry's status into the record we kept so a
+      // duplicated identity can never report pass while a fail was observed.
+      const kept = observations[seenIndex]!;
+      const merged = worstStatus(kept.status, record.status);
+      if (merged !== kept.status) {
+        observations[seenIndex] = { ...kept, status: merged };
+      }
       return;
     }
 
-    seenKeys.add(key);
+    seenKeys.set(key, observations.length);
     observations.push(record);
   });
 

@@ -93,6 +93,46 @@ describe("quality-tools observations", () => {
     ]);
   });
 
+  it("keeps every node:test case when two describe blocks share test names", async () => {
+    const source = output("node-test.junit.xml");
+    const destination = output("quality-observations.json");
+    // node:test writes the describe() title only into <testsuite name>, so
+    // without it these four cases collapse into two identities and the whole
+    // artifact is rejected.
+    writeFileSync(
+      source,
+      `<testsuites name="node:test">
+        <testsuite name="OpenAI">
+          <testcase name="throws when neither key is set" file="tests/providerProxy.test.ts"/>
+          <testcase name="routes via nova" file="tests/providerProxy.test.ts"/>
+        </testsuite>
+        <testsuite name="Anthropic">
+          <testcase name="throws when neither key is set" file="tests/providerProxy.test.ts"/>
+          <testcase name="routes via nova" file="tests/providerProxy.test.ts"/>
+        </testsuite>
+      </testsuites>`
+    );
+
+    const result = await runObservationsCommand([
+      "from-junit",
+      source,
+      "--commit",
+      "abc123",
+      "--observed-at",
+      "2026-07-26T18:00:00Z",
+      "--output",
+      destination
+    ]);
+
+    expect(result).toEqual({ exitCode: 0 });
+    expect(JSON.parse(readFileSync(destination, "utf8")).observations).toEqual([
+      { path: "tests/providerProxy.test.ts", test_case: "OpenAI › throws when neither key is set", status: "pass" },
+      { path: "tests/providerProxy.test.ts", test_case: "OpenAI › routes via nova", status: "pass" },
+      { path: "tests/providerProxy.test.ts", test_case: "Anthropic › throws when neither key is set", status: "pass" },
+      { path: "tests/providerProxy.test.ts", test_case: "Anthropic › routes via nova", status: "pass" }
+    ]);
+  });
+
   it("converts Playwright JSON at the producer boundary", async () => {
     const source = output("playwright.json");
     const destination = output("quality-observations.json");
@@ -255,7 +295,7 @@ describe("quality-tools observations", () => {
       second,
       JSON.stringify({
         ...envelope,
-        observations: [{ path: "tests\\login.spec.ts", test_case: " User Can Sign In ", status: "fail" }]
+        observations: [{ path: "tests\\login.spec.ts", test_case: " user can sign in ", status: "fail" }]
       })
     );
 
