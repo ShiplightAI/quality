@@ -140,41 +140,11 @@ function activeFeatureFrom(value: unknown): ParsedProjectMapDocument["activeFeat
   };
 }
 
-function currentMilestoneFrom(value: Record<string, unknown>): string | undefined {
-  const roadmap = isRecord(value.roadmap) ? value.roadmap : {};
-  return stringValue(roadmap.current_milestone);
-}
-
-function releaseAreasFrom(value: Record<string, unknown>): ParsedProjectMapDocument["releaseAreas"] {
-  const roadmap = isRecord(value.roadmap) ? value.roadmap : {};
-
-  if (!Array.isArray(roadmap.release_areas)) {
-    return [];
-  }
-
-  return roadmap.release_areas.flatMap((item) => {
-    if (!isRecord(item)) {
-      return [];
-    }
-
-    const id = stringValue(item.id);
-    if (id === undefined) {
-      return [];
-    }
-
-    return [{
-      id,
-      name: stringValue(item.name) ?? id,
-      description: stringValue(item.description),
-      featureIds: stringArray(item.feature_ids),
-      exitCriteria: stringArray(item.exit_criteria)
-    }];
-  });
-}
-
+// Display order for the project index. Top-level, not under a `roadmap:` block:
+// the quality graph models features, checks, and proof, and leaves roadmap,
+// milestone, and release grouping to the planning documents in `product_docs`.
 function featureOrderFrom(value: Record<string, unknown>): readonly string[] {
-  const roadmap = isRecord(value.roadmap) ? value.roadmap : {};
-  return stringArray(roadmap.feature_order);
+  return stringArray(value.feature_order);
 }
 
 function productDocsFrom(value: unknown): readonly ProjectMapSourceReference[] {
@@ -245,8 +215,6 @@ function normalizeProjectMap(value: Record<string, unknown>): ParsedProjectMapDo
   return {
     project: projectFrom(value),
     activeFeature: activeFeatureFrom(value.active_feature),
-    currentMilestone: currentMilestoneFrom(value),
-    releaseAreas: releaseAreasFrom(value),
     featureOrder: featureOrderFrom(value),
     features: Array.isArray(value.features)
       ? value.features.flatMap((item) => {
@@ -340,6 +308,22 @@ export function parseProjectMap(source: ProjectMapSource): ParsedProjectMap {
       message: `Feature id ${id} is defined more than once; only the last is kept.`
     })
   );
+
+  // A `roadmap:` block is no longer read. Its `feature_order` moved to the top
+  // level and its `current_milestone`/`release_areas` were removed outright, so
+  // a map written against the old shape parses cleanly and silently loses its
+  // index ordering. Say so rather than letting the list quietly reorder.
+  if (isRecord(value.roadmap)) {
+    diagnostics.push(
+      diagnostic(source, {
+        severity: "warning",
+        code: "LEGACY_ROADMAP_BLOCK",
+        message:
+          "`roadmap:` is no longer read. Move `roadmap.feature_order` to the top level as `feature_order`; milestone and release grouping belong in the documents listed under `product_docs`.",
+        yamlPath: "$.roadmap"
+      })
+    );
+  }
 
   return {
     source,

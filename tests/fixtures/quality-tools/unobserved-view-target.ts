@@ -59,7 +59,7 @@ export function unobservedViewTargetFiles(): readonly FixtureFile[] {
     {
       relativePath: ".quality/project-map.yaml",
       contents:
-        'project:\n  id: "fixture-project"\n  name: "Fixture Project"\nroadmap:\n  feature_order:\n    - "001-feature-a"\n    - "003-feature-c"\nfeatures:\n  - id: "001-feature-a"\n    name: "Feature A"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-a/quality-map.yaml"\n  - id: "003-feature-c"\n    name: "Feature C"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-c/quality-map.yaml"\n'
+        'project:\n  id: "fixture-project"\n  name: "Fixture Project"\nfeature_order:\n  - "001-feature-a"\n  - "003-feature-c"\nfeatures:\n  - id: "001-feature-a"\n    name: "Feature A"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-a/quality-map.yaml"\n  - id: "003-feature-c"\n    name: "Feature C"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-c/quality-map.yaml"\n'
     },
     {
       relativePath: ".quality/config/views.yaml",

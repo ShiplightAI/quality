@@ -99,8 +99,6 @@ export interface WorkspaceActionItem {
 
 export interface WorkspaceProjectSummary {
   readonly projectName: string;
-  readonly currentMilestone?: string;
-  readonly currentMilestoneLabel?: string;
   readonly totalRiskCount: number;
   readonly totalNextProofCount: number;
   readonly topRisks: readonly WorkspaceActionItem[];

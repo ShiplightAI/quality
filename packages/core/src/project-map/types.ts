@@ -39,14 +39,6 @@ export interface ProjectMapActiveFeature {
   readonly updatedAt?: string;
 }
 
-export interface ProjectMapReleaseArea {
-  readonly id: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly featureIds: readonly string[];
-  readonly exitCriteria: readonly string[];
-}
-
 export type ProjectMapPriorityProvenance = "agent" | "human";
 
 export interface ProjectMapFeatureArtifacts {
@@ -81,8 +73,6 @@ export interface ProjectMapFeature {
 export interface ParsedProjectMapDocument {
   readonly project: ProjectMapProject;
   readonly activeFeature?: ProjectMapActiveFeature;
-  readonly currentMilestone?: string;
-  readonly releaseAreas: readonly ProjectMapReleaseArea[];
   readonly featureOrder: readonly string[];
   readonly features: readonly ProjectMapFeature[];
   readonly productDocs: readonly ProjectMapSourceReference[];

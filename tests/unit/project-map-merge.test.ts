@@ -23,7 +23,6 @@ function feature(overrides: Partial<ProjectMapFeature> & { id: string }): Projec
 function map(features: readonly ProjectMapFeature[]): ParsedProjectMapDocument {
   return {
     project: { id: "p", name: "p", sourceRefs: [] },
-    releaseAreas: [],
     featureOrder: [],
     features,
     productDocs: [],

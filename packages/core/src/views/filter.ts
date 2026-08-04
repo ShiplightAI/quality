@@ -109,9 +109,6 @@ function filteredProjectMap(projectMap: ParsedProjectMap, view: SavedQcView): Pa
       activeFeature: map.activeFeature === undefined || !allowedFeatureIds.has(map.activeFeature.id)
         ? undefined
         : map.activeFeature,
-      currentMilestone: map.currentMilestone !== undefined && !allowedFeatureIds.has(map.currentMilestone)
-        ? undefined
-        : map.currentMilestone,
       featureOrder: map.featureOrder.filter((featureId) => allowedFeatureIds.has(featureId)),
       features
     }

@@ -240,7 +240,7 @@ function projectMapTargetRows(
       description: map.project.summary,
       scope: "project",
       sourceClassification: "project_map",
-      status: map.currentMilestone ?? "current",
+      status: "current",
       // The project-map row is the document itself, not a scored quality target, so
       // it has no evidence/structure confidence — show an em-dash, not a fake level
       // or a raw sentinel string.

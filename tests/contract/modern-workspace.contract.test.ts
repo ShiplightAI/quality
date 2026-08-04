@@ -123,22 +123,12 @@ describe("modern quality workspace", () => {
           summary: "Project-level summary for human review.",
           sourceRefs: []
         },
-        currentMilestone: "release-one",
         activeFeature: {
           id: "001-feature-one",
           phase: "release",
           branch: "feature-branch",
           updatedAt: "2026-05-31"
         },
-        releaseAreas: [
-          {
-            id: "area-one",
-            name: "Area One",
-            description: "Grouped feature work that should be reviewed together.",
-            featureIds: ["001-feature-one"],
-            exitCriteria: ["Feature evidence is canonical."]
-          }
-        ],
         featureOrder: ["001-feature-one"],
         features: [
           {
@@ -194,12 +184,14 @@ describe("modern quality workspace", () => {
       mapAvailability: "project_map_only"
     });
     expect(workspace.projectSummary).toMatchObject({
-      projectName: "Mapped Project",
-      currentMilestone: "release-one",
-      currentMilestoneLabel: "Release One"
+      projectName: "Mapped Project"
     });
+    // The project summary carries no planning concepts: no focus pointer beyond
+    // the map's own `active_feature`, and no milestone or release grouping.
     expect(workspace.projectSummary).not.toHaveProperty("activeFeature");
     expect(workspace.projectSummary).not.toHaveProperty("releaseAreas");
+    expect(workspace.projectSummary).not.toHaveProperty("currentMilestone");
+    expect(workspace.projectSummary).not.toHaveProperty("currentMilestoneLabel");
     expect(workspace.projectSummary?.topRisks[0]).toMatchObject({
       targetName: "Feature One",
       reason: expect.stringContaining("No canonical quality-map.yaml"),
@@ -234,14 +226,6 @@ describe("modern quality workspace", () => {
           name: "Mapped Project",
           sourceRefs: []
         },
-        releaseAreas: [
-          {
-            id: "area-one",
-            name: "Area One",
-            featureIds: ["001-feature-one"],
-            exitCriteria: []
-          }
-        ],
         featureOrder: ["001-feature-one"],
         features: [
           {
@@ -318,7 +302,6 @@ describe("modern quality workspace", () => {
           name: "Mapped Project",
           sourceRefs: []
         },
-        releaseAreas: [],
         featureOrder: [],
         features: [],
         productDocs: [],
@@ -369,14 +352,6 @@ describe("modern quality workspace", () => {
           summary: "Derived project summary.",
           sourceRefs: []
         },
-        releaseAreas: [
-          {
-            id: "area-one",
-            name: "Area One",
-            featureIds: ["001-feature-one", "002-feature-two"],
-            exitCriteria: []
-          }
-        ],
         featureOrder: ["001-feature-one", "002-feature-two"],
         features: [
           {
@@ -526,7 +501,6 @@ describe("modern quality workspace", () => {
           }
         ],
         productDocs: [],
-        releaseAreas: [],
         crossFeatureConcerns: [],
         discovery: {
           evidenceGaps: [],
@@ -833,7 +807,6 @@ describe("modern quality workspace", () => {
           }
         ],
         productDocs: [],
-        releaseAreas: [],
         crossFeatureConcerns: [],
         discovery: {
           evidenceGaps: [],
