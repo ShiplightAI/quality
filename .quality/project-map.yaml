@@ -1,0 +1,397 @@
+# Canonical location: .quality/project-map.yaml
+#
+# Construction source: BROWNFIELD. This repository had no accepted per-feature
+# intent document. Every feature below was reconstructed from implementation and
+# tests, and is proposed as `candidate` for human ratification. Scope excludes
+# `agent-skills/` by the project owner's instruction.
+project:
+  id: "shiplight-quality"
+  name: "Shiplight Quality"
+  summary: >-
+    Open-source process and toolset that connects product intent to independent,
+    repeatable proof. It maintains a quality graph in `.quality/`, ingests runtime
+    results, and computes four separate scores deterministically so an agent or UI
+    cannot invent or adjust a score by opinion. The assessment boundary is the
+    published packages (`quality-map`, `quality-core`, `quality-tools`,
+    `quality-ui`) and the local Quality Explorer application. The `agent-skills/`
+    workflows are out of scope for this assessment.
+  # No proof-strategy document exists in this repository yet.
+  quality_policy_path: null
+  source_refs:
+    - path: "README.md"
+      label: "Project README and stated principles"
+    - path: "docs/architecture.md"
+      label: "Package boundaries and non-negotiable constraints"
+    - path: "AGENTS.md"
+      label: "Repository guidance: independence and dependency direction"
+
+product_docs:
+  - id: "readme"
+    path: "README.md"
+    role: "project_overview"
+    status: "current"
+  - id: "architecture"
+    path: "docs/architecture.md"
+    role: "architecture"
+    status: "current"
+  - id: "agents"
+    path: "AGENTS.md"
+    role: "repository_constraints"
+    status: "current"
+
+active_feature:
+  id: "003-runtime-observations"
+  branch: "feat/extract-quality-ui"
+  spec_path: null
+  phase: "map-feature"
+  updated_at: "2026-08-04"
+
+features:
+  - id: "001-quality-map-contract"
+    name: "Quality map contract"
+    description: >-
+      A quality map written by a person or an agent is parsed, validated, and
+      normalized against one published contract, with diagnostics that point at
+      the exact YAML location of each problem. Consumers of the contract get a
+      generated JSON Schema that cannot drift from the validator.
+    status: "candidate"
+    priority: "P1"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies: []
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/001-quality-map-contract/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/quality-map/src/parse.ts"
+      - "packages/quality-map/src/validate.ts"
+      - "packages/quality-map/src/normalize.ts"
+      - "packages/quality-map/src/schema.ts"
+      - "packages/quality-map/src/json-schema.ts"
+      - "packages/quality-map/src/source-location.ts"
+      - "packages/quality-map/src/diagnostics.ts"
+      - "packages/quality-map/src/gap-categories.ts"
+    evidence_refs:
+      - "packages/quality-map/src/quality-map-schema.test.ts"
+      - "tests/contract/quality-map.contract.test.ts"
+      - "tests/integration/quality-map-normalization.test.ts"
+      - "tests/unit/source-location.test.ts"
+    open_questions:
+      - "Is the generated JSON Schema a supported public contract for third-party authoring tools, or an internal artifact?"
+    residual_risks:
+      - "The contract is the lowest-level dependency; an unnoticed breaking change propagates to every consumer at once."
+
+  - id: "002-project-graph"
+    name: "Project graph reading and safe authoring"
+    description: >-
+      A repository's quality graph is discovered on disk, read into an index a
+      person can navigate, and edited without losing formatting or human-set
+      fields. Includes saved assessment scopes (views) and the Markdown fallback
+      used when a project has specs and reports but no quality maps yet.
+    status: "candidate"
+    priority: "P1"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies:
+      - "001-quality-map-contract"
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/002-project-graph/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/core/src/discovery"
+      - "packages/core/src/project-map"
+      - "packages/core/src/quality-map-edit/apply-edits.ts"
+      - "packages/core/src/git/commit.ts"
+      - "packages/core/src/project-index"
+      - "packages/core/src/workspace"
+      - "packages/core/src/views"
+      - "packages/core/src/markdown-fallback"
+      - "packages/core/src/sources"
+    evidence_refs:
+      - "tests/integration/local-project-discovery.test.ts"
+      - "tests/integration/local-project-discovery-race.test.ts"
+      - "tests/contract/project-index.contract.test.ts"
+      - "tests/integration/project-index.test.ts"
+      - "tests/contract/modern-workspace.contract.test.ts"
+      - "tests/integration/modern-workspace.test.ts"
+      - "tests/contract/views-client-boundary.contract.test.ts"
+      - "tests/contract/markdown-fallback.contract.test.ts"
+      - "tests/integration/markdown-fallback.test.ts"
+      - "tests/unit/project-map-merge.test.ts"
+      - "tests/unit/project-map-serialize.test.ts"
+      - "tests/unit/quality-map-edit.test.ts"
+      - "tests/unit/key-artifacts.test.ts"
+      - "tests/unit/git-commit.test.ts"
+      - "tests/unit/sources-parse.test.ts"
+    open_questions:
+      - "Should saved views be split back into their own feature once view semantics grow beyond a feature-id filter?"
+      - "Is `commitFiles` a supported capability of the engine, or Explorer-only convenience?"
+    residual_risks:
+      - "Edit application and commit paths write to a user's repository; a formatting or merge defect damages files the user owns."
+
+  - id: "003-runtime-observations"
+    name: "Runtime observations"
+    description: >-
+      Results produced by a project's own test and CI systems become canonical
+      observations, are located and executed through declared sources and sets,
+      and are resolved to the exact checks they prove. This is the only path by
+      which a passing or failing run reaches a score, and the boundary that keeps
+      Quality from grading its own work.
+    status: "candidate"
+    priority: "P0"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies:
+      - "001-quality-map-contract"
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/003-runtime-observations/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/core/src/observations"
+      - "packages/core/src/observation-sources"
+      - "packages/core/src/observation-sets"
+    evidence_refs:
+      - "tests/contract/canonical-observation-manifest.contract.test.ts"
+      - "tests/contract/observation-checks.contract.test.ts"
+      - "tests/contract/observation-ingestion.contract.test.ts"
+      - "tests/contract/observation-set-execution.contract.test.ts"
+      - "tests/contract/observation-set-scan.contract.test.ts"
+      - "tests/contract/observation-set-schemas.contract.test.ts"
+      - "tests/contract/observation-sets.contract.test.ts"
+      - "tests/contract/observation-source-execution.contract.test.ts"
+      - "tests/contract/observation-source-profiles.contract.test.ts"
+      - "tests/contract/observation-source-scan.contract.test.ts"
+      - "tests/integration/observation-ingestion.test.ts"
+      - "tests/integration/observation-manifest-convention.test.ts"
+      - "tests/integration/observation-source-execution.test.ts"
+    open_questions:
+      - "Which native report formats are committed public contracts (JUnit, Playwright JSON, GitHub Actions) versus best-effort adapters?"
+    residual_risks:
+      - "Three of the five most recent commits fix defects in JUnit suite handling and identity resolution, so the join between an observed test case and the check it proves is the repository's demonstrated weak point."
+      - "A resolution defect silently attributes a pass to the wrong check, which is worse than an error because it inflates a score without any visible failure."
+
+  - id: "004-quality-scoring"
+    name: "Quality scoring and gap recommendations"
+    description: >-
+      The four scores are computed deterministically from declared checks, mapped
+      proof, runtime observations, and recorded human ratification, and the
+      resulting gaps become ranked recommendations and fix prompts a person can
+      act on. Human ratification gates must be readable but never raisable by an
+      agent or a passing test.
+    status: "candidate"
+    priority: "P0"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies:
+      - "001-quality-map-contract"
+      - "002-project-graph"
+      - "003-runtime-observations"
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/004-quality-scoring/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/core/src/quality-structure/assessment.ts"
+      - "packages/core/src/quality-structure/priority.ts"
+      - "packages/core/src/workspace/project-evidence-scores.ts"
+      - "packages/core/src/evidence-view"
+      - "packages/core/src/owner-view"
+      - "packages/core/src/analytics"
+      - "packages/core/src/gap-triage"
+      - "packages/core/src/fix-prompts"
+      - "packages/core/src/recommendation-export"
+      - "packages/core/src/observations/recommend.ts"
+    evidence_refs:
+      - "tests/unit/expectation-assessment.test.ts"
+      - "tests/unit/structure-confidence-review.test.ts"
+      - "tests/unit/filters.test.ts"
+      - "tests/contract/structure-provenance.contract.test.ts"
+      - "tests/contract/gap-triage.contract.test.ts"
+      - "tests/contract/evidence-view.contract.test.ts"
+      - "tests/contract/owner-view.contract.test.ts"
+      - "tests/contract/analytics.contract.test.ts"
+      - "tests/contract/fix-prompts-assessment.contract.test.ts"
+      - "tests/contract/fix-prompts-policy-override.contract.test.ts"
+      - "tests/contract/fix-prompts-yaml-continuation.contract.test.ts"
+      - "tests/contract/ranked-recommendations-export.contract.test.ts"
+      - "tests/contract/runtime-improvement-recommendations.contract.test.ts"
+      - "tests/integration/gap-triage.test.ts"
+      - "tests/integration/evidence-view.test.ts"
+      - "tests/integration/owner-view.test.ts"
+      - "tests/integration/analytics.test.ts"
+    open_questions:
+      - "Is the current score rubric a versioned public contract? A silent rubric change moves every consumer's numbers with no signal."
+    residual_risks:
+      - "This feature carries the project's central promise. A defect here does not produce a visible failure; it produces a wrong number that a reader trusts."
+
+  - id: "005-quality-tools-cli"
+    name: "Published command line and API"
+    description: >-
+      One installable npm package exposes validate, analyze, fix-prompts,
+      observations, and schema to users and to agent skills, bundling the
+      internal contract and engine packages so a consumer never sees a workspace
+      dependency. The CLI is the interface the `quality` skill pins a version of.
+    status: "candidate"
+    priority: "P1"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies:
+      - "001-quality-map-contract"
+      - "003-runtime-observations"
+      - "004-quality-scoring"
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/005-quality-tools-cli/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/quality-tools/src/cli.ts"
+      - "packages/quality-tools/src/index.ts"
+      - "packages/quality-tools/src/commands"
+    evidence_refs:
+      - "packages/quality-tools/src/commands/observations.test.ts"
+      - "packages/quality-tools/src/commands/schema-validate.test.ts"
+      - "tests/contract/quality-tools-analyze.contract.test.ts"
+      - "tests/contract/quality-tools-fix-prompts.contract.test.ts"
+    open_questions:
+      - "Which CLI flags and exit codes are a stable contract that the agent skill may depend on across minor versions?"
+    residual_risks:
+      - "The `quality` agent skill pins `@shiplightai/quality-tools@^0.3.0`; a breaking change inside that range breaks every installed skill at once."
+
+  - id: "006-quality-presentation"
+    name: "Quality presentation and Explorer"
+    description: >-
+      A person can inspect a project's quality graph, scores, gaps, and
+      observation wiring through a local application that is strictly read-only
+      and never writes to the project it displays. Reusable presentation lives in
+      a published package that receives data through an injected client and must
+      not reach the filesystem or any platform service.
+    status: "candidate"
+    priority: "P2"
+    priority_provenance: "agent"
+    source_type: "IMPLEMENTATION"
+    dependencies:
+      - "002-project-graph"
+      - "004-quality-scoring"
+    implements_prd_refs: []
+    artifacts:
+      spec_path: null
+      plan_path: null
+      tasks_path: null
+      checklist_paths: []
+      quality_map_path: ".quality/evidence/006-quality-presentation/quality-map.yaml"
+      test_report_path: null
+    code_refs:
+      - "packages/ui/src"
+      - "apps/explorer/src/app"
+      - "apps/explorer/src/lib/quality-explorer"
+    evidence_refs:
+      - "packages/ui/src/lib/client-bundle-boundary.test.ts"
+      - "packages/ui/src/components/FeatureIndex.test.tsx"
+      - "packages/ui/src/components/FeaturePage.test.tsx"
+      - "packages/ui/src/components/ObservationSourcesView.test.tsx"
+      - "packages/ui/src/components/ProjectScanner.test.tsx"
+      - "packages/ui/src/components/Settings.test.tsx"
+      - "packages/ui/src/components/ViewsManager.test.tsx"
+      - "packages/ui/src/lib/instructions.test.tsx"
+      - "apps/explorer/src/lib/quality-explorer/data-access/local-fs.test.ts"
+      - ".github/workflows/ci.yml"
+    open_questions:
+      - "Should `packages/ui` and `apps/explorer` be separate features? They were merged at the owner's direction; their promises (no server imports and a size budget, versus fixed root and read-only) are distinct and may warrant a split later."
+    residual_risks:
+      - "The read-only guarantee and the loopback binding are security-relevant claims about a tool pointed at a user's source tree."
+
+cross_feature_concerns:
+  - id: "independence-boundary"
+    title: "One-directional flow between proof producers and judgment"
+    status: "open"
+    feature_ids:
+      - "003-runtime-observations"
+      - "004-quality-scoring"
+      - "006-quality-presentation"
+    source_refs:
+      - path: "AGENTS.md"
+        label: "Independence"
+      - path: "docs/architecture.md"
+        label: "Non-negotiable boundaries"
+    notes: >-
+      The product's core claim is that the systems producing proof cannot
+      influence the judgment of it, and that no agent or UI can raise a human
+      ratification gate. This constraint spans ingestion, scoring, and
+      presentation, and no single feature owns it.
+
+  - id: "dependency-direction"
+    title: "Package dependency direction and published surface"
+    status: "open"
+    feature_ids:
+      - "001-quality-map-contract"
+      - "004-quality-scoring"
+      - "005-quality-tools-cli"
+      - "006-quality-presentation"
+    source_refs:
+      - path: "AGENTS.md"
+        label: "Dependency direction"
+    notes: >-
+      quality-map is the lowest contract, core may depend on it, quality-tools
+      bundles both, quality-ui must not import filesystem, GitHub, auth, or
+      platform code, and no open-source package may depend on the Shiplight
+      platform monorepo.
+
+  - id: "no-canonical-observations"
+    title: "No workflow emits canonical observations for this repository"
+    status: "open"
+    feature_ids:
+      - "003-runtime-observations"
+      - "004-quality-scoring"
+    source_refs:
+      - path: ".github/workflows/ci.yml"
+        label: "CI runs pnpm test but serializes no result"
+    notes: >-
+      CI runs the suite and reports pass or fail to GitHub, but nothing writes a
+      `quality-observations.json`. Until an emit step exists, this project's own
+      quality score is unavailable and no estimate may be substituted. Adding the
+      emit step is a producer edit that requires explicit owner authorization.
+
+discovery:
+  mode: "brownfield"
+  source_types:
+    - "IMPLEMENTATION"
+    - "INFERRED"
+  orphan_code_refs:
+    - "scripts/check-quality-skill.sh"
+    - "scripts/check-spec-project-skill.sh"
+    - ".github/workflows/quality-skill.yml"
+    - ".github/workflows/spec-project-skill.yml"
+  specs_without_implementation: []
+  implementation_without_specs:
+    - "Every feature in this map. No accepted per-feature intent document exists; all six were reconstructed from code and tests."
+  tests_without_specs:
+    - "All 62 test files. They assert current behavior with no accepted specification to compare against."
+  evidence_gaps:
+    - "No project emits canonical quality-observations.json, so the runtime quality score is unavailable for every feature."
+    - "No proof-strategy document (TESTING.md) declares which proof modalities are required for which kind of claim."
+    - "examples/ advertises example quality projects that CLI, engine, and Explorer integration tests can use, but contains only a README."
+  unresolved_drift:
+    - "The `agent-skills/` directory is excluded from this assessment by owner instruction, so the skill contract checks in scripts/ guard code no feature in this map covers."
