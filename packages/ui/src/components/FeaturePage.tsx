@@ -1,5 +1,7 @@
 "use client";
 
+import { useQcApi, useQcRoute } from "../host";
+
 import { Breadcrumb } from "./Breadcrumb";
 import { MarkdownOverlay } from "./MarkdownOverlay";
 import Link from "next/link";
@@ -9,8 +11,8 @@ import { Alert, Anchor, Badge, Button, Collapse, Group, Paper, Select, Stack, Te
 import type { ScanResult } from "@shiplightai/quality-core";
 import { buildProjectIndex } from "@shiplightai/quality-core/project-index";
 import { buildGapTriage, type GapRecord } from "@shiplightai/quality-core/gap-triage";
-import { canonicalFixPromptForGap } from "@/lib/quality-explorer/fix-prompt";
-import { gapExpectationLocalId, verificationChecks } from "@/lib/quality-explorer/gap-detail";
+import { canonicalFixPromptForGap } from "../lib/fix-prompt";
+import { gapExpectationLocalId, verificationChecks } from "../lib/gap-detail";
 import { CopyInstruction } from "./CopyInstruction";
 import {
   acceptRiskInstruction,
@@ -19,7 +21,7 @@ import {
   removeCheckInstruction,
   setProofPolicyInstruction,
   unacceptRiskInstruction
-} from "@/lib/quality-explorer/instructions";
+} from "../lib/instructions";
 
 const PRIORITIES = ["P0", "P1", "P2", "P3"] as const;
 
@@ -59,6 +61,7 @@ function CopyFixPromptButton({
   readonly gap: GapRecord;
   readonly projectPath: string;
 }): React.ReactElement {
+  const qcApi = useQcApi();
   const [state, setState] = useState<"idle" | "loading" | "copied" | "error">("idle");
   const mounted = useRef(true);
   const resetTimer = useRef<number | undefined>(undefined);
@@ -83,7 +86,7 @@ function CopyFixPromptButton({
   async function copy(): Promise<void> {
     setState("loading");
     try {
-      const prompt = await canonicalFixPromptForGap(gap, projectPath);
+      const prompt = await canonicalFixPromptForGap(qcApi, gap, projectPath);
       // navigator.clipboard is undefined in non-secure contexts (plain HTTP, some iframes/test
       // runners); guard rather than let the property access throw into a generic catch.
       if (prompt === undefined || navigator.clipboard === undefined) {
@@ -149,6 +152,8 @@ export function FeaturePage({
   readonly projectKey: string | null;
   readonly featureId: string;
 }): React.ReactElement {
+  const qcApi = useQcApi();
+  const qcRoute = useQcRoute();
   const [result, setResult] = useState<ScanResult>();
   const [isLoading, setIsLoading] = useState(false);
   // Set true in the effect body (not just useRef init): StrictMode/remount runs cleanup→setup, else a cleanup-only ref stays false and the loader discards its result.
@@ -194,7 +199,7 @@ export function FeaturePage({
     }
     setMarkdownViewer({ reference, isLoading: true });
     try {
-      const response = await fetch("/api/quality-explorer/artifact/markdown", {
+      const response = await fetch(qcApi("/artifact/markdown"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectPath: result.target.resolvedPath, artifactPath: reference.path })
@@ -267,7 +272,7 @@ export function FeaturePage({
     setIsLoading(true);
     setError(undefined);
     try {
-      const response = await fetch("/api/quality-explorer/scan", {
+      const response = await fetch(qcApi("/scan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectPath, mode: "scan" })
@@ -348,7 +353,7 @@ export function FeaturePage({
         <Group gap="md">
           <Text size="sm" c="dimmed">{visibleCount} {visibleCount === 1 ? "check" : "checks"}</Text>
           <Text size="sm" c={gapCount > 0 ? "orange" : "dimmed"}>{gapCount} {gapCount === 1 ? "gap" : "gaps"}</Text>
-          <Anchor component={Link} href="/quality-explorer/explorer" size="sm">← All features</Anchor>
+          <Anchor component={Link} href={qcRoute("/explorer")} size="sm">← All features</Anchor>
         </Group>
       </Stack>
 

@@ -2,7 +2,8 @@
 
 import "@testing-library/jest-dom/vitest";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { render, testHost } from "../testing";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectScanner } from "./ProjectScanner";
 
@@ -18,9 +19,6 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/app/quality-explorer/_actions/project", () => ({
-  setQcProjectAction: setProjectMock,
-}));
 
 beforeAll(() => {
   // Mantine's Select/Popover use ResizeObserver, which jsdom doesn't provide. Use defineProperty
@@ -48,6 +46,11 @@ beforeAll(() => {
   });
 });
 
+// The project-persistence action reaches the component through the host seam, so the mock is
+// injected there rather than by mocking a module the package no longer imports.
+const renderWithHost = (ui: React.ReactElement): ReturnType<typeof render> =>
+  render(ui, { host: { ...testHost, setProject: setProjectMock } });
+
 beforeEach(() => {
   refreshMock.mockClear();
   setProjectMock.mockClear();
@@ -64,7 +67,7 @@ const hostedProject = { kind: "hosted", projectKey: "hosted:abc" } as const;
 
 describe("ProjectScanner — local path input in a local deployment", () => {
   it("shows the Project path input for a hosted project when local projects are allowed (dev)", () => {
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={hostedProject} localAllowed />
       </MantineProvider>
@@ -74,7 +77,7 @@ describe("ProjectScanner — local path input in a local deployment", () => {
   });
 
   it("hides the Project path input in a hosted deployment (localAllowed=false) — security boundary", () => {
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={hostedProject} localAllowed={false} />
       </MantineProvider>
@@ -84,7 +87,7 @@ describe("ProjectScanner — local path input in a local deployment", () => {
   });
 
   it("submitting a path persists it as the local project and re-resolves (switch back from hosted)", async () => {
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={hostedProject} localAllowed />
       </MantineProvider>
@@ -102,7 +105,7 @@ describe("ProjectScanner — local path input in a local deployment", () => {
 
   it("does NOT re-resolve when the persist fails (setQcProjectAction returns an error)", async () => {
     setProjectMock.mockResolvedValueOnce({ error: "Sign in first." });
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={hostedProject} localAllowed />
       </MantineProvider>
@@ -119,7 +122,7 @@ describe("ProjectScanner — local path input in a local deployment", () => {
   });
 
   it("does NOT persist on an empty-path submit (falls through to a plain re-scan)", async () => {
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={hostedProject} localAllowed />
       </MantineProvider>
@@ -134,7 +137,7 @@ describe("ProjectScanner — local path input in a local deployment", () => {
 
   it("does NOT re-persist when re-scanning the already-selected local path", async () => {
     const localProject = { kind: "local", path: "/repo/x", projectKey: "local:/repo/x" } as const;
-    render(
+    renderWithHost(
       <MantineProvider>
         <ProjectScanner view="dashboard" project={localProject} localAllowed />
       </MantineProvider>

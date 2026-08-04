@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ViewsManager } from "@/components/quality-explorer/ViewsManager";
+import { ViewsManager } from "@shiplightai/quality-ui";
 import { resolveScannerProject } from "@/lib/quality-explorer/scanner-project";
 
 export default async function ViewsPage(): Promise<React.ReactElement> {

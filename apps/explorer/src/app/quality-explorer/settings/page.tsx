@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Settings } from "@/components/quality-explorer/Settings";
+import { Settings } from "@shiplightai/quality-ui";
 import { resolveScannerProject } from "@/lib/quality-explorer/scanner-project";
 
 export default async function SettingsRoute(): Promise<React.ReactElement> {

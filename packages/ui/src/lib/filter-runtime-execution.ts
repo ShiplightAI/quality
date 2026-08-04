@@ -1,7 +1,7 @@
 import type { ScanResult } from "@shiplightai/quality-core";
 // Subpath, not the @shiplightai/quality-core barrel: barrel -> observation-sources -> adm-zip -> fs (client-bundle fatal).
 import { priorityWeight } from "@shiplightai/quality-core/priority";
-import type { ObservationRuntimeExecutionView } from "@/components/quality-explorer/ObservationSourcePanel";
+import type { ObservationRuntimeExecutionView } from "../components/ObservationSourcePanel";
 
 function expectationWeight(expectation: {
   readonly priority?: string;

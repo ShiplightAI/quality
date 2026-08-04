@@ -55,8 +55,12 @@ function lookupForGapDetail(detail: DetailPanelRecord): FixPromptLookup | undefi
   };
 }
 
-async function requestFixPrompt(projectPath: string, lookup: FixPromptLookup): Promise<string | undefined> {
-  const response = await fetch("/api/quality-explorer/fix-prompt", {
+async function requestFixPrompt(
+  qcApi: (path: string) => string,
+  projectPath: string,
+  lookup: FixPromptLookup,
+): Promise<string | undefined> {
+  const response = await fetch(qcApi("/fix-prompt"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -77,6 +81,7 @@ async function requestFixPrompt(projectPath: string, lookup: FixPromptLookup): P
 }
 
 export async function canonicalFixPromptForGap(
+  qcApi: (path: string) => string,
   gap: GapRecord,
   projectPath: string | undefined
 ): Promise<string | undefined> {
@@ -85,10 +90,11 @@ export async function canonicalFixPromptForGap(
   }
 
   const lookup = lookupForGap(gap);
-  return lookup === undefined ? undefined : requestFixPrompt(projectPath, lookup);
+  return lookup === undefined ? undefined : requestFixPrompt(qcApi, projectPath, lookup);
 }
 
 export async function canonicalFixPromptForDetail(
+  qcApi: (path: string) => string,
   detail: DetailPanelRecord,
   projectPath: string | undefined
 ): Promise<string | undefined> {
@@ -97,5 +103,5 @@ export async function canonicalFixPromptForDetail(
   }
 
   const lookup = lookupForGapDetail(detail);
-  return lookup === undefined ? undefined : requestFixPrompt(projectPath, lookup);
+  return lookup === undefined ? undefined : requestFixPrompt(qcApi, projectPath, lookup);
 }

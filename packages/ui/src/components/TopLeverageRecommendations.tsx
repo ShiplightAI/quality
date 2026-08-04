@@ -4,7 +4,7 @@ import { PanelRightOpen } from "lucide-react";
 import { Button } from "@mantine/core";
 import type { SavedQcView } from "@shiplightai/quality-core";
 import { HelpTooltip } from "./HelpTooltip";
-import type { GenerateRecommendationsResponse } from "@/lib/quality-explorer/ranked-recommendations";
+import type { GenerateRecommendationsResponse } from "../lib/ranked-recommendations";
 
 interface TopLeverageRecommendationsProps {
   readonly observationSetId?: string;

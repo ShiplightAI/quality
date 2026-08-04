@@ -53,6 +53,9 @@ importers:
       '@shiplightai/quality-map':
         specifier: workspace:*
         version: link:../../packages/quality-map
+      '@shiplightai/quality-ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       lucide-react:
         specifier: ^1.8.0
         version: 1.28.0(react@19.2.8)
@@ -156,6 +159,40 @@ importers:
       tsup:
         specifier: 8.3.5
         version: 8.3.5(postcss@8.5.25)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/ui:
+    dependencies:
+      '@shiplightai/quality-core':
+        specifier: workspace:*
+        version: link:../core
+      '@shiplightai/quality-map':
+        specifier: workspace:*
+        version: link:../quality-map
+    devDependencies:
+      '@mantine/core':
+        specifier: ^9.4.1
+        version: 9.5.1(@mantine/hooks@9.5.1(react@19.2.8))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      lucide-react:
+        specifier: ^1.8.0
+        version: 1.28.0(react@19.2.8)
+      next:
+        specifier: ^16.2.10
+        version: 16.2.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

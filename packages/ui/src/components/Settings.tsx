@@ -1,9 +1,11 @@
 "use client";
 
+import { useQcApi } from "../host";
+
 import { Breadcrumb } from "./Breadcrumb";
 import { ObservationSourcesView, type ObservationSourceRow } from "./ObservationSourcesView";
 import { CopyInstruction } from "./CopyInstruction";
-import { removeObservationSetInstruction } from "@/lib/quality-explorer/instructions";
+import { removeObservationSetInstruction } from "../lib/instructions";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Badge, Code, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import type { ScanResult } from "@shiplightai/quality-core";
@@ -35,6 +37,7 @@ export function Settings({
   // The org's GitHub-App-installed repos (repoFullName) — drives the per-source coverage badge.
   readonly installedRepos: readonly string[];
 }): React.ReactElement {
+  const qcApi = useQcApi();
   const [result, setResult] = useState<ScanResult>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -86,7 +89,7 @@ export function Settings({
     setIsLoading(true);
     setError(undefined);
     try {
-      const response = await fetch("/api/quality-explorer/scan", {
+      const response = await fetch(qcApi("/scan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectPath, mode: "scan" })

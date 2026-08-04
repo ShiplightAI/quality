@@ -1,5 +1,7 @@
 "use client";
 
+import { useQcRoute } from "../host";
+
 import Link from "next/link";
 import { AlertTriangle, BarChart3, Boxes, CircleGauge, GitBranch, ShieldCheck } from "lucide-react";
 import { Alert, Anchor, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
@@ -9,8 +11,8 @@ import { GateLink } from "./GateLink";
 import { HelpTooltip } from "./HelpTooltip";
 import type { ObservationRuntimeExecutionView } from "./ObservationSourcePanel";
 import { TopLeverageRecommendations } from "./TopLeverageRecommendations";
-import type { GenerateRecommendationsResponse } from "@/lib/quality-explorer/ranked-recommendations";
-import { hasLoadedRuntimeProof } from "@/lib/quality-explorer/runtime-proof";
+import type { GenerateRecommendationsResponse } from "../lib/ranked-recommendations";
+import { hasLoadedRuntimeProof } from "../lib/runtime-proof";
 
 interface OwnerDashboardProps {
   readonly recommendationContext?: {
@@ -74,6 +76,7 @@ export function OwnerDashboard({
   workspace,
   observationExecution
 }: OwnerDashboardProps): React.ReactElement {
+  const qcRoute = useQcRoute();
   const summary = workspace.summary;
   const project = workspace.projectSummary;
   const projectEvidence = project?.freshness.projectEvidence;
@@ -109,7 +112,7 @@ export function OwnerDashboard({
           </Text>
           {summary.projectPath === "" ? null : (
             <Box mt={4}>
-              <GateLink href="/quality-explorer/reviews">
+              <GateLink href={qcRoute("/reviews")}>
                 Review everything that needs confirmation
               </GateLink>
             </Box>
@@ -121,7 +124,7 @@ export function OwnerDashboard({
             </Text>
           ) : null}
         </Stack>
-        <Anchor component={Link} href="/quality-explorer/help/scoring">
+        <Anchor component={Link} href={qcRoute("/help/scoring")}>
           How scores work
         </Anchor>
       </Group>

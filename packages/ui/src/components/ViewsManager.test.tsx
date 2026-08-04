@@ -2,7 +2,8 @@
 
 import "@testing-library/jest-dom/vitest";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
+import { render } from "../testing";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { ScanResult } from "@shiplightai/quality-core";
 import { ViewsManager } from "./ViewsManager";

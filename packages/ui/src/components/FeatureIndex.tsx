@@ -1,5 +1,7 @@
 "use client";
 
+import { useQcRoute } from "../host";
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
@@ -107,6 +109,7 @@ function FeatureRow({
   readonly feature: ProjectMapFeature;
   readonly target: TargetSummary | undefined;
 }): React.ReactElement {
+  const qcRoute = useQcRoute();
   const [open, setOpen] = useState(false);
   const hasDescription = feature.description !== undefined && feature.description.trim().length > 0;
   const confirmed = feature.status !== "candidate";
@@ -135,7 +138,7 @@ function FeatureRow({
 
         <Anchor
           component={Link}
-          href={{ pathname: "/quality-explorer/feature", query: { feature: feature.id } }}
+          href={{ pathname: qcRoute("/feature"), query: { feature: feature.id } }}
           fw={600}
           truncate
         >
