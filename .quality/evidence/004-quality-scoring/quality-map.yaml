@@ -1,0 +1,745 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess.
+#
+# This is the feature the product's central claim rests on — that a score is
+# computed by a deterministic engine from declared facts, runtime observations,
+# and recorded human decisions, and that no agent, UI, or passing test can move
+# it any other way. Checks marked SOURCE trace to that written claim.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "004-quality-scoring"
+  name: "Quality scoring and gap recommendations"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "README.md"
+      label: "Four measures reported separately, never blended into one number"
+    - path: "AGENTS.md"
+      label: "Scores computed by the engine; agents must not set ratification fields"
+    - path: "docs/architecture.md"
+      label: "Non-negotiable boundaries"
+
+expectations:
+  - id: "evidence-confidence-rubric"
+    title: "Proof strength is derived from what the proof is, never from an opinion"
+    description: >-
+      How strongly a check is proven follows one published rubric applied to the
+      evidence types attached to it: an automated proof running in a gate, or two
+      distinct automated proofs, reads HIGH; a single ungated automated proof
+      reads MEDIUM; manual-only reads MANUAL at LOW; anything merely supporting
+      reads IMPLICIT at LOW; nothing at all reads NOT COVERED. Nobody types a
+      confidence level in.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/quality-structure/assessment.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "rubric-gate-high"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats an automated type in a gate context as COVERED with HIGH confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-two-automated-high"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats two distinct ungated automated types as COVERED with HIGH confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-single-automated-medium"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats a single ungated automated type as COVERED with MEDIUM confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-manual-low"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats manual-only evidence as MANUAL with LOW confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-supporting-implicit"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats non-automated supporting evidence as IMPLICIT with LOW confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-none-not-covered"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "treats no evidence as NOT COVERED with LOW confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-tier-classification"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "classifies automated evidence types as automated"
+        contexts: ["local", "pr-ci"]
+      - id: "rubric-type-case-insensitive"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "is case-insensitive"
+        contexts: ["local", "pr-ci"]
+
+  - id: "accepted-risk-stays-visible"
+    title: "Accepting a risk stops it nagging without pretending it was fixed"
+    description: >-
+      When a person accepts a gap as tolerated risk, it stops counting as open
+      and stops dragging the score, but the honest status and evidence
+      confidence are left untouched, so the gap stays visible to anyone reading.
+      Accepting a category that does not apply to a check changes nothing.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/quality-structure/assessment.ts"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "accepted-missing"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "accepting 'missing' lifts scoreStatus to COVERED while status/confidence stay honest"
+        contexts: ["local", "pr-ci"]
+      - id: "accepted-manual-only"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "accepting 'manual-only' lifts scoreStatus for manual-only evidence"
+        contexts: ["local", "pr-ci"]
+      - id: "accepted-weak"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "accepting 'weak' lifts scoreStatus for weak (implicit) evidence"
+        contexts: ["local", "pr-ci"]
+      - id: "accepted-non-matching"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "a non-matching acceptance does not lift scoreStatus"
+        contexts: ["local", "pr-ci"]
+      - id: "accepted-none"
+        type: "unit"
+        path: "tests/unit/expectation-assessment.test.ts"
+        test_case: "scoreStatus equals status when nothing is accepted"
+        contexts: ["local", "pr-ci"]
+
+  - id: "structure-confidence-origin-ladder"
+    title: "Unattested structure earns no trust"
+    description: >-
+      How much the check list itself can be trusted follows its declared origin,
+      resolved from the map default or a per-check override. A check that
+      declares no origin still counts toward the score and contributes zero
+      rather than being quietly excluded, so a map cannot raise its structure
+      confidence by staying silent.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/quality-structure/assessment.ts"
+      - path: "packages/core/src/workspace/project-evidence-scores.ts"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "origin-resolution"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "resolves provenance from map default, per-expectation override, and explicit unspecified"
+        contexts: ["local", "pr-ci"]
+      - id: "origin-unspecified-counts-zero"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "scores structure confidence separately, counting an unspecified check as zero"
+        contexts: ["local", "pr-ci"]
+      - id: "origin-all-unspecified-rollup"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "rolls up to 0 / UNSPECIFIED when every check is unspecified"
+        contexts: ["local", "pr-ci"]
+      - id: "origin-per-check-labels"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "derives structure confidence labels per quality check in the owner view"
+        contexts: ["local", "pr-ci"]
+      - id: "origin-unreviewed-fallback"
+        type: "unit"
+        path: "tests/unit/structure-confidence-review.test.ts"
+        test_case: "falls back to the origin table when unreviewed"
+        contexts: ["local", "pr-ci"]
+
+  - id: "only-a-human-lifts-structure-confidence"
+    title: "Only a person's review can raise structure confidence to full trust"
+    description: >-
+      A check reaches full structure confidence only when both human gates are
+      clear: the feature has been accepted as real structure, and a person has
+      approved its whole check list. Confirming the feature on its own does not
+      do it, and the review flag is read strictly so that only a literal true
+      counts. This is the mechanism behind the promise that an agent cannot
+      approve its own proposals.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Agents must not set human ratification fields or accept risk for a human"
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 4"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "gates-both-required"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "scores by origin until both human gates clear — confirming the feature alone does not lift it"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-lift-to-high"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "lifts every check to HIGH once reviewed AND confirmed (gate 2 + gate 4)"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-strict-flag"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "parses the checks_reviewed flag strictly (only literal true counts)"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-owner-view"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "lifts owner-view per-check structure confidence to HIGH only when reviewed AND confirmed"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-project-index-row"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "lifts the project-index feature row label to HIGH only when reviewed AND confirmed"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-review-overrides-origin"
+        type: "unit"
+        path: "tests/unit/structure-confidence-review.test.ts"
+        test_case: "lifts any origin to HIGH (1.0) once reviewed — human opinion first"
+        contexts: ["local", "pr-ci"]
+      - id: "gates-candidate-unconfirmed"
+        type: "unit"
+        path: "tests/unit/structure-confidence-review.test.ts"
+        test_case: "treats a candidate feature as unconfirmed and everything else as confirmed"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        Every check here proves the positive direction — what a recorded human
+        decision does. None proves the negative that matters most: that nothing
+        else can raise structure confidence. No check asserts that ingesting
+        observations, adding evidence, or a passing test run leaves it unchanged.
+        The claim an agent could most easily violate is the one with no proof
+        behind it.
+      next_step: >-
+        Add a check that scores a target, then re-scores it after attaching
+        passing observations and stronger evidence, asserting structure
+        confidence is identical across both.
+
+  - id: "invalid-provenance-fails-safe"
+    title: "An unrecognised origin is distrusted, not guessed at"
+    description: >-
+      An origin outside the accepted vocabulary produces a warning and falls back
+      to untrusted rather than being interpreted. An invalid per-check value
+      falls back on its own instead of silently inheriting the map's default,
+      which would otherwise let a typo borrow trust from the rest of the map. An
+      empty value reads as simply absent, with no warning.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/quality-structure/assessment.ts"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "invalid-provenance-warns"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "flags out-of-vocabulary provenance with a warning and falls back to unspecified"
+        contexts: ["local", "pr-ci"]
+      - id: "invalid-provenance-no-inherit"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "forces an invalid per-expectation provenance to unspecified instead of inheriting the map default"
+        contexts: ["local", "pr-ci"]
+      - id: "invalid-provenance-empty"
+        type: "contract"
+        path: "tests/contract/structure-provenance.contract.test.ts"
+        test_case: "treats an empty/whitespace structure_provenance as absent without warning"
+        contexts: ["local", "pr-ci"]
+
+  - id: "measures-stay-separate"
+    title: "The four measures are never blended into one number"
+    description: >-
+      Structural analysis stays structural: it does not absorb a runtime
+      confidence value handed to it by a source, and the owner's release view
+      states risk without inventing a quality score where none was observed.
+      Keeping the measures apart is what makes the next action clear — weak
+      proof calls for a different response from a failing one.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "README.md"
+        anchor: "Show what is uncertain"
+      - path: "AGENTS.md"
+        anchor: "Scores are computed by the deterministic engine, never by an agent or UI"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "separate-structural-only"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "keeps analytics structural-only and does not expose source-supplied runtime confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "separate-no-invented-score"
+        type: "integration"
+        path: "tests/integration/owner-view.test.ts"
+        test_case: "surfaces release risk without a computed quality score"
+        contexts: ["local", "pr-ci"]
+
+  - id: "release-confidence-metrics"
+    title: "Release-confidence figures come with their formula and their limits"
+    description: >-
+      The release snapshot computes its metrics from published formulas with
+      explicit guardrails, and counts how many checks sit in each state — stale,
+      manual-only, missing, blocked, accepted, deferred. Where no mapping exists
+      for a priority level, the figure is labelled unavailable instead of being
+      approximated.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/analytics/compute-release-snapshot.ts"
+      - path: "packages/core/src/analytics/metric-definitions.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "metrics-formulas"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "computes mandatory release-confidence snapshot metrics with formulas and guardrails"
+        contexts: ["local", "pr-ci"]
+      - id: "metrics-state-counts"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "counts stale, manual-only, missing, blocked, accepted, and deferred contexts"
+        contexts: ["local", "pr-ci"]
+      - id: "metrics-unavailable-label"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "labels non-P0/P1 vocabulary unavailable when no mapping exists"
+        contexts: ["local", "pr-ci"]
+
+  - id: "analytics-drilldown-and-baseline"
+    title: "A figure can be opened up, and is only compared against a stated baseline"
+    description: >-
+      Any metric can be drilled into for the records behind it, with filters
+      applied consistently and without altering the underlying records. A
+      comparison against a previous state happens only when an explicit baseline
+      is identified, so no trend is implied against an unnamed past.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/analytics/drilldowns.ts"
+      - path: "packages/core/src/analytics/baselines.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "drilldown-selection"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "selects metric drilldowns and applies analytics filters"
+        contexts: ["local", "pr-ci"]
+      - id: "baseline-explicit-only"
+        type: "contract"
+        path: "tests/contract/analytics.contract.test.ts"
+        test_case: "compares only when explicit baseline identity is present"
+        contexts: ["local", "pr-ci"]
+      - id: "filters-conjunctive-pure"
+        type: "unit"
+        path: "tests/unit/filters.test.ts"
+        test_case: "applies analytics filters conjunctively without mutating records"
+        contexts: ["local", "pr-ci"]
+      - id: "drilldown-budget"
+        type: "integration"
+        path: "tests/integration/analytics.test.ts"
+        test_case: "computes 1000 drilldown records under the target budget"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        The drilldown budget check asserts a wall-clock threshold on whatever
+        machine runs it, so it reports the speed of the runner as much as the
+        speed of the code and can pass on a fast machine while a real regression
+        goes unnoticed.
+      next_step: >-
+        Assert an implementation-independent bound such as record count or
+        operation count alongside the timing, so a regression in algorithmic
+        cost fails regardless of hardware.
+
+  - id: "gap-classification"
+    title: "Every real gap is named, and only when it is real"
+    description: >-
+      A check lands in each gap category that genuinely applies to it, with
+      stable links back to the check it came from. Weak proof is only called weak
+      when no direct passing evidence exists, and stale is only claimed when a
+      source explicitly says so — never guessed from an old timestamp.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/gap-triage/classify-gaps.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "gap-categories-grouped"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "groups attention-needed gaps by category without computing analytics"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-weak-only-without-passing"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "classifies weak evidence only when direct passing evidence is absent"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-stale-explicit-only"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "uses explicit stale source context and does not infer stale from old timestamps"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-stable-identity"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "places one expectation in each applicable category with stable identity links"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-category-ordering"
+        type: "unit"
+        path: "tests/unit/filters.test.ts"
+        test_case: "groups and summarizes gaps in product category order"
+        contexts: ["local", "pr-ci"]
+
+  - id: "no-failure-without-a-failure"
+    title: "A failure is only reported when something actually failed"
+    description: >-
+      The structured analysis path never marks a check as failing unless a
+      runtime observation actually recorded a failure. Structural absence and
+      runtime failure are different conditions and must not be conflated, or a
+      project with no results would read as a project full of broken ones.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Quality reads and evaluates evidence"
+      - path: "packages/core/src/gap-triage/classify-gaps.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "no-failing-without-runtime"
+        type: "integration"
+        path: "tests/integration/gap-triage.test.ts"
+        test_case: "never emits the failing gap category from the structured path without a runtime failure"
+        contexts: ["local", "pr-ci"]
+
+  - id: "gap-navigation-and-handoff"
+    title: "A gap leads to the place it can be fixed"
+    description: >-
+      Each gap can be filtered by category, priority, source, and residual risk,
+      carries navigation back to the owner and evidence context it came from, and
+      preserves the structured evidence paths and commands a fix prompt needs.
+      Where a recommended action is unknown, that is stated rather than filled in.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/gap-triage/filters.ts"
+      - path: "packages/core/src/gap-triage/navigation.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "gap-filters"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "filters category, priority, source classification, and residual risk"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-unavailable-preserved"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "preserves recommended action unavailable state and fallback source labels"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-navigation-contexts"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "creates owner and evidence navigation contexts from gap records"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-paths-for-fix-prompts"
+        type: "contract"
+        path: "tests/contract/gap-triage.contract.test.ts"
+        test_case: "preserves structured evidence paths and commands for fix prompts"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-filters-unit"
+        type: "unit"
+        path: "tests/unit/filters.test.ts"
+        test_case: "filters gap records by category, evidence state, source, and residual-risk availability"
+        contexts: ["local", "pr-ci"]
+      - id: "gap-diagnostics-visible"
+        type: "integration"
+        path: "tests/integration/gap-triage.test.ts"
+        test_case: "keeps diagnostics and existing evidence context visible with gaps"
+        contexts: ["local", "pr-ci"]
+
+  - id: "evidence-traceability"
+    title: "Every claim traces back to the artifact behind it"
+    description: >-
+      A reader can follow any check to the tasks, proof, results, artifacts, and
+      recorded risk attached to it. One proof identity resolves to one canonical
+      record so the same artifact is not double-counted, while genuinely distinct
+      references to the same file or command stay distinct.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/evidence-view/build-evidence-view.ts"
+      - path: "packages/core/src/evidence-view/relationships.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "trace-relationships"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "builds traceable structured relationships for expectations, tasks, evidence, results, artifacts, and risk"
+        contexts: ["local", "pr-ci"]
+      - id: "trace-canonical-identity"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "uses one canonical evidence record for shared stable evidence identities"
+        contexts: ["local", "pr-ci"]
+      - id: "trace-drawer-model"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "builds drawer models with unavailable labels, latest results, artifacts, diagnostics, and context"
+        contexts: ["local", "pr-ci"]
+      - id: "trace-focus-preserved"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "preserves selected expectation focus while keeping full target evidence"
+        contexts: ["local", "pr-ci"]
+      - id: "trace-duplicates-distinct"
+        type: "integration"
+        path: "tests/integration/evidence-view.test.ts"
+        test_case: "preserves duplicate file or command references as distinct evidence relationships"
+        contexts: ["local", "pr-ci"]
+      - id: "trace-markdown-fallback-marked"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "renders parsed Markdown fallback evidence hints distinctly"
+        contexts: ["local", "pr-ci"]
+
+  - id: "stale-data-is-never-shown"
+    title: "A missing selection says so instead of showing the last thing that worked"
+    description: >-
+      When the thing being looked at disappears or was never there — a removed
+      target, an unknown metric, a stale selection — the result is an explicit
+      recoverable state. Showing the previous target's evidence under the new
+      one's name would be a quiet, plausible lie.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/evidence-view/drawer.ts"
+      - path: "packages/core/src/owner-view/navigation.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "stale-evidence-recoverable"
+        type: "contract"
+        path: "tests/contract/evidence-view.contract.test.ts"
+        test_case: "reports recoverable missing selections instead of stale evidence"
+        contexts: ["local", "pr-ci"]
+      - id: "stale-owner-targets"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        test_case: "keeps missing targets and direct opens recoverable"
+        contexts: ["local", "pr-ci"]
+      - id: "stale-target-changes"
+        type: "integration"
+        path: "tests/integration/owner-view.test.ts"
+        test_case: "updates when the selected target changes or disappears"
+        contexts: ["local", "pr-ci"]
+      - id: "stale-metric-missing"
+        type: "integration"
+        path: "tests/integration/analytics.test.ts"
+        test_case: "handles missing selected metrics with recoverable state"
+        contexts: ["local", "pr-ci"]
+      - id: "stale-empty-states"
+        type: "integration"
+        path: "tests/integration/gap-triage.test.ts"
+        test_case: "returns clear empty and missing-selection states"
+        contexts: ["local", "pr-ci"]
+
+  - id: "owner-view-leads-with-priority"
+    title: "The owner sees what matters most first, in their own language"
+    description: >-
+      The release view is ordered by declared priority and written for the person
+      accountable for the release rather than the person who wrote the code.
+      Checks with no declared priority sort after those that have one, so an
+      undeclared item never displaces a stated P0. Where no structured target
+      exists at all, a readable fallback is shown rather than an empty screen.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/owner-view/build-owner-view.ts"
+      - path: "packages/core/src/owner-view/grouping.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "owner-priority-first"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        test_case: "builds priority-first structured expectations without implementation-heavy defaults"
+        contexts: ["local", "pr-ci"]
+      - id: "owner-unknown-priority-last"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        test_case: "groups unknown priorities after explicit priorities"
+        contexts: ["local", "pr-ci"]
+      - id: "owner-fallback-sections"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        test_case: "renders fallback owner-readable sections when no structured target exists"
+        contexts: ["local", "pr-ci"]
+      - id: "owner-drilldown-context"
+        type: "contract"
+        path: "tests/contract/owner-view.contract.test.ts"
+        test_case: "preserves evidence drilldown context"
+        contexts: ["local", "pr-ci"]
+      - id: "owner-next-proof-context"
+        type: "integration"
+        path: "tests/integration/owner-view.test.ts"
+        test_case: "keeps next proof and deferred follow-up context on partial expectations"
+        contexts: ["local", "pr-ci"]
+
+  - id: "recommendations-rank-by-value"
+    title: "The suggested next action is the one that would help most"
+    description: >-
+      Open checks are ranked by how much closing them would actually raise the
+      result, so effort goes where it pays. When everything already passes,
+      nothing is recommended rather than manufacturing busywork.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/observations/recommend.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "rank-by-projected-lift"
+        type: "contract"
+        path: "tests/contract/runtime-improvement-recommendations.contract.test.ts"
+        test_case: "ranks open evaluated expectations by projected score lift"
+        contexts: ["local", "pr-ci"]
+      - id: "rank-empty-when-passing"
+        type: "contract"
+        path: "tests/contract/runtime-improvement-recommendations.contract.test.ts"
+        test_case: "returns no recommendations when every evaluated expectation already passes"
+        contexts: ["local", "pr-ci"]
+
+  - id: "recommendations-degrade-honestly"
+    title: "Losing the runtime results degrades the answer without faking it"
+    description: >-
+      The exported recommendations are reproducible for the same inputs. When
+      runtime results cannot be fetched, the structural scores are still reported
+      and the runtime ones are simply absent. Checks in scope with no matching
+      observations stay listed rather than disappearing, and where results
+      arrived but matched nothing, the unmatched examples are exported so the
+      wiring fault is visible instead of reading as an absence of proof.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/recommendation-export/index.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "export-deterministic"
+        type: "contract"
+        path: "tests/contract/ranked-recommendations-export.contract.test.ts"
+        test_case: "builds a deterministic recommendation export for a saved observation set and view"
+        contexts: ["local", "pr-ci"]
+      - id: "export-static-on-runtime-failure"
+        type: "contract"
+        path: "tests/contract/ranked-recommendations-export.contract.test.ts"
+        test_case: "still reports static structural scores when runtime acquisition fails"
+        contexts: ["local", "pr-ci"]
+      - id: "export-keeps-unobserved-targets"
+        type: "contract"
+        path: "tests/contract/ranked-recommendations-export.contract.test.ts"
+        test_case: "keeps saved-view targets in recommendations when they have no matching observations"
+        contexts: ["local", "pr-ci"]
+      - id: "export-audit-examples"
+        type: "contract"
+        path: "tests/contract/ranked-recommendations-export.contract.test.ts"
+        test_case: "exports resolution audit examples when loaded observations do not match evidence paths"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        Reproducibility is asserted by one export compared against an expected
+        shape in a single run. Nothing runs the same input twice and compares the
+        two outputs, so a non-deterministic ordering that happens to be stable on
+        one machine would satisfy this check.
+      next_step: >-
+        Build the export twice from identical inputs in one test and assert the
+        two results are deeply equal.
+
+  - id: "fix-prompts-name-the-real-lever"
+    title: "A fix prompt says what to add, not merely that something is wrong"
+    description: >-
+      Prompts are generated only for checks below their target, and each one
+      names the specific lever that would raise it rather than repeating a
+      generic complaint. Where a check declares its own proof policy — a required
+      gate, modality, or context — the prompt names that requirement. Everything,
+      including already-proven checks, can be requested explicitly.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/fix-prompts/index.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "prompts-below-target-only"
+        type: "contract"
+        path: "tests/contract/fix-prompts-assessment.contract.test.ts"
+        test_case: "flags only checks below target by default (not fully-proven ones)"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-include-covered"
+        type: "contract"
+        path: "tests/contract/fix-prompts-assessment.contract.test.ts"
+        test_case: "includes every check under --include-covered"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-name-the-lever"
+        type: "contract"
+        path: "tests/contract/fix-prompts-assessment.contract.test.ts"
+        test_case: "names the specific evidence-confidence lever per gap"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-require-gate"
+        type: "contract"
+        path: "tests/contract/fix-prompts-policy-override.contract.test.ts"
+        test_case: "maps require_gate to needs_gate with a gating action"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-required-modality"
+        type: "contract"
+        path: "tests/contract/fix-prompts-policy-override.contract.test.ts"
+        test_case: "maps required_modalities to required_modality and names the modality"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-required-context"
+        type: "contract"
+        path: "tests/contract/fix-prompts-policy-override.contract.test.ts"
+        test_case: "maps required_contexts to required_context and names the context"
+        contexts: ["local", "pr-ci"]
+      - id: "prompts-folded-yaml-path"
+        type: "contract"
+        path: "tests/contract/fix-prompts-yaml-continuation.contract.test.ts"
+        test_case: "parses a quality map with a double-quoted folded evidence path"
+        contexts: ["local", "pr-ci"]
+
+  - id: "reading-never-writes"
+    title: "Assessing a project never changes it or sends it anywhere"
+    description: >-
+      Producing any view of a project — gaps, evidence, release risk, analytics —
+      reads the repository and writes nothing back, uploads nothing, and leaves
+      every scanned artifact untouched. A tool pointed at someone's source tree
+      to judge it must not be able to alter what it is judging.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 3"
+      - path: "README.md"
+        anchor: "Quality Explorer never writes to the project it displays"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "readonly-gap-triage"
+        type: "integration"
+        path: "tests/integration/gap-triage.test.ts"
+        test_case: "renders gap context without mutating source artifacts or uploading data"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-evidence-view"
+        type: "integration"
+        path: "tests/integration/evidence-view.test.ts"
+        test_case: "keeps artifact handling read-only and local"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-owner-view"
+        type: "integration"
+        path: "tests/integration/owner-view.test.ts"
+        test_case: "does not mutate scanned files or upload while building owner content"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-analytics"
+        type: "integration"
+        path: "tests/integration/analytics.test.ts"
+        test_case: "computes analytics without mutating source artifacts or uploading data"
+        contexts: ["local", "pr-ci"]
