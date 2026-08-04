@@ -30,10 +30,12 @@ Brownfield works best as a collaboration, not autonomous reconstruction:
 - **Agent ingests**: reads docs, code, tests, and trackers; proposes candidate
   features; maps evidence; surfaces conflicts and open questions.
 
-This runs **without Spec Kit installed**. Use `start` to explain and orchestrate
-the sequence: create the provisional project map first, then run `map-feature`
-for the user-selected priority feature. Install and `specify init` through the
-relevant development workflow only after the user decides to adopt Spec Kit.
+Use `start` to explain and orchestrate the sequence: create the provisional
+project map first, then run `map-feature` for the user-selected priority
+feature. If `spec-project` is installed for the active agent, delegate product
+specification and development workflow decisions to it. Otherwise stop at the
+Quality boundary and report that optional handoff as unavailable; do not
+install, emulate, or operate its lower-level tools.
 
 ## Discovery Sources
 
@@ -89,11 +91,15 @@ Prefer `rg` and targeted file reads. Avoid broad context dumps.
    - Present the feature list with source type and open questions.
    - Ask the user to accept, split, merge, rename, defer, or reject features.
 
-7. **Hand off Spec Kit adoption (optional)**
-   - If the user adopts Spec Kit, hand off to `speckit-project` to install /
-     `specify init` and backfill `specs/NNN-feature-name/` for ratified features
-     (it runs the clarify/plan/tasks lifecycle). This skill does not run the
-     Spec Kit lifecycle.
+7. **Hand off product specification when available (optional)**
+   - First confirm that `spec-project` is installed for the active agent. If it
+     is absent, report the optional handoff as unavailable and continue the
+     Quality workflow without installing or imitating it.
+   - If it is installed, after the user accepts the reconstructed feature
+     structure, hand off to `spec-project` to orchestrate backfilling
+     `specs/NNN-feature-name/spec.md` and the clarify/plan/tasks lifecycle.
+     This skill does not choose how that workflow is implemented, author product
+     specifications, or run the development lifecycle.
    - In the project map, record which feature requirements are `SOURCE` and
      which are reconstructed from implementation, and mark replaced behavior with
      `deprecated`/`superseded` entries (not active specs) — git holds the

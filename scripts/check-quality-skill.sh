@@ -112,6 +112,17 @@ forbid_fixed \
   "${skill_root}/references/improve/index.md" \
   "the single-record example must directly produce quality-observations.json"
 
+brownfield_reference="${skill_root}/references/map-project/brownfield-reconstruction.md"
+forbid_regex \
+  'Spec Kit|specify' \
+  "${brownfield_reference}" \
+  "Quality brownfield reconstruction must know only the spec-project handoff"
+
+if ! grep -Fq '`spec-project` is installed for the active agent' \
+  "${brownfield_reference}"; then
+  fail "the optional spec-project handoff must be gated on local installation"
+fi
+
 observation_template="${skill_root}/references/improve/assets/quality-observations.template.json"
 if ! npx --yes @shiplightai/quality-tools@^0.3.0 observations validate \
   "${observation_template}" >/dev/null; then

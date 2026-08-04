@@ -96,7 +96,10 @@ This repository contains:
 - [`@shiplightai/quality-tools`](packages/quality-tools/README.md), the command
   line interface and public programmatic API;
 - the [`quality` agent skill](agent-skills/quality/SKILL.md), which helps create
-  and maintain a project's `.quality/` graph; and
+  and maintain a project's `.quality/` graph;
+- the [`spec-project` agent skill](agent-skills/spec-project/SKILL.md), which
+  drives portable or Spec Kit-backed product specifications through
+  implementation and Shiplight testing evidence; and
 - [Quality Explorer](apps/explorer/README.md), a local, read-only web interface
   for inspecting the result.
 
@@ -106,7 +109,7 @@ files.
 
 ## Get started
 
-### Use the agent skill
+### Use the agent skills
 
 From the project you want to map, install the `quality` skill with the
 [`skills`](https://www.npmjs.com/package/skills) CLI:
@@ -118,6 +121,20 @@ npx skills add ShiplightAI/quality/agent-skills --skill quality --all -y
 Then ask your agent to run `/quality start`. The skill inventories the project,
 creates the smallest useful quality graph, and keeps inferred structure
 unapproved until a person reviews it.
+
+For the complementary producer workflow, install `spec-project`:
+
+```bash
+npx skills add ShiplightAI/quality/agent-skills --skill spec-project --all -y
+```
+
+Then invoke `/spec-project init`, `/spec-project lifecycle`, or
+`/spec-project maintenance`. It uses portable Markdown by default and uses
+GitHub Spec Kit only when the target repository has adopted it or you explicitly
+request installation. It reconciles product changes into existing feature specs
+before permitting a new feature. Its `/shiplight cover` handoff requires the
+corresponding Shiplight skill; without it, specification and implementation
+remain available but testing-evidence production is reported as unavailable.
 
 The installer creates agent-specific files and `skills-lock.json` in the target
 project. Treat them as generated installation state unless your project has
@@ -146,16 +163,17 @@ observation formats, saved scopes, and generated recommendations.
 ## Repository layout
 
 ```text
-agent-skills/quality/  Agent workflow for creating and maintaining quality maps
-apps/explorer/         Local, read-only Quality Explorer application
-packages/quality-map/ Quality-map contract, parser, and validation
-packages/core/        Deterministic analysis engine
-packages/quality-tools/ Published CLI and public API
-packages/ui/          Shared presentation package under development
-docs/                 Architecture and contributor documentation
-examples/             Example quality projects
-scripts/              Repository checks used by CI
-tests/                Cross-package contract and integration tests
+agent-skills/quality/        Agent workflow for creating and maintaining quality maps
+agent-skills/spec-project/   Producer workflow from product specs to testing evidence
+apps/explorer/               Local, read-only Quality Explorer application
+packages/quality-map/        Quality-map contract, parser, and validation
+packages/core/               Deterministic analysis engine
+packages/quality-tools/      Published CLI and public API
+packages/ui/                 Shared presentation package under development
+docs/                        Architecture and contributor documentation
+examples/                    Example quality projects
+scripts/                     Repository checks used by CI
+tests/                       Cross-package contract and integration tests
 ```
 
 The dependency direction is deliberate:
