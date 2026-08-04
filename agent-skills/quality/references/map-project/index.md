@@ -84,12 +84,18 @@ Reconcile rather than rebuild:
 - surface conflicts and drift
 - never replace accepted structure with a fresh inference pass
 - remove graph-owned roadmap/milestone/grouping fields; use views for reusable
-  assessment scopes and retain roadmap documents under `intent_docs`
+  assessment scopes and retain roadmap documents under `product_docs`
 
 ## Workflow
 
 1. **Inventory**
    - Read existing `.quality/project-map.yaml`.
+   - Read `.quality/config/sources.yaml` when present. The author, or their
+     coding agent, records product sources the repository scan cannot reach
+     there — a Jira project, a Linear team, an external design doc. Treat a
+     `current` entry as a real intent source, follow it where the tooling allows,
+     and index it in `product_docs`. Skip `rejected` entries and prefer the
+     replacement named by `superseded_by`.
    - Read accepted intent sources and the user-named scope.
    - Inspect only the code, routes, schemas, tests, CI, and trackers needed to
      confirm feature boundaries.

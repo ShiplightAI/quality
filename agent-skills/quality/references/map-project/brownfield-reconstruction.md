@@ -50,7 +50,11 @@ Read only what is needed to infer feature boundaries:
 - runtime behavior through browser verification when needed
 - external trackers the user points to — Jira, Linear, GitHub Issues — via an
   available MCP, an export/CSV, or pasted ticket text. Use the user's project
-  key, team, or saved filter; do not crawl a whole tracker unprompted
+  key, team, or saved filter; do not crawl a whole tracker unprompted. When the
+  repository itself names no such tracker, the pointer belongs in
+  `.quality/config/sources.yaml` as a `tracker_query` entry with `origin: human`
+  that the author or their coding agent writes; `map-project` reads it on the
+  next pass instead of asking again
 - git history or issues only when relevant and available
 
 Prefer `rg` and targeted file reads. Avoid broad context dumps.
