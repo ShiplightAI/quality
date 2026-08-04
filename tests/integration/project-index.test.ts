@@ -47,7 +47,7 @@ describe("project index integration", () => {
       {
         relativePath: ".quality/project-map.yaml",
         contents:
-          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\n  source_refs:\n    - path: "README.md"\n      label: "Readme"\nroadmap:\n  feature_order:\n    - "001-feature-one"\nactive_feature:\n  id: "001-feature-one"\n  phase: "verified"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/001-feature-one/spec.md"\n      quality_map_path: ".quality/evidence/feature-one/quality-map.yaml"\n      test_report_path: "specs/feature-one/test-report.md"\n    evidence_refs:\n      - "tests/contract/feature-one.test.ts"\n'
+          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\n  source_refs:\n    - path: "README.md"\n      label: "Readme"\nfeature_order:\n  - "001-feature-one"\nactive_feature:\n  id: "001-feature-one"\n  phase: "verified"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/001-feature-one/spec.md"\n      quality_map_path: ".quality/evidence/feature-one/quality-map.yaml"\n      test_report_path: "specs/feature-one/test-report.md"\n    evidence_refs:\n      - "tests/contract/feature-one.test.ts"\n'
       },
       {
         relativePath: "README.md",
@@ -100,7 +100,7 @@ describe("project index integration", () => {
       {
         relativePath: ".quality/project-map.yaml",
         contents:
-          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nroadmap:\n  feature_order:\n    - "001-feature-one"\n    - "002-feature-two"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-one/quality-map.yaml"\n  - id: "002-feature-two"\n    name: "Feature Two"\n    status: "verified"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-two/quality-map.yaml"\n'
+          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nfeature_order:\n  - "001-feature-one"\n  - "002-feature-two"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-one/quality-map.yaml"\n  - id: "002-feature-two"\n    name: "Feature Two"\n    status: "verified"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-two/quality-map.yaml"\n'
       },
       {
         relativePath: ".quality/config/views.yaml",
@@ -143,7 +143,7 @@ describe("project index integration", () => {
       {
         relativePath: ".quality/project-map.yaml",
         contents:
-          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nroadmap:\n  feature_order:\n    - "001-feature-one"\n    - "002-feature-two"\n    - "003-feature-three"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/001-feature-one/spec.md"\n  - id: "002-feature-two"\n    name: "Feature Two"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/002-feature-two/spec.md"\n  - id: "003-feature-three"\n    name: "Feature Three"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/003-feature-three/spec.md"\n'
+          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nfeature_order:\n  - "001-feature-one"\n  - "002-feature-two"\n  - "003-feature-three"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/001-feature-one/spec.md"\n  - id: "002-feature-two"\n    name: "Feature Two"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/002-feature-two/spec.md"\n  - id: "003-feature-three"\n    name: "Feature Three"\n    status: "verified"\n    artifacts:\n      spec_path: "specs/003-feature-three/spec.md"\n'
       },
       {
         relativePath: "specs/001-feature-one/spec.md",
@@ -229,7 +229,6 @@ describe("project index integration", () => {
           }
         ],
         productDocs: [],
-        releaseAreas: [],
         crossFeatureConcerns: [],
         discovery: {
           evidenceGaps: [],

@@ -109,7 +109,7 @@ describe("ranked recommendations export", () => {
       {
         relativePath: ".quality/project-map.yaml",
         contents:
-          'project:\n  id: "fixture-project"\n  name: "Fixture Project"\nroadmap:\n  feature_order:\n    - "001-feature-a"\n    - "002-feature-b"\nfeatures:\n  - id: "001-feature-a"\n    name: "Feature A"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-a/quality-map.yaml"\n  - id: "002-feature-b"\n    name: "Feature B"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-b/quality-map.yaml"\n'
+          'project:\n  id: "fixture-project"\n  name: "Fixture Project"\nfeature_order:\n  - "001-feature-a"\n  - "002-feature-b"\nfeatures:\n  - id: "001-feature-a"\n    name: "Feature A"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-a/quality-map.yaml"\n  - id: "002-feature-b"\n    name: "Feature B"\n    artifacts:\n      quality_map_path: ".quality/evidence/feature-b/quality-map.yaml"\n'
       },
       {
         relativePath: ".quality/config/views.yaml",

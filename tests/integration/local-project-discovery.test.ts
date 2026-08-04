@@ -75,7 +75,7 @@ describe("local project discovery", () => {
       {
         relativePath: ".quality/project-map.yaml",
         contents:
-          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nroadmap:\n  feature_order:\n    - "001-feature-one"\n    - "002-feature-two"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n  - id: "002-feature-two"\n    name: "Feature Two"\n'
+          'project:\n  id: "mapped-project"\n  name: "Mapped Project"\nfeature_order:\n  - "001-feature-one"\n  - "002-feature-two"\nfeatures:\n  - id: "001-feature-one"\n    name: "Feature One"\n  - id: "002-feature-two"\n    name: "Feature Two"\n'
       },
       {
         relativePath: ".quality/config/views.yaml",

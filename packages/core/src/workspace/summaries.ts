@@ -5,7 +5,6 @@ import { buildGapTriage } from "../gap-triage/build-gap-triage";
 import { NO_SOURCE_PROVIDED_NEXT_EVIDENCE } from "../gap-triage/classify-gaps";
 import type { GapCategory } from "../gap-triage/types";
 import { buildOwnerView } from "../owner-view/build-owner-view";
-import type { ParsedProjectMapDocument } from "../project-map/types";
 import { projectEvidenceScores } from "./project-evidence-scores";
 import type {
   IndexDiagnosticSeverityCounts,
@@ -377,30 +376,6 @@ function priorityRank(priority: string): number {
   return 3;
 }
 
-function humanizeIdentifier(value: string): string {
-  return value
-    .split(/[_-]+/)
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function milestoneLabelFor(input: {
-  readonly map: ParsedProjectMapDocument;
-  readonly milestoneId?: string;
-}): string | undefined {
-  if (input.milestoneId === undefined) {
-    return undefined;
-  }
-
-  const feature = input.map.features.find((candidate) => candidate.id === input.milestoneId);
-  if (feature !== undefined) {
-    return feature.name;
-  }
-
-  return humanizeIdentifier(input.milestoneId);
-}
-
 function actionItemsFor(input: {
   readonly result: ScanResult | undefined;
   readonly targets: readonly TargetSummary[];
@@ -547,10 +522,6 @@ export function buildWorkspaceProjectSummary(input: {
 
   return {
     projectName: map.project.name,
-    ...(map.currentMilestone === undefined ? {} : { currentMilestone: map.currentMilestone }),
-    ...(map.currentMilestone === undefined
-      ? {}
-      : { currentMilestoneLabel: milestoneLabelFor({ map, milestoneId: map.currentMilestone }) }),
     totalRiskCount: actionItems.totalRiskCount,
     totalNextProofCount: actionItems.totalNextProofCount,
     topRisks: actionItems.topRisks,

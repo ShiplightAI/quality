@@ -36,14 +36,6 @@ function provenanceProjectMap(featureStatus: string = "verified") {
         summary: "Project used to exercise structure confidence.",
         sourceRefs: []
       },
-      releaseAreas: [
-        {
-          id: "area-one",
-          name: "Area One",
-          featureIds: ["001-provenance"],
-          exitCriteria: []
-        }
-      ],
       featureOrder: ["001-provenance"],
       features: [
         {

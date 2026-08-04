@@ -13,7 +13,9 @@ project:
     - path: "docs/feature-breakdown.md"
       label: "Feature breakdown"
 
-intent_docs:
+# Accepted requirements, feature catalogs, architecture docs, and roadmaps.
+# `product_docs` is the key the engine reads; `role` becomes the displayed label.
+product_docs:
   - id: "prd"
     path: "docs/prd.md"
     role: "accepted_requirements"
@@ -22,6 +24,10 @@ intent_docs:
     path: "docs/feature-breakdown.md"
     role: "feature_catalog"
     status: "current"
+
+# Display order for the project index. Ordering only — it carries no roadmap,
+# milestone, or release meaning, and omitted features simply sort last.
+feature_order: []
 
 active_feature:
   id: null

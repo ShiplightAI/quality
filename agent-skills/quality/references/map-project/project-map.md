@@ -74,16 +74,20 @@ Important fields:
 
 - `project`: identity, user-facing purpose, assessment boundary, source refs,
   and proof-policy path
-- `intent_docs`: accepted requirements, feature catalogs, architecture docs,
+- `product_docs`: accepted requirements, feature catalogs, architecture docs,
   roadmaps, and other intent sources
+- `feature_order`: top-level display order for the project index; ordering only,
+  with no roadmap, milestone, or release meaning
 - `active_feature`: current working pointer
 - `features`: reusable feature graph with dependencies and artifact links
 - `cross_feature_concerns`: shared risks, constraints, and architecture seams
 - `discovery`: brownfield inference and drift metadata
 
 Do not put roadmap, milestone, or release grouping inside the quality graph.
-Keep those documents under `intent_docs` and store reusable assessment scopes in
-`.quality/config/views.yaml`.
+There is no `roadmap:` block: keep those documents under `product_docs` and
+store reusable assessment scopes in `.quality/config/views.yaml`. The one thing
+the graph keeps is `feature_order`, and it orders the index without implying a
+plan.
 
 ## Saved assessment scopes
 
