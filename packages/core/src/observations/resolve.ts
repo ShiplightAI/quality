@@ -5,6 +5,7 @@ import type {
 } from "@shiplightai/quality-map";
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import type { ScanResult } from "../discovery/types";
+import { OBSERVATION_SUITE_SEPARATOR } from "./types";
 import type {
   ObservationResolutionAuditRow,
   NormalizedObservationRecord,
@@ -51,11 +52,11 @@ function normalizeCase(value: string | undefined): string | undefined {
 // junit adapter does it for cases a bare name cannot tell apart. A pin authored
 // against the bare name must keep matching, otherwise adding a same-named test
 // in a second describe() would silently unmatch an existing check and drop its
-// expectation to unobserved.
-const SUITE_SEPARATOR = "›";
-
+// expectation to unobserved. Splits on the same exported constant the adapter
+// joins with, so the leaf is exact rather than relying on normalizeCase's trim
+// to absorb a separator mismatch.
 function caseLeafName(value: string | undefined): string | undefined {
-  const segments = value?.split(SUITE_SEPARATOR);
+  const segments = value?.split(OBSERVATION_SUITE_SEPARATOR);
   return segments === undefined || segments.length < 2 ? undefined : segments[segments.length - 1];
 }
 

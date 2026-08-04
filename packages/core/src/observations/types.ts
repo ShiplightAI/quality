@@ -2,6 +2,15 @@ import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 
 export const INTERNAL_OBSERVATION_CONTEXT = "runtime-review";
 
+// Separates a test's enclosing suite chain from its name inside a single
+// test_case ("OpenAI › throws when neither key is set"). Playwright's JUnit
+// reporter already writes exactly this, and the junit adapter reuses it when it
+// has to qualify a case. Shared so the adapter that joins on it and the
+// resolver that splits on it cannot drift apart: if they did, a bare evidence
+// pin would stop matching a qualified observation and the expectation would
+// silently fall to unobserved.
+export const OBSERVATION_SUITE_SEPARATOR = " › ";
+
 export type ObservationIngestionStatus = "valid" | "partial" | "invalid";
 
 export type ObservationRecordStatus = "pass" | "fail" | "error" | "skipped";
