@@ -486,14 +486,20 @@ function duplicateObservationIdentityDetails(
         return;
       }
 
-      const normalizedPath = normalizePath(proofPath);
-      const normalizedTestCase = observation.testCase?.trim() ?? "";
       // Same identity rule as the canonical manifest, so a cross-artifact
       // warning here means the same thing as a duplicate there.
       const identity = qualityObservationIdentity({
         path: proofPath,
         test_case: observation.testCase
       });
+      // The label below is human-facing and deliberately formatted differently
+      // from the identity key it reports on ("path :: case" rather than the
+      // key's "path::case"). It is built from the same inputs so the two cannot
+      // describe different records, but it is not derived from the key: reading
+      // a separator back out of a joined string would break on any path or
+      // test name containing it.
+      const normalizedPath = normalizePath(proofPath);
+      const normalizedTestCase = observation.testCase?.trim() ?? "";
       const firstResultIndex = firstResultByIdentity.get(identity);
       if (firstResultIndex !== undefined && firstResultIndex !== resultIndex) {
         duplicateIdentities.add(
