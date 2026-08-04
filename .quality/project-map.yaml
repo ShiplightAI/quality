@@ -41,7 +41,9 @@ product_docs:
 
 active_feature:
   id: "003-runtime-observations"
-  branch: "feat/extract-quality-ui"
+  # No branch pinned: the feature outlives any one branch, and a merged branch
+  # name here would point at something that no longer exists.
+  branch: null
   spec_path: null
   phase: "map-feature"
   updated_at: "2026-08-04"
