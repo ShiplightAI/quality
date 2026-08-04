@@ -7,11 +7,11 @@ import { ArrowRight } from "lucide-react";
 import { Anchor, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import type { ScanResult } from "@shiplightai/quality-core";
 
-interface GateProgressProps {
+interface SetupProgressProps {
   readonly result?: ScanResult;
 }
 
-interface GateFeature {
+interface SetupFeature {
   readonly id: string;
   readonly name: string;
   readonly ratified: boolean;
@@ -20,7 +20,7 @@ interface GateFeature {
   readonly attested: boolean;
 }
 
-function gateFeatures(result: ScanResult | undefined): readonly GateFeature[] {
+function setupFeatures(result: ScanResult | undefined): readonly SetupFeature[] {
   const features = result?.projectMaps.primary?.map?.features ?? [];
   return features.map((feature) => {
     const qualityMapPath = feature.artifacts.qualityMapPath;
@@ -41,13 +41,13 @@ function gateFeatures(result: ScanResult | undefined): readonly GateFeature[] {
   });
 }
 
-export function GateProgress({ result }: GateProgressProps): React.ReactElement | null {
+export function SetupProgress({ result }: SetupProgressProps): React.ReactElement | null {
   const qcRoute = useQcRoute();
   // Don't render placeholder 0/0 counts while the scan is still loading.
   if (result === undefined) {
     return null;
   }
-  const features = gateFeatures(result);
+  const features = setupFeatures(result);
   const ratifiedFeatures = features.filter((feature) => feature.ratified).length;
   const qualityMapFeatures = features.filter((feature) => feature.hasQualityMap);
   const attestedFeatures = qualityMapFeatures.filter((feature) => feature.attested).length;
@@ -56,7 +56,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
 
   return (
     <Stack gap="md" aria-label="Review gates">
-      {/* Gate 1 — features, sources, priorities */}
+      {/* Step 1 — features, sources, priorities */}
       <Paper p="md" component="section" aria-label="Features and priorities">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Stack gap={2}>
@@ -73,7 +73,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
         </Group>
       </Paper>
 
-      {/* Gate 2 — per-feature checks, drill-in */}
+      {/* Step 2 — per-feature checks, drill-in */}
       <Paper p="md" component="section" aria-label="Feature quality checks">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Stack gap={2}>
@@ -102,7 +102,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
         )}
       </Paper>
 
-      {/* Observations — gate 6 */}
+      {/* Step 3 — observations */}
       <Paper p="md" component="section" aria-label="Observations">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Stack gap={2}>

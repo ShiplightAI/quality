@@ -59,6 +59,29 @@ construct at the untrusted end of every gate (`inferred_brownfield`, `candidate`
 on the owner's behalf — including flipping `checks_reviewed` to true or accepting a
 gap risk (`accepted_gaps`) for the owner.
 
+## The two human decisions that are *not* gates
+
+Two other fields record a human decision and move a score. Neither touches
+structure confidence, so **neither is a ratification gate and neither carries a
+gate number** — the four above are the whole list. They are mirror images:
+
+| Field | The human… | Effect |
+| --- | --- | --- |
+| `policy_override` | **raises** the bar for one check — `require_gate`, `required_modalities`, `required_contexts` | adds `needs_gate` / `required_modalities` / `required_contexts` gap reasons, so coverage and quality can only go **down** |
+| `accepted_gaps` | **lowers** the bar, accepting a gap category as tolerated risk | the gap stays visible but stops counting as open, so the score can go **up** |
+
+Both feed the gap reasons in `quality-structure/assessment.ts` and never the
+structure-confidence axis. Reporting them beside each other is the point: one
+says "this needs more proof than the default", the other says "we know, and we
+accept it".
+
+The direction decides what an agent may do. An agent may **propose** either, and
+may **tighten** freely — adding a `policy_override` only makes the bar harder to
+clear, which cannot manufacture trust. An agent must never **loosen** on the
+owner's behalf: writing `accepted_gaps`, or removing or weakening an owner's
+`policy_override` (including setting `require_gate: false`), discards a human
+decision exactly as self-advancing a gate would.
+
 ## Layering rule
 
 Quality may know about and drive the producers (top knows bottom — it can hand a
