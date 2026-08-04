@@ -28,7 +28,13 @@ export interface QualityMapEdits {
   readonly addExpectations?: readonly QualityCheckAddition[];
   /** Gate 4 curation: drop checks that don't belong, by expectation id. */
   readonly removeExpectationIds?: readonly string[];
-  /** Gate 5: per-check proof-policy edits. */
+  /**
+   * Per-check proof policy: a human RAISES the bar for what counts as proven.
+   * The mirror of the accepted-risk edits below, which lower it. Both move
+   * coverage and quality through the gap reasons in `quality-structure/
+   * assessment.ts`; neither touches structure confidence, so neither is a
+   * ratification gate and neither carries a gate number.
+   */
   readonly policyEdits?: readonly QualityCheckPolicyEdit[];
   /** Per-gap accepted-risk decisions: accept (or un-accept) a gap category on a check. */
   readonly gapAcceptanceEdits?: readonly QualityGapAcceptanceEdit[];

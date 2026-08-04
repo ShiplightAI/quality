@@ -39,7 +39,7 @@ import {
   type ObservationRuntimeExecutionView
 } from "./ObservationSourcePanel";
 import { OwnerDashboard } from "./OwnerDashboard";
-import { GateProgress } from "./GateProgress";
+import { SetupProgress } from "./SetupProgress";
 import { ScanDiagnostics } from "./ScanDiagnostics";
 import { FeatureIndex } from "./FeatureIndex";
 import { useQcScanCache } from "./scan-cache";
@@ -741,7 +741,7 @@ export function ProjectScanner({
           {currentResult === undefined ? (
             <Text c="dimmed">Scan a project above to see what needs your review.</Text>
           ) : (
-            <GateProgress result={currentResult} />
+            <SetupProgress result={currentResult} />
           )}
           <Paper p="md" component="section" aria-label="Saved views">
             <Group justify="space-between" align="flex-start" wrap="nowrap">

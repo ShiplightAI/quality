@@ -41,7 +41,7 @@ describe("applyQualityMapEdits", () => {
     expect(parsed(result.text).structure_provenance).toBe("agent_generated");
   });
 
-  it("sets proof policy on a check, creating policy_override when absent (gate 5)", () => {
+  it("sets proof policy on a check, creating policy_override when absent", () => {
     const result = applyQualityMapEdits(RAW, {
       policyEdits: [{ id: "exp-1", requireGate: true }]
     });
