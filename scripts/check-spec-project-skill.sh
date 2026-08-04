@@ -21,14 +21,16 @@ require_fixed() {
   fi
 }
 
+# Trailing arguments are passed through to grep as extra flags (e.g. -i).
 forbid_regex() {
   local pattern="$1"
   local path="$2"
   local message="$3"
+  shift 3
   local matches
   local status
 
-  if matches="$(rg -n -- "${pattern}" "${path}" 2>&1)"; then
+  if matches="$(grep -REn "$@" -- "${pattern}" "${path}" 2>&1)"; then
     printf '%s\n' "${matches}" >&2
     fail "${message}"
   else
@@ -40,7 +42,7 @@ forbid_regex() {
   fi
 }
 
-for required_command in grep rg diff; do
+for required_command in grep diff; do
   if ! command -v "${required_command}" >/dev/null 2>&1; then
     fail "required command is unavailable: ${required_command}"
   fi
@@ -81,8 +83,8 @@ fi
 
 forbid_regex 'speckit-project|spec-less|Spec-less' "${skill_root}" \
   "stale speckit-project or spec-less wording remains in spec-project"
-forbid_regex '(?i:quality|\.quality)' "${skill_root}" \
-  "spec-project must not know about Quality or .quality"
+forbid_regex 'quality|\.quality' "${skill_root}" \
+  "spec-project must not know about Quality or .quality" -i
 forbid_regex '^\| `specs/NNN-feature-name/(spec|plan|tasks)\.md` \| `?spec-project' \
   "${skill_root}/SKILL.md" \
   "spec-project must not claim Spec Kit artifact ownership"
