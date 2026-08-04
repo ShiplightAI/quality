@@ -150,6 +150,37 @@ describe("canonical quality-observations manifest", () => {
     expect(strict.document).toBeUndefined();
   });
 
+  it("keeps the whole worse record when one identity is observed twice", () => {
+    // The retained record must not be a chimera: a fail's observed_at and note
+    // describe that failure, so pairing them with the passing entry's timestamp
+    // would report a failure at a time it did not happen.
+    const result = ingestObservationManifest({
+      report_json: canonicalManifest([
+        {
+          path: "tests/login.spec.ts",
+          test_case: "user can sign in",
+          status: "pass",
+          observed_at: "2026-07-26T10:00:00Z"
+        },
+        {
+          path: "tests/login.spec.ts",
+          test_case: "user can sign in",
+          status: "fail",
+          observed_at: "2026-07-26T11:00:00Z",
+          note: "expected 200, received 500"
+        }
+      ])
+    });
+
+    expect(result.observations).toEqual([
+      expect.objectContaining({
+        status: "fail",
+        observedAt: "2026-07-26T11:00:00.000Z",
+        note: "expected 200, received 500"
+      })
+    ]);
+  });
+
   it("treats test names that differ only in case as separate identities", () => {
     // Observation identity is exact: two tests whose names differ only in case
     // are two tests. Folding them would discard a record — here the failing one

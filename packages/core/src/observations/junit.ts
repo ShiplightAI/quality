@@ -118,16 +118,32 @@ function qualifiedName(testCase: ParsedJunitCase): string {
 // describe() title, vitest and jest-junit write the file path and already fold
 // the describe chain into <testcase name> — so prefixing unconditionally would
 // corrupt the common reporters and rewrite identities that were never ambiguous.
+//
+// A case keeps its bare name unless the prefix actually separates it from the
+// cases it collided with. Colliding cases that share one <testsuite> (Playwright
+// running a spec under several projects, or it.each titles that repeat) qualify
+// to the same string, so prefixing them would splice the suite or file name into
+// test_case without resolving anything. Those stay bare and reach the manifest
+// layer as the genuine duplicates they are.
 function testCaseNames(testCases: readonly ParsedJunitCase[]): readonly string[] {
-  const counts = new Map<string, number>();
+  const identityCounts = new Map<string, number>();
+  const qualifiedCounts = new Map<string, number>();
   for (const testCase of testCases) {
     const identity = caseIdentity(testCase);
-    counts.set(identity, (counts.get(identity) ?? 0) + 1);
+    identityCounts.set(identity, (identityCounts.get(identity) ?? 0) + 1);
+    const qualified = `${identity}::${qualifiedName(testCase)}`;
+    qualifiedCounts.set(qualified, (qualifiedCounts.get(qualified) ?? 0) + 1);
   }
 
-  return testCases.map((testCase) =>
-    (counts.get(caseIdentity(testCase)) ?? 0) > 1 ? qualifiedName(testCase) : testCase.name
-  );
+  return testCases.map((testCase) => {
+    const identity = caseIdentity(testCase);
+    if ((identityCounts.get(identity) ?? 0) <= 1) {
+      return testCase.name;
+    }
+
+    const qualified = qualifiedName(testCase);
+    return (qualifiedCounts.get(`${identity}::${qualified}`) ?? 0) === 1 ? qualified : testCase.name;
+  });
 }
 
 function observationIdFor(

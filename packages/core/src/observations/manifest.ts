@@ -186,8 +186,12 @@ export function qualityObservationIdentity(record: {
   return `${record.path.replaceAll("\\", "/")}::${record.test_case?.trim() ?? ""}`;
 }
 
-// Ranked worst-first, consistent with expectationObservedState in evaluate.ts:
-// a failure anywhere outranks an error, and neither is ever masked by a pass.
+// Ranked worst-first. The fail-over-error order matches expectationObservedState
+// in evaluate.ts, where a failure anywhere outranks an error and neither is
+// masked by a pass. The skipped-over-pass order is this fold's own conservative
+// choice, not evaluate.ts's: that function reports a pass/skipped mix as
+// `partial`, which a single canonical status cannot express, so a contradictory
+// duplicate reports the weaker claim rather than asserting the test ran.
 const STATUS_SEVERITY: readonly ObservationRecordStatus[] = ["fail", "error", "skipped", "pass"];
 
 function worstStatus(
@@ -284,12 +288,15 @@ function parseObservations(
         )
       );
       // Strict mode rejects the document outright, but tolerant mode keeps
-      // going: fold the dropped entry's status into the record we kept so a
-      // duplicated identity can never report pass while a fail was observed.
+      // going: keep whichever entry reports the worse status so a duplicated
+      // identity can never report pass while a fail was observed. The whole
+      // record is swapped, not just the status — a fail's observed_at and note
+      // (usually the error message) describe that failure, and pairing them
+      // with the passing entry's timestamp would report a failure that never
+      // happened at that time.
       const kept = observations[seenIndex]!;
-      const merged = worstStatus(kept.status, record.status);
-      if (merged !== kept.status) {
-        observations[seenIndex] = { ...kept, status: merged };
+      if (worstStatus(kept.status, record.status) !== kept.status) {
+        observations[seenIndex] = record;
       }
       return;
     }

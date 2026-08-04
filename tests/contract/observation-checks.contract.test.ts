@@ -154,6 +154,28 @@ describe("check evidence resolution", () => {
     expect(resolved.observations[0]?.evidenceLocalId).toBe("vm-testbox-health");
   });
 
+  it("keeps a pinned check matching once the reporter qualifies the case with its suite", () => {
+    // Playwright's JUnit reporter always writes "suite › test", and the junit
+    // adapter qualifies cases a bare name cannot tell apart. A pin authored
+    // against the bare name must survive that, otherwise adding a same-named
+    // test in a second describe() silently unmatches this check and drops the
+    // expectation to unobserved with no diagnostic.
+    const ingested = ingestObservationManifest({
+      report_json: manifest([
+        {
+          path: ".github/workflows/release-ci-runner.yml",
+          test_case: "Release › agent_payload",
+          status: "pass"
+        }
+      ])
+    });
+
+    const resolved = resolveObservations(checksScanResult(), ingested);
+
+    expect(resolved.status).toBe("valid");
+    expect(resolved.observations[0]?.evidenceLocalId).toBe("ci-runner-agent-payload");
+  });
+
   it("does not match a pinned check when the observation carries no test_case", () => {
     const ingested = ingestObservationManifest({
       report_json: manifest([{ path: ".github/workflows/release-ci-runner.yml", status: "pass" }])

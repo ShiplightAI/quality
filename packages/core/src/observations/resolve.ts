@@ -46,16 +46,32 @@ function normalizeCase(value: string | undefined): string | undefined {
   return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
 }
 
+// Reporters qualify a test with its enclosing suite chain ("OpenAI › throws
+// when neither key is set"): Playwright's JUnit reporter always does, and the
+// junit adapter does it for cases a bare name cannot tell apart. A pin authored
+// against the bare name must keep matching, otherwise adding a same-named test
+// in a second describe() would silently unmatch an existing check and drop its
+// expectation to unobserved.
+const SUITE_SEPARATOR = "›";
+
+function caseLeafName(value: string | undefined): string | undefined {
+  const segments = value?.split(SUITE_SEPARATOR);
+  return segments === undefined || segments.length < 2 ? undefined : segments[segments.length - 1];
+}
+
 // Evidence without a test_case pin stays file-level (case-agnostic), preserving
 // existing behavior. A pinned entry only matches an observation that names that
-// same case.
+// same case, either in full or as the leaf of a suite-qualified name.
 function caseMatches(pin: string | undefined, observed: string | undefined): boolean {
   const normalizedPin = normalizeCase(pin);
   if (normalizedPin === undefined) {
     return true;
   }
 
-  return normalizedPin === normalizeCase(observed);
+  return (
+    normalizedPin === normalizeCase(observed) ||
+    normalizedPin === normalizeCase(caseLeafName(observed))
+  );
 }
 
 // Distinctness for ambiguity detection is keyed on (path, casePin) so several
