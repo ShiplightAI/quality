@@ -1,8 +1,10 @@
 "use client";
 
+import { useQcApi } from "../host";
+
 import { Breadcrumb } from "./Breadcrumb";
 import { CopyInstruction } from "./CopyInstruction";
-import { removeViewInstruction } from "@/lib/quality-explorer/instructions";
+import { removeViewInstruction } from "../lib/instructions";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Code, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import type { ScanDiagnostic, ScanResult } from "@shiplightai/quality-core";
@@ -27,6 +29,7 @@ export function ViewsManager({
   // Reload trigger + presence check (null = no project); hosted projects share an empty projectPath.
   readonly projectKey: string | null;
 }): React.ReactElement {
+  const qcApi = useQcApi();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ScanResult>();
   const [loadDiagnostics, setLoadDiagnostics] = useState<readonly ScanDiagnostic[]>([]);
@@ -40,7 +43,7 @@ export function ViewsManager({
       setIsLoading(true);
       setLoadDiagnostics([]);
       try {
-        const response = await fetch("/api/quality-explorer/scan", {
+        const response = await fetch(qcApi("/scan"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ projectPath, mode: "scan" })

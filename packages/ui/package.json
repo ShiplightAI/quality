@@ -1,0 +1,70 @@
+{
+  "name": "@shiplightai/quality-ui",
+  "version": "0.1.0",
+  "description": "Shared React/Mantine presentation for Quality Explorer and Shiplight Quality Center.",
+  "license": "MIT",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./host": {
+      "types": "./dist/host.d.ts",
+      "import": "./dist/host.js",
+      "default": "./dist/host.js"
+    },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "import": "./dist/helpers.js",
+      "default": "./dist/helpers.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "check:size": "tsx scripts/check-package-size.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm -w test && pnpm typecheck && pnpm build && pnpm check:size",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@shiplightai/quality-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mantine/core": ">=9.4.1",
+    "lucide-react": ">=1.8.0",
+    "next": ">=16.2.0",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@mantine/core": "^9.4.1",
+    "@types/node": "25.9.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "0.24.2",
+    "lucide-react": "^1.8.0",
+    "next": "^16.2.10",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useQcRoute } from "../host";
+
 import Link from "next/link";
 import { Button, Select, TextInput } from "@mantine/core";
 import type {
@@ -17,7 +19,7 @@ import { Activity, CircleCheckBig, Clock3, ExternalLink, Play } from "lucide-rea
 import { GateLink } from "./GateLink";
 import { ScanDiagnostics } from "./ScanDiagnostics";
 import { buildObservationProfilePresentation } from "./observation-profile-presentation";
-import { hasLoadedProfileRuntimeProof, hasLoadedRuntimeProof } from "@/lib/quality-explorer/runtime-proof";
+import { hasLoadedProfileRuntimeProof, hasLoadedRuntimeProof } from "../lib/runtime-proof";
 
 interface ObservationSourceEvaluationGroup {
   readonly targets: readonly TargetEvaluationSnapshot[];
@@ -145,6 +147,7 @@ export function ObservationSourcePanel({
   onExecute,
   onOpenAudit
 }: ObservationSourcePanelProps): React.ReactElement | null {
+  const qcRoute = useQcRoute();
   if (scannedProjectPath === undefined) {
     return null;
   }
@@ -158,7 +161,7 @@ export function ObservationSourcePanel({
             <p className="observation-panel-subtitle">
               This scan is structural only — Quality Explorer hasn't loaded any test results for this repo yet.
             </p>
-            <GateLink href="/quality-explorer/settings">Manage observation sources</GateLink>
+            <GateLink href={qcRoute("/settings")}>Manage observation sources</GateLink>
           </div>
         </div>
 
@@ -233,7 +236,7 @@ export function ObservationSourcePanel({
           <p className="observation-panel-subtitle">
             Pull the test results from your test run to produce the final quality score.
           </p>
-          <GateLink href="/quality-explorer/settings">Manage observation sources</GateLink>
+          <GateLink href={qcRoute("/settings")}>Manage observation sources</GateLink>
         </div>
       </div>
 

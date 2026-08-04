@@ -3,7 +3,7 @@
 import { Clipboard, PanelRightClose, TrendingUp } from "lucide-react";
 import { ActionIcon, Badge, Button, Code, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useState } from "react";
-import type { GenerateRecommendationsResponse, RankedRecommendationRecord } from "@/lib/quality-explorer/ranked-recommendations";
+import type { GenerateRecommendationsResponse, RankedRecommendationRecord } from "../lib/ranked-recommendations";
 
 interface RecommendationsPanelProps {
   readonly payload: GenerateRecommendationsResponse;

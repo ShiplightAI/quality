@@ -2,7 +2,7 @@
 
 import { Badge, Card, Code, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
 import { CopyInstruction } from "./CopyInstruction";
-import { removeObservationSourceInstruction } from "@/lib/quality-explorer/instructions";
+import { removeObservationSourceInstruction } from "../lib/instructions";
 
 // A single observation source as this view consumes it (decoupled from the ScanResult-derived type).
 export interface ObservationSourceRow {

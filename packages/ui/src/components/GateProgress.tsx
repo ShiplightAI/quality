@@ -1,5 +1,7 @@
 "use client";
 
+import { useQcRoute } from "../host";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Anchor, Group, Paper, Stack, Text, Title } from "@mantine/core";
@@ -40,6 +42,7 @@ function gateFeatures(result: ScanResult | undefined): readonly GateFeature[] {
 }
 
 export function GateProgress({ result }: GateProgressProps): React.ReactElement | null {
+  const qcRoute = useQcRoute();
   // Don't render placeholder 0/0 counts while the scan is still loading.
   if (result === undefined) {
     return null;
@@ -64,7 +67,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
               <Text size="sm" c="dimmed">{attestedFeatures}/{qualityMapFeatures.length} features have a recorded source</Text>
             ) : null}
           </Stack>
-          <Anchor component={Link} href="/quality-explorer/explorer">
+          <Anchor component={Link} href={qcRoute("/explorer")}>
             <Group gap={6}><span>Open</span><ArrowRight aria-hidden size={16} /></Group>
           </Anchor>
         </Group>
@@ -88,7 +91,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
                     Checklist {feature.checkListRatified ? "approved" : "not reviewed"}
                   </Text>
                 </Stack>
-                <Anchor component={Link} href={{ pathname: "/quality-explorer/feature", query: { feature: feature.id } }}>
+                <Anchor component={Link} href={{ pathname: qcRoute("/feature"), query: { feature: feature.id } }}>
                   <Group gap={6}><span>Open</span><ArrowRight aria-hidden size={16} /></Group>
                 </Anchor>
               </Group>
@@ -107,7 +110,7 @@ export function GateProgress({ result }: GateProgressProps): React.ReactElement 
             <Title order={3}>Where your test results come from</Title>
             <Text size="sm" c="dimmed">{profileCount} sources · {observationSets.length} sets — run a set to pull in test results</Text>
           </Stack>
-          <Anchor component={Link} href="/quality-explorer/settings">
+          <Anchor component={Link} href={qcRoute("/settings")}>
             <Group gap={6}><span>Open</span><ArrowRight aria-hidden size={16} /></Group>
           </Anchor>
         </Group>

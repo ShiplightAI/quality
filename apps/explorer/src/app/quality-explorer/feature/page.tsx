@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { FeaturePage } from "@/components/quality-explorer/FeaturePage";
+import { FeaturePage } from "@shiplightai/quality-ui";
 import { resolveScannerProject } from "@/lib/quality-explorer/scanner-project";
 
 interface FeatureRouteProps {

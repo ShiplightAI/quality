@@ -43,11 +43,10 @@ import { GateProgress } from "./GateProgress";
 import { ScanDiagnostics } from "./ScanDiagnostics";
 import { FeatureIndex } from "./FeatureIndex";
 import { useQcScanCache } from "./scan-cache";
-import { serializeObservationSetSelection } from "@/lib/quality-explorer/observation-set-selection";
-import { filterRuntimeExecutionForResult } from "@/lib/quality-explorer/filter-runtime-execution";
-import type { GenerateRecommendationsResponse } from "@/lib/quality-explorer/ranked-recommendations";
-import type { ScannerProject } from "@/lib/quality-explorer/scanner-project";
-import { setQcProjectAction } from "@/app/quality-explorer/_actions/project";
+import { serializeObservationSetSelection } from "../lib/observation-set-selection";
+import { filterRuntimeExecutionForResult } from "../lib/filter-runtime-execution";
+import type { GenerateRecommendationsResponse } from "../lib/ranked-recommendations";
+import { useQcApi, useQcHost, useQcRoute, type ScannerProject } from "../host";
 
 interface ScanResponse {
   readonly result: ScanResult;
@@ -141,26 +140,18 @@ export function ProjectScanner({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const scanCache = useQcScanCache();
+  // Host seam: route/API prefixes and the project-persistence action differ per host.
+  const { setProject } = useQcHost();
+  const qcApi = useQcApi();
+  const qcRoute = useQcRoute();
   const runScanRef = useRef<((mode: ScanMode) => void) | null>(null);
-  // Refresh = sync-down: pull the base branch from origin into the hosted worktree, then re-scan.
-  // (Local projects have no origin — just re-scan.) This is the single header sync action; the old
-  // "Scan" button was a duplicate re-scan (spec 045 draft-preview-publish-refinement).
+  // Refresh = re-scan. There is no sync-down step: every scan reads the project fresh (from the
+  // local filesystem in Quality Explorer, from the repo at HEAD in Quality Center), so the scan
+  // itself IS the refresh. (An older sync/pull call here belonged to the VM-hosted `qc serve`
+  // worktree, which no longer exists in either host.)
   const doRefresh = useCallback(() => {
-    void (async () => {
-      if (project.kind === "hosted") {
-        try {
-          await fetch("/api/quality-explorer/sync/pull", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: "{}",
-          });
-        } catch {
-          // Pull failure (transient/unreachable) shouldn't block the re-scan — it surfaces state.
-        }
-      }
-      runScanRef.current?.("refresh");
-    })();
-  }, [project]);
+    runScanRef.current?.("refresh");
+  }, []);
   // Stable id for the selected project; the scan result is cached under it so navigating between
   // QC pages reuses it instead of rescanning. Null when nothing is selected.
   const projectKey = project.kind === "none" ? null : project.projectKey;
@@ -340,7 +331,7 @@ export function ProjectScanner({
           query.set("viewId", viewId);
         }
 
-        const response = await fetch(`/api/quality-explorer/recommendations?${query.toString()}`);
+        const response = await fetch(qcApi(`/recommendations?${query.toString()}`));
         if (isCancelled) {
           return;
         }
@@ -504,7 +495,7 @@ export function ProjectScanner({
     }
 
     try {
-      const responsePromise = fetch("/api/quality-explorer/scan", {
+      const responsePromise = fetch(qcApi("/scan"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -586,7 +577,7 @@ export function ProjectScanner({
     // path. A no-op re-scan of the already-selected local path skips the write and just re-scans.
     if (localAllowed && path.length > 0 && !(project.kind === "local" && project.path === path)) {
       void (async () => {
-        const result = await setQcProjectAction({ kind: "local", path });
+        const result = await setProject({ kind: "local", path });
         // Only re-resolve on success — a failed switch (e.g. session expired, or `local` rejected in a
         // non-local deployment) leaves the current project untouched rather than refreshing to the same
         // unchanged cookie and appearing to have done nothing.
@@ -616,7 +607,7 @@ export function ProjectScanner({
 
     try {
       const selection = serializeObservationSetSelection(observationSetSelection);
-      const response = await fetch("/api/quality-explorer/observation-sets/execute", {
+      const response = await fetch(qcApi("/observation-sets/execute"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -670,7 +661,7 @@ export function ProjectScanner({
             <Text c="dimmed" size="sm">
               Choose a Quality Explorer project above — a connected repository + branch — to view its quality.
             </Text>
-            <Anchor component={Link} href="/quality-explorer/manage-projects" size="sm">
+            <Anchor component={Link} href={qcRoute("/manage-projects")} size="sm">
               Connect a project
             </Anchor>
           </Stack>
@@ -726,7 +717,7 @@ export function ProjectScanner({
               }}
               allowDeselect={false}
             />
-            <Link className="dashboard-link" href="/quality-explorer/views">
+            <Link className="dashboard-link" href={qcRoute("/views")}>
               Manage Views
             </Link>
           </>
@@ -758,7 +749,7 @@ export function ProjectScanner({
                 <Title order={3}>Saved views</Title>
                 <Text size="sm" c="dimmed">Reviews always cover the whole project. Saved views scope the Dashboard.</Text>
               </Stack>
-              <Anchor component={Link} href="/quality-explorer/views">
+              <Anchor component={Link} href={qcRoute("/views")}>
                 <Group gap={6}><span>Manage Views</span><ArrowRight aria-hidden size={16} /></Group>
               </Anchor>
             </Group>
