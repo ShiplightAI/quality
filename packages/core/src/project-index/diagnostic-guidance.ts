@@ -152,6 +152,14 @@ function guidanceText(input: DiagnosticGuidanceInput): Omit<DiagnosticGuidance, 
         recommendedAction:
           "In the target repo, open .quality/config/observation-sources.yaml, find the named profile, then inspect the selected workflow run's uploaded artifacts. Make the smallest fix: update github.artifact_names or observation_path to match the real upload, make the workflow publish the canonical quality-observations JSON file, or restrict the source to runs where the observation-producing job actually runs."
       };
+    case "INCOMPLETE_OBSERVATION_ARTIFACT_MATCH":
+      return {
+        title: "Partial runtime observation upload",
+        explanation:
+          "The selected run published some, but not all, of the artifacts the profile names. The observations that did arrive are used; every check proven only by a missing artifact reads unobserved for this run, which looks identical to having no proof at all.",
+        recommendedAction:
+          "Check whether the job that publishes the missing artifact failed, was skipped, or was cancelled in the selected run. Either fix that job so it publishes on the paths it should, or drop the artifact name from github.artifact_names if it is no longer produced."
+      };
     case "UNREADABLE_MARKDOWN_ARTIFACT":
       return {
         title: "Unreadable Markdown",

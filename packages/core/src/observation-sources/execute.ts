@@ -441,6 +441,19 @@ function matchingDownloadedEntries(
   );
 }
 
+// Selectors that produced no canonical file, when others did. Matching "nothing
+// at all" is already reported; a PARTIAL run is the dangerous case, because it
+// looks like a successful acquisition while every check backed by the missing
+// artifact silently reads unobserved.
+function unmatchedSelectors(
+  matches: readonly { artifact: DownloadedArtifact; entry: DownloadedArtifactEntry }[],
+  selectors: readonly string[]
+): readonly string[] {
+  return selectors.filter(
+    (selector) => !matches.some((match) => artifactNameMatchesSelector(match.artifact.name, selector))
+  );
+}
+
 function ambiguousDownloadedMatchDetails(
   matches: readonly { artifact: DownloadedArtifact; entry: DownloadedArtifactEntry }[],
   selectors: readonly string[]
@@ -576,6 +589,21 @@ async function executeGitHubActionsProfile(
         })
       );
     } else {
+      const missingSelectors = unmatchedSelectors(matches, input.profile.github?.artifactNames ?? []);
+      if (missingSelectors.length > 0) {
+        diagnostics.push(
+          createDiagnostic({
+            severity: "warning",
+            code: "INCOMPLETE_OBSERVATION_ARTIFACT_MATCH",
+            message: [
+              `Observation source profile ${input.profile.id} read GitHub Actions run ${runId}, but ${joinedList(missingSelectors)} matched no artifact.`,
+              `Every check proven only by the missing artifact will read unobserved for this run.`,
+              `Downloaded matching artifacts: ${joinedList(downloads.map((download) => download.name))}.`
+            ].join(" ")
+          })
+        );
+      }
+
       for (const match of matches) {
         artifacts.push({
           declaredObservationPath: input.profile.observationPath,

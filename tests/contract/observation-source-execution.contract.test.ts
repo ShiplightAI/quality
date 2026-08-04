@@ -371,6 +371,88 @@ describe("observation source execution contract", () => {
     expect(result.diagnostics).toEqual([]);
   });
 
+  it("warns when a configured artifact selector matched nothing in the selected run", async () => {
+    // A run that published only some of its configured artifacts still yields
+    // matches, so a guard on "matched nothing at all" stays silent. Every check
+    // backed by the missing artifact then reads unobserved with no explanation —
+    // for a repo whose test suite is one artifact and a release gate the other,
+    // that is the entire suite disappearing without a diagnostic.
+    const workflowRun = {
+      id: 791,
+      name: "ci.yml",
+      head_sha: "abc123",
+      head_branch: "main",
+      status: "completed",
+      conclusion: "failure",
+      created_at: "2026-06-08T12:00:00Z",
+      updated_at: "2026-06-08T12:05:00Z",
+      html_url: "https://github.com/ShiplightAI/example/actions/runs/791"
+    };
+    const gatesZip = zipBuffer({
+      "quality-observations.json": manifest({
+        runId: "791",
+        observations: [{ path: ".github/workflows/ci.yml", test_case: "release_gate", status: "pass" }]
+      })
+    });
+    const fetchImpl: typeof fetch = async (input) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+
+      if (url.includes("/actions/workflows/ci.yml/runs")) {
+        return new Response(JSON.stringify({ workflow_runs: [workflowRun] }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        });
+      }
+
+      if (url.endsWith("/actions/runs/791/artifacts?per_page=100")) {
+        return new Response(
+          JSON.stringify({
+            artifacts: [
+              {
+                id: 1,
+                name: "quality-observations-size-gate",
+                archive_download_url: "https://download.example/gates.zip",
+                expired: false
+              }
+            ]
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url === "https://download.example/gates.zip") {
+        return new Response(gatesZip, { status: 200 });
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    };
+    const profile: ObservationSourceProfile = {
+      id: "ci",
+      name: "CI",
+      transport: "github-actions",
+      observationPath: "quality-observations.json",
+      requiredEnv: ["GITHUB_TOKEN"],
+      sourceRefs: [],
+      github: {
+        repo: "ShiplightAI/example",
+        workflow: "ci.yml",
+        artifactNames: ["quality-observations-tests", "quality-observations-size-gate"]
+      }
+    };
+
+    const result = await executeObservationSourceProfile({
+      profile,
+      env: { GITHUB_TOKEN: "test-token" },
+      fetchImpl
+    });
+
+    // The observations that DID arrive stay usable; the gap is reported, not guessed at.
+    expect(result.observations.map((entry) => entry.testCase)).toEqual(["release_gate"]);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "INCOMPLETE_OBSERVATION_ARTIFACT_MATCH" })
+    );
+  });
+
   it("warns when several selected artifacts publish the same observation identity", async () => {
     const workflowRun = {
       id: 790,
