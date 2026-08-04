@@ -35,3 +35,49 @@ expectations:
         command: "Smoke test testbox image"
         contexts:
           - "ci"
+  # Separator-handling rows. Each sits on its own path so the suite-qualified
+  # join cases stay isolated from the smoke rows above.
+  - id: "threshold-guard"
+    title: "The release threshold guard rejects a non-positive count"
+    source_type: "IMPLEMENTATION"
+    category: "other"
+    priority: "P1"
+    evidence:
+      # A pin whose own title contains the reporter separator.
+      - id: "threshold-count-positive"
+        type: "unit"
+        path: "tests/release/thresholds.test.ts"
+        test_case: "errors when count > 0"
+        contexts:
+          - "local"
+  - id: "canonical-pin"
+    title: "A check pinned with the canonical separator still joins"
+    source_type: "IMPLEMENTATION"
+    category: "other"
+    priority: "P1"
+    evidence:
+      - id: "canonical-qualified"
+        type: "unit"
+        path: "tests/release/canonical.test.ts"
+        test_case: "Release › agent_payload"
+        contexts:
+          - "local"
+  - id: "parser-null-body"
+    title: "The parser accepts a null body"
+    source_type: "IMPLEMENTATION"
+    category: "data"
+    priority: "P1"
+    evidence:
+      # Two pins on one path where one is the suite-qualified form of the other.
+      - id: "parser-qualified"
+        type: "unit"
+        path: "tests/release/parser.test.ts"
+        test_case: "parser > accepts a null body"
+        contexts:
+          - "local"
+      - id: "parser-bare"
+        type: "unit"
+        path: "tests/release/parser.test.ts"
+        test_case: "accepts a null body"
+        contexts:
+          - "local"
