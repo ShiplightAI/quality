@@ -12,25 +12,37 @@
     "*.css"
   ],
   "exports": {
-    ".": "./src/index.ts",
-    "./host": "./src/host.tsx",
-    "./styles.css": "./src/styles.css",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./host": {
+      "types": "./dist/host.d.ts",
+      "import": "./dist/host.js",
+      "default": "./dist/host.js"
+    },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "import": "./dist/helpers.js",
+      "default": "./dist/helpers.js"
+    },
+    "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
   "files": [
-    "src",
-    "!src/**/*.test.ts",
-    "!src/**/*.test.tsx",
-    "!src/testing.tsx",
+    "dist",
     "README.md"
   ],
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prepublishOnly": "pnpm -w test && pnpm typecheck"
+    "build": "tsup",
+    "check:size": "tsx scripts/check-package-size.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm -w test && pnpm typecheck && pnpm build && pnpm check:size",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@shiplightai/quality-core": "workspace:*",
-    "@shiplightai/quality-map": "workspace:*"
+    "@shiplightai/quality-core": "workspace:*"
   },
   "peerDependencies": {
     "@mantine/core": ">=9.4.1",
@@ -41,12 +53,18 @@
   },
   "devDependencies": {
     "@mantine/core": "^9.4.1",
+    "@types/node": "25.9.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "0.24.2",
     "lucide-react": "^1.8.0",
     "next": "^16.2.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
     "typescript": "5.9.3"
-  }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
 }

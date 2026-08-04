@@ -24,17 +24,5 @@ export {
   type ScannerProject,
 } from "./host";
 
-// Presentation helpers a host may legitimately assert on. These derive what the UI shows from a
-// scan result; both hosts contract-test them, so they are public surface rather than internals.
-export { buildObservationProfilePresentation } from "./components/observation-profile-presentation";
-export type { ObservationRuntimeExecutionView } from "./components/ObservationSourcePanel";
-export { filterRuntimeExecutionForResult } from "./lib/filter-runtime-execution";
-export { gapExpectationLocalId, verificationChecks } from "./lib/gap-detail";
-export {
-  hasUsableRuntimeProofStatus,
-  hasLoadedRuntimeProof,
-  hasLoadedProfileRuntimeProof,
-  type RuntimeProofStatusInput,
-  type RuntimeExecutionViewLike,
-  type RuntimeProfileExecutionLike,
-} from "./lib/runtime-proof";
+// Pure presentation helpers live at `@shiplightai/quality-ui/helpers` — a Next-free entry, so a
+// plain-Node consumer (tests, scripts) can import them without resolving next/link.
