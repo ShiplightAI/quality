@@ -1,6 +1,11 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildMarkdownFallbackBatch, ingestObservationManifest, resolveObservations } from "@shiplightai/quality-core";
+import {
+  buildMarkdownFallbackBatch,
+  ingestObservationManifest,
+  OBSERVATION_SUITE_SEPARATOR,
+  resolveObservations
+} from "@shiplightai/quality-core";
 import { parseQualityMaps, type QualityMapSource } from "@shiplightai/quality-map";
 import { projectIndexScanResult } from "../fixtures/project-index/build-fixtures";
 
@@ -160,11 +165,14 @@ describe("check evidence resolution", () => {
     // against the bare name must survive that, otherwise adding a same-named
     // test in a second describe() silently unmatches this check and drops the
     // expectation to unobserved with no diagnostic.
+    // Built from the constant the junit adapter joins with, not a hardcoded
+    // string: if the writer's separator ever changes, the reader must still
+    // find the leaf, and this test fails rather than the pin silently missing.
     const ingested = ingestObservationManifest({
       report_json: manifest([
         {
           path: ".github/workflows/release-ci-runner.yml",
-          test_case: "Release › agent_payload",
+          test_case: `Release${OBSERVATION_SUITE_SEPARATOR}agent_payload`,
           status: "pass"
         }
       ])

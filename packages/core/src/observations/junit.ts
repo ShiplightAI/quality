@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import type { ScanDiagnostic } from "../diagnostics/diagnostic";
-import { INTERNAL_OBSERVATION_CONTEXT } from "./types";
+import { INTERNAL_OBSERVATION_CONTEXT, OBSERVATION_SUITE_SEPARATOR } from "./types";
 import type {
   IngestJunitXmlReportInput,
   ObservationIngestionResult,
@@ -21,10 +21,6 @@ interface ParsedJunitCase {
   readonly className?: string;
   readonly status: ObservationRecordStatus;
 }
-
-// Matches the separator Playwright's own JUnit reporter writes into
-// <testcase name>, so a qualified name reads the same whatever produced it.
-const SUITE_SEPARATOR = " › ";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -110,7 +106,7 @@ function caseIdentity(testCase: ParsedJunitCase): string {
 function qualifiedName(testCase: ParsedJunitCase): string {
   return testCase.suitePath.length === 0
     ? testCase.name
-    : [...testCase.suitePath, testCase.name].join(SUITE_SEPARATOR);
+    : [...testCase.suitePath, testCase.name].join(OBSERVATION_SUITE_SEPARATOR);
 }
 
 // Only cases whose bare (path, name) identity repeats inside one report get the
