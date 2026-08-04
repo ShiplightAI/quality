@@ -362,19 +362,23 @@ cross_feature_concerns:
       platform monorepo.
 
   - id: "no-canonical-observations"
-    title: "No workflow emits canonical observations for this repository"
-    status: "open"
+    title: "Canonical observations are emitted by CI"
+    status: "resolved"
     feature_ids:
       - "003-runtime-observations"
       - "004-quality-scoring"
     source_refs:
       - path: ".github/workflows/ci.yml"
-        label: "CI runs pnpm test but serializes no result"
+        label: "Test and build jobs emit, validate, and upload canonical observations"
+      - path: ".quality/config/observation-sources.yaml"
+        label: "Transport that locates the uploaded artifacts"
     notes: >-
-      CI runs the suite and reports pass or fail to GitHub, but nothing writes a
-      `quality-observations.json`. Until an emit step exists, this project's own
-      quality score is unavailable and no estimate may be substituted. Adding the
-      emit step is a producer edit that requires explicit owner authorization.
+      Resolved with owner authorization. The test job converts its own JUnit
+      output and the build job records the size-gate outcome; both validate and
+      upload, and both run on failure so a red build is observed too. Verified
+      locally end to end: 354 observations ingest valid and 309 resolve onto
+      mapped evidence. The remaining step is a real CI run — no assessment has
+      yet read these artifacts from GitHub.
 
 discovery:
   mode: "brownfield"
@@ -392,7 +396,8 @@ discovery:
   tests_without_specs:
     - "All 62 test files. They assert current behavior with no accepted specification to compare against."
   evidence_gaps:
-    - "No project emits canonical quality-observations.json, so the runtime quality score is unavailable for every feature."
+    - "CI emits canonical observations, but no assessment has yet executed the `ci` observation set against a real workflow run, so the runtime quality score remains uncomputed rather than unavailable."
+    - "45 of 353 tests are not mapped to any check, so they run in CI and produce observations that resolve to nothing."
     - "No proof-strategy document (TESTING.md) declares which proof modalities are required for which kind of claim."
     - "examples/ advertises example quality projects that CLI, engine, and Explorer integration tests can use, but contains only a README."
   unresolved_drift:

@@ -1,0 +1,325 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess.
+#
+# The owner merged the reusable UI package and the Explorer application into one
+# feature. Their promises remain distinct — a client bundle with no server
+# imports and a size budget, versus an application pinned to one project root
+# that never writes — so the checks below keep them separable if that decision
+# is revisited.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "006-quality-presentation"
+  name: "Quality presentation and Explorer"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "README.md"
+      label: "Quality Explorer never writes to the project it displays"
+    - path: "docs/architecture.md"
+      label: "The UI is read-only; the app fixes the project root at startup"
+    - path: "AGENTS.md"
+      label: "packages/ui must not import filesystem, GitHub, authentication, or platform code"
+
+expectations:
+  - id: "the-interface-cannot-write"
+    title: "Nothing in the interface can change the project it is showing"
+    description: >-
+      Every screen renders the graph read-only: no editors, no save or publish
+      controls, no write affordances anywhere. Changes to a project's quality
+      graph go through the same review as any other change to its files, so the
+      viewer cannot become a back door around that.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 3"
+      - path: "README.md"
+        anchor: "Quality Explorer never writes to the project it displays"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "readonly-feature-index"
+        type: "unit"
+        path: "packages/ui/src/components/FeatureIndex.test.tsx"
+        test_case: "exposes no write controls (view-only)"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-feature-index-render"
+        type: "unit"
+        path: "packages/ui/src/components/FeatureIndex.test.tsx"
+        test_case: "renders features and sources read-only"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-sources-view"
+        type: "unit"
+        path: "packages/ui/src/components/ObservationSourcesView.test.tsx"
+        test_case: "renders sources read-only with copy-to-agent controls, no live editors"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-settings"
+        type: "unit"
+        path: "packages/ui/src/components/Settings.test.tsx"
+        test_case: "renders sources and sets read-only with copy-to-agent controls, no Save/Publish"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-views-manager"
+        type: "unit"
+        path: "packages/ui/src/components/ViewsManager.test.tsx"
+        test_case: "renders saved views read-only with copy-to-agent controls and no Save"
+        contexts: ["local", "pr-ci"]
+      - id: "readonly-rejects-writes"
+        type: "unit"
+        path: "apps/explorer/src/lib/quality-explorer/data-access/local-fs.test.ts"
+        test_case: "rejects repository writes"
+        contexts: ["local", "pr-ci"]
+
+  - id: "human-decisions-route-through-a-person"
+    title: "A decision the interface suggests still has to be made by a person"
+    description: >-
+      Where a screen offers a human decision — accepting a risk, approving a
+      check list, setting proof policy, adding or removing a check, removing a
+      source, set, or view — it produces an instruction naming the exact field
+      and the gate it touches, for a person to review and an agent to apply. The
+      interface never records the decision itself, which is what keeps approval
+      an explicit human event rather than something a click infers.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Agents must not set human ratification fields or accept risk for a human"
+      - path: "README.md"
+        anchor: "Make human approval explicit"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "instruction-accept-risk"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "acceptRisk names the category, check, feature, accepted_gaps, and the human-decision gate"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-unaccept-risk"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "unacceptRisk removes the category from accepted_gaps"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-approve-check-list"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "approveCheckList sets checks_reviewed and gates it on human review"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-proof-policy"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "setProofPolicy carries the require_gate boolean"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-add-check"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "addCheck carries title, priority, and an honest provenance"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-remove-check"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "removeCheck names the check to delete"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-remove-source"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "removeObservationSource names the source and drops set references"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-remove-set"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "removeObservationSet names the set to delete"
+        contexts: ["local", "pr-ci"]
+      - id: "instruction-remove-view"
+        type: "unit"
+        path: "packages/ui/src/lib/instructions.test.tsx"
+        test_case: "removeView names the view to delete"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-app-reads-one-fixed-project"
+    title: "The application reads only the project it was started against"
+    description: >-
+      The project root is fixed when the process starts, and a path supplied by a
+      browser request is ignored rather than followed. A local tool that accepted
+      a caller-chosen path would read any directory on the machine running it.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "It fixes the project root at process startup"
+      - path: "README.md"
+        anchor: "The project root is fixed when the process starts and cannot be changed by a browser request"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "fixed-root-ignores-client-path"
+        type: "unit"
+        path: "apps/explorer/src/lib/quality-explorer/data-access/local-fs.test.ts"
+        test_case: "ignores a client-supplied path and scans only the startup-selected root"
+        contexts: ["local", "pr-ci"]
+
+  - id: "local-only-controls-stay-local"
+    title: "A control that only makes sense locally is absent when hosted"
+    description: >-
+      The field for choosing a project path on disk appears in a local
+      deployment and is absent from a hosted one. Selecting a path is meaningful
+      only when the browser and the files share a machine; offering it to a
+      hosted user would expose the server's own filesystem as a target.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/ui/src/components/ProjectScanner.tsx"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "local-path-shown-in-dev"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "shows the Project path input for a hosted project when local projects are allowed (dev)"
+        contexts: ["local", "pr-ci"]
+      - id: "local-path-hidden-when-hosted"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "hides the Project path input in a hosted deployment (localAllowed=false) — security boundary"
+        contexts: ["local", "pr-ci"]
+
+  - id: "selecting-a-project-is-consistent"
+    title: "Choosing a project either takes effect or reports that it did not"
+    description: >-
+      Submitting a path stores it and re-reads the project; when storing fails,
+      the view does not re-read and pretend it worked. An empty submission falls
+      through to a plain re-read, and re-reading a project already selected does
+      not store it again. Otherwise a user can end up looking at one project
+      while the application believes it is showing another.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/ui/src/components/ProjectScanner.tsx"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "select-persists-and-rescans"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "submitting a path persists it as the local project and re-resolves (switch back from hosted)"
+        contexts: ["local", "pr-ci"]
+      - id: "select-no-rescan-on-failure"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "does NOT re-resolve when the persist fails (setQcProjectAction returns an error)"
+        contexts: ["local", "pr-ci"]
+      - id: "select-empty-path"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "does NOT persist on an empty-path submit (falls through to a plain re-scan)"
+        contexts: ["local", "pr-ci"]
+      - id: "select-no-repersist"
+        type: "unit"
+        path: "packages/ui/src/components/ProjectScanner.test.tsx"
+        test_case: "does NOT re-persist when re-scanning the already-selected local path"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-browser-bundle-stays-clean"
+    title: "The published components pull in no server or platform code"
+    description: >-
+      The reusable presentation package receives its data through an injected
+      client and imports no filesystem, GitHub, authentication, or platform code,
+      with the guard covering enough modules that a mistaken file pattern cannot
+      pass by checking nothing. A leaked server import would either break a
+      consumer's build or ship code that has no business in a browser.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "packages/ui consumes public read models and must not import filesystem, GitHub, authentication, or Shiplight platform code"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "bundle-boundary-guard"
+        type: "unit"
+        path: "packages/ui/src/lib/client-bundle-boundary.test.ts"
+        test_case: "guards a non-trivial set of modules (so a bad glob cannot pass vacuously)"
+        contexts: ["local", "pr-ci"]
+
+  - id: "waiting-and-failing-look-different"
+    title: "Loading, empty, and failed each look like themselves"
+    description: >-
+      While a project is being read the interface says so, rather than showing
+      the empty state that means no checks exist. A failed read shows the error
+      alone, without a spinner implying work is still happening. With no project
+      chosen, every screen shows the same guard. Confusing "still loading" with
+      "nothing here" tells a user their project has no proof when it has not been
+      read yet.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/ui/src/components/FeaturePage.tsx"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "state-loading-not-empty"
+        type: "unit"
+        path: "packages/ui/src/components/FeaturePage.test.tsx"
+        test_case: "shows a loading state (not the empty 'no checks' state) while the initial scan is in flight"
+        contexts: ["local", "pr-ci"]
+      - id: "state-error-alone"
+        type: "unit"
+        path: "packages/ui/src/components/FeaturePage.test.tsx"
+        test_case: "shows the error alert alone (not a loading spinner) when the initial scan fails"
+        contexts: ["local", "pr-ci"]
+      - id: "state-guard-feature-page"
+        type: "unit"
+        path: "packages/ui/src/components/FeaturePage.test.tsx"
+        test_case: "shows the empty-state guard when no project is selected"
+        contexts: ["local", "pr-ci"]
+      - id: "state-guard-feature-index"
+        type: "unit"
+        path: "packages/ui/src/components/FeatureIndex.test.tsx"
+        test_case: "shows the empty-state guard when no project is selected"
+        contexts: ["local", "pr-ci"]
+      - id: "state-guard-settings"
+        type: "unit"
+        path: "packages/ui/src/components/Settings.test.tsx"
+        test_case: "shows the empty-state guard when no project is selected"
+        contexts: ["local", "pr-ci"]
+      - id: "state-guard-views"
+        type: "unit"
+        path: "packages/ui/src/components/ViewsManager.test.tsx"
+        test_case: "shows the empty-state guard when no project is selected"
+        contexts: ["local", "pr-ci"]
+      - id: "state-empty-sources"
+        type: "unit"
+        path: "packages/ui/src/components/ObservationSourcesView.test.tsx"
+        test_case: "shows an empty state when there are no sources"
+        contexts: ["local", "pr-ci"]
+
+  - id: "unreachable-sources-are-flagged"
+    title: "A results source the tool cannot reach is marked, not left looking fine"
+    description: >-
+      A configured source whose repository is outside the installation granted to
+      the tool is flagged in the interface, so the reason no results are arriving
+      is visible rather than appearing as a project with no proof.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/ui/src/components/ObservationSourcesView.tsx"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "source-not-installed-flagged"
+        type: "unit"
+        path: "packages/ui/src/components/ObservationSourcesView.test.tsx"
+        test_case: "flags a source whose repo is not in the GitHub App installation"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-published-bundle-stays-small"
+    title: "The published package stays within its size budget"
+    description: >-
+      The built package is measured against a size budget on every change, so a
+      dependency that quietly inflates what consumers download fails on the
+      change that caused it rather than at publish time.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/ui/scripts/check-package-size.ts"
+      - path: ".github/workflows/ci.yml"
+    category: "performance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "size-gate-ci"
+        type: "smoke"
+        path: ".github/workflows/ci.yml"
+        test_case: "Check published package size"
+        command: "pnpm --filter @shiplightai/quality-ui check:size"
+        contexts: ["pr-ci"]

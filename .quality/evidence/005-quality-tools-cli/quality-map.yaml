@@ -1,0 +1,266 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "005-quality-tools-cli"
+  name: "Published command line and API"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "docs/architecture.md"
+      label: "quality-tools bundles the contract and engine so users install one package"
+    - path: "packages/quality-tools/README.md"
+      label: "Published CLI documentation"
+
+expectations:
+  - id: "producer-boundary-conversion"
+    title: "Native test results are converted where they are produced"
+    description: >-
+      A project's own runner output — JUnit XML, Playwright JSON — is turned into
+      the canonical format by the producer, at the moment the result is
+      determined, rather than being shipped raw for Quality to interpret later.
+      Test identity survives the conversion: cases that share a name across
+      suites stay distinct, and one spec running under several projects keeps
+      each project's identity.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Evidence producers write facts and artifacts"
+      - path: "packages/quality-tools/src/commands/observations.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-junit-conversion"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "converts JUnit at the producer boundary"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-playwright-conversion"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "converts Playwright JSON at the producer boundary"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-shared-test-names"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "keeps every node:test case when two describe blocks share test names"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-playwright-project-identity"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "preserves Playwright project identity when one spec runs in several projects"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-record-single-gate"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "records one workflow gate in the canonical format"
+        contexts: ["local", "pr-ci"]
+
+  - id: "status-is-never-reinterpreted"
+    title: "A result's status is carried across, never reinterpreted"
+    description: >-
+      A status outside the canonical set is rejected rather than mapped onto a
+      near synonym. Guessing that some runner's "warned" means "passed" would put
+      the tool in the business of deciding results, which is precisely what it
+      must not do.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Independence"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-rejects-status-synonyms"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "rejects unsupported statuses instead of normalizing synonyms"
+        contexts: ["local", "pr-ci"]
+
+  - id: "shards-merge-without-silent-loss"
+    title: "Results split across parallel jobs recombine without losing any"
+    description: >-
+      Shards from one revision and run merge into a single set of observations,
+      and a duplicate identity across shards is reported before the merge rather
+      than being quietly collapsed. On a matrix build this is the difference
+      between a complete picture and a partial one that looks complete.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/observations.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-merge-shards"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "merges producer shards from one revision and run"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-duplicate-identity-reported"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "reports duplicate identities before merging producer shards"
+        contexts: ["local", "pr-ci"]
+
+  - id: "workflow-metadata-is-inferred-safely"
+    title: "Revision details come from the workflow when not passed explicitly"
+    description: >-
+      When a converter is invoked without explicit revision flags, the values are
+      taken from the surrounding workflow environment, so a correct manifest does
+      not depend on every caller remembering to pass them.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/observations.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-workflow-metadata-defaults"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "uses workflow revision metadata when a converter omits explicit flags"
+        contexts: ["local", "pr-ci"]
+
+  - id: "artifacts-are-validated-before-upload"
+    title: "A malformed results file is caught before it is published"
+    description: >-
+      The canonical artifact can be validated in the workflow that produced it,
+      so a broken file fails at the point it was written rather than silently
+      reaching an assessment and reading as an absence of proof.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/observations.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-validate-before-upload"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "validates the canonical artifact before a workflow uploads it"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-contract-is-obtainable"
+    title: "Anyone can obtain the exact contract they must satisfy"
+    description: >-
+      Both the observation format and the quality-map schema can be printed
+      straight from the installed tool, so an author or an agent writing a
+      producer works from the shipped contract rather than from documentation
+      that may have drifted.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/schema.ts"
+    category: "api"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-observations-schema"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/observations.test.ts"
+        test_case: "prints the checked-in canonical schema"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-schema-stdout"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "writes the canonical schema to stdout and exits 0"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-schema-help"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "--help exits 0 without printing the schema"
+        contexts: ["local", "pr-ci"]
+
+  - id: "exit-codes-can-gate-a-build"
+    title: "Exit codes are reliable enough to gate a build on"
+    description: >-
+      Validation exits zero for a valid map, and non-zero with diagnostics for an
+      invalid one or when no path was supplied. Anything looser and a CI step
+      that runs this command would pass while the map underneath it was broken.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/validate.ts"
+    category: "ops"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-validate-exit-0"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "exits 0 on a valid map"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-validate-exit-1-invalid"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "exits 1 and reports diagnostics on an invalid map"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-validate-exit-1-no-path"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "exits 1 when no map path is given"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-validate-help"
+        type: "unit"
+        path: "packages/quality-tools/src/commands/schema-validate.test.ts"
+        test_case: "--help exits 0"
+        contexts: ["local", "pr-ci"]
+
+  - id: "installs-as-one-self-contained-package"
+    title: "The published package works alone, with no workspace left behind"
+    description: >-
+      The built command runs inside somebody else's repository with no access to
+      this workspace, proving the engine and contract are genuinely bundled. A
+      leaked workspace dependency would work perfectly here and fail for every
+      real user on install.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "bundles the internal contract and engine packages so users install one npm package without workspace dependency leakage"
+    category: "api"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-runs-from-target-workspace"
+        type: "contract"
+        path: "tests/contract/quality-tools-analyze.contract.test.ts"
+        test_case: "runs the built CLI from a target workspace without a source command runner"
+        contexts: ["local", "pr-ci"]
+
+  - id: "analysis-and-prompts-are-usable-output"
+    title: "Analysis and fix prompts land where a person or a script can use them"
+    description: >-
+      Recommendations are written for a saved scope, honouring an explicit output
+      path and keeping targets in view even when nothing was observed for them.
+      Fix prompts come out as machine-readable JSON or human-readable Markdown so
+      both an agent and a person can act on the same result.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-tools/src/commands/analyze.ts"
+      - path: "packages/quality-tools/src/commands/fix-prompts.ts"
+    category: "api"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "cli-analyze-saved-view"
+        type: "contract"
+        path: "tests/contract/quality-tools-analyze.contract.test.ts"
+        test_case: "writes saved-view recommendations with unobserved scoped targets"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-analyze-output-path"
+        type: "contract"
+        path: "tests/contract/quality-tools-analyze.contract.test.ts"
+        test_case: "writes recommendations to an explicit output path"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-fix-prompts-json"
+        type: "contract"
+        path: "tests/contract/quality-tools-fix-prompts.contract.test.ts"
+        test_case: "prints structural fix prompts as JSON"
+        contexts: ["local", "pr-ci"]
+      - id: "cli-fix-prompts-markdown"
+        type: "contract"
+        path: "tests/contract/quality-tools-fix-prompts.contract.test.ts"
+        test_case: "writes structural fix prompts as Markdown"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        No check covers the command-line surface the `quality` agent skill
+        actually depends on: that the documented flags keep their names and
+        meanings across a release. The skill pins `@shiplightai/quality-tools@^0.3.0`
+        and every installed copy calls these flags by name, so a rename inside
+        that range breaks every consumer at once with nothing failing here first.
+      next_step: >-
+        Add a check asserting the published flag set for each command, so
+        removing or renaming a flag fails before it is published.

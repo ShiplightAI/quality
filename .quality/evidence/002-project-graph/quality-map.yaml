@@ -1,0 +1,790 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "002-project-graph"
+  name: "Project graph reading and safe authoring"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "docs/architecture.md"
+      label: "packages/core owns project discovery and read operations"
+    - path: "AGENTS.md"
+      label: "Agents must not set human ratification fields or accept risk for a human"
+    - path: "agent-skills/quality/references/_shared/layout.md"
+      label: "Graph artifact layout and per-command edit ownership"
+
+expectations:
+  - id: "discovery-finds-the-graph"
+    title: "The graph is found wherever a project keeps it"
+    description: >-
+      A scan locates every canonical artifact — project maps, feature quality
+      maps, saved views, shared observation configuration — and ignores unrelated
+      files. A project map is found even when no evidence artifacts exist beside
+      it, and configuration files are recognised as configuration rather than
+      being presented as things to assess.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/discovery/scan-project.ts"
+      - path: "packages/core/src/discovery/scan-patterns.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "discovery-canonical-patterns"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "covers every canonical FR-003 source pattern and ignores unrelated files"
+        contexts: ["local", "pr-ci"]
+      - id: "discovery-config-not-target"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "discovers shared observation source profiles without turning them into feature targets"
+        contexts: ["local", "pr-ci"]
+      - id: "discovery-saved-views"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "discovers saved QC views when a primary project map is present"
+        contexts: ["local", "pr-ci"]
+      - id: "discovery-map-without-evidence"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "discovers project maps without requiring quality-evidence artifacts"
+        contexts: ["local", "pr-ci"]
+
+  - id: "a-partial-read-is-reported-as-partial"
+    title: "What could not be read is named, and the rest still works"
+    description: >-
+      An unreadable directory, an unreadable file, a half-written map, or an
+      artifact deleted mid-scan each produce a diagnostic while everything
+      readable stays usable. Duplicate matches are reported without duplicating
+      the artifact. A scan that silently returned less than it found would read
+      as a project with less proof than it has.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/discovery/find-artifacts.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "partial-unreadable-directory"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "keeps readable artifacts when one target directory is unreadable"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-unreadable-files"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "reports unreadable matched artifact files separately from unreadable directories"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-duplicate-matches"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "reports duplicate artifact matches without duplicating artifacts"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-half-written-map"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "returns partial diagnostics for a half-written quality map without failing the scan"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-vanishing-artifact"
+        type: "integration"
+        path: "tests/integration/local-project-discovery-race.test.ts"
+        test_case: "returns a partial result when an artifact disappears before canonicalization"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-empty-and-invalid-paths"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "returns a completed empty result with an info diagnostic"
+        contexts: ["local", "pr-ci"]
+      - id: "partial-rejects-bad-paths"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "rejects missing and non-directory project paths"
+        contexts: ["local", "pr-ci"]
+
+  - id: "scanning-is-safe-and-contained"
+    title: "Scanning a repository neither changes it nor escapes it"
+    description: >-
+      A scan writes nothing, uploads nothing, and refuses to follow a symbolic
+      link that resolves outside the chosen project. The tool is pointed at
+      source trees it does not own, so both halves matter: it must not alter what
+      it reads, and it must not read outside what it was given.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "docs/architecture.md"
+        anchor: "Non-negotiable boundaries, item 3 and item 5"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "safe-no-upload"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "does not call external upload APIs during scan"
+        contexts: ["local", "pr-ci"]
+      - id: "safe-no-mutation"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "does not mutate scanned project files during scans or refreshes"
+        contexts: ["local", "pr-ci"]
+      - id: "safe-symlink-containment"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "skips symlinked artifacts that resolve outside the selected project"
+        contexts: ["local", "pr-ci"]
+      - id: "safe-index-build-readonly"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "does not mutate scanned files or call external upload APIs while building the index"
+        contexts: ["local", "pr-ci"]
+      - id: "safe-workspace-readonly"
+        type: "integration"
+        path: "tests/integration/modern-workspace.test.ts"
+        test_case: "does not mutate source artifacts while deriving workspace state and details"
+        contexts: ["local", "pr-ci"]
+
+  - id: "refresh-reflects-reality"
+    title: "Re-scanning shows what is there now, not what was there before"
+    description: >-
+      A refresh returns a replacement snapshot covering added, removed, and
+      renamed artifacts, so a deleted map disappears from the result rather than
+      lingering as proof that no longer exists.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/discovery/scan-project.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "refresh-replacement-snapshot"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "refresh returns a replacement snapshot for added, removed, and renamed artifacts"
+        contexts: ["local", "pr-ci"]
+
+  - id: "a-rebuild-never-destroys-a-human-decision"
+    title: "Rebuilding the map never overwrites what a person decided"
+    description: >-
+      When the graph is rebuilt from a fresh scan, a ratified status and a
+      human-set priority survive. A scan proposing a different priority raises a
+      conflict instead of applying it. A feature that carried a human decision
+      and is no longer found is surfaced as an orphan rather than deleted, while
+      an unratified proposal is simply replaced. This is the mechanism that lets
+      an agent re-run mapping without quietly undoing its owner.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Agents must not set human ratification fields or accept risk for a human"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "merge-preserves-ratification"
+        type: "unit"
+        path: "tests/unit/project-map-merge.test.ts"
+        test_case: "preserves ratification and human-set priority across a rebuild"
+        contexts: ["local", "pr-ci"]
+      - id: "merge-surfaces-conflict"
+        type: "unit"
+        path: "tests/unit/project-map-merge.test.ts"
+        test_case: "surfaces a conflict when the scan proposes a different priority than a human-set one"
+        contexts: ["local", "pr-ci"]
+      - id: "merge-orphans-never-deleted"
+        type: "unit"
+        path: "tests/unit/project-map-merge.test.ts"
+        test_case: "emits an orphan for a dropped feature that carried a human decision, never deleting it"
+        contexts: ["local", "pr-ci"]
+      - id: "merge-no-orphan-without-decision"
+        type: "unit"
+        path: "tests/unit/project-map-merge.test.ts"
+        test_case: "does not orphan a dropped feature that carried no human decision"
+        contexts: ["local", "pr-ci"]
+      - id: "merge-replaces-unratified"
+        type: "unit"
+        path: "tests/unit/project-map-merge.test.ts"
+        test_case: "takes the scan's status and priority for an unratified candidate"
+        contexts: ["local", "pr-ci"]
+
+  - id: "edits-are-surgical-and-attributed"
+    title: "An edit changes the one thing asked for and records who asked"
+    description: >-
+      Writing back to the project map changes the targeted field and leaves
+      comments and neighbouring content intact, so a file a person maintains by
+      hand stays readable. Any priority edit stamps the priority as human-set,
+      and an existing human attribution survives unrelated edits. Unknown ids are
+      reported rather than applied.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/project-map/serialize.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "edit-preserves-comments"
+        type: "unit"
+        path: "tests/unit/project-map-serialize.test.ts"
+        test_case: "ratifies a feature (status edit) and preserves the comment/other nodes"
+        contexts: ["local", "pr-ci"]
+      - id: "edit-stamps-human-priority"
+        type: "unit"
+        path: "tests/unit/project-map-serialize.test.ts"
+        test_case: "stamps priority_provenance=human on any priority edit"
+        contexts: ["local", "pr-ci"]
+      - id: "edit-preserves-human-provenance"
+        type: "unit"
+        path: "tests/unit/project-map-serialize.test.ts"
+        test_case: "preserves an existing priority_provenance: human across an unrelated status edit"
+        contexts: ["local", "pr-ci"]
+      - id: "edit-reports-unknown-ids"
+        type: "unit"
+        path: "tests/unit/project-map-serialize.test.ts"
+        test_case: "reports unknown ids without applying them"
+        contexts: ["local", "pr-ci"]
+
+  - id: "check-list-edits-respect-the-gates"
+    title: "Approving a check list records the approval without rewriting its origin"
+    description: >-
+      Applying a human's decision to a feature's check list sets the review flag
+      while leaving each check's declared origin untouched, so approval is
+      recorded as approval and never disguised as authorship. Proof policy and
+      accepted risk are maintained as lists that can be added to and fully
+      removed, and additions, removals, duplicates, and unknown ids are each
+      handled explicitly rather than applied hopefully.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/quality-map-edit/apply-edits.ts"
+    category: "compliance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "check-edit-approve-list"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "approves the check list by setting checks_reviewed, leaving origins untouched (gate 4)"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-policy-created"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "sets proof policy on a check, creating policy_override when absent"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-policy-merged"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "merges into an existing policy_override without dropping other fields"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-accept-gap"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "accepts a gap on a check, maintaining the accepted_gaps list"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-unaccept-gap"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "un-accepts a gap, dropping accepted_gaps entirely when the last one is removed"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-append-check"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "appends a human-authored check (gate 4 curation)"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-remove-check"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "removes a check by id and reports an unknown removal"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-remove-before-policy"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "removes a check and reports a policy edit for that same id as unknown (remove runs first)"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-duplicate-add"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "skips a duplicate addition id within one batch instead of writing a duplicate"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-existing-id"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "skips an addition whose id already exists in the map and reports it"
+        contexts: ["local", "pr-ci"]
+      - id: "check-edit-unknown-ids"
+        type: "unit"
+        path: "tests/unit/quality-map-edit.test.ts"
+        test_case: "reports unknown expectation ids without applying them"
+        contexts: ["local", "pr-ci"]
+
+  - id: "project-map-contract-holds"
+    title: "What an author writes in the project map is what the engine reads"
+    description: >-
+      Documents declared in the map reach the engine, ordering is read from where
+      the contract says it lives, and retired planning concepts stay unread. The
+      skill's own template is parsed through the engine so the authoring side and
+      the reading side cannot drift apart unnoticed — the failure mode this
+      guards is silent discard, where a map looks complete and the data never
+      arrives.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/project-map/parse.ts"
+      - path: "agent-skills/quality/references/map-project/assets/project-map.template.yaml"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "map-product-docs-delivered"
+        type: "unit"
+        path: "tests/unit/project-map-parse.test.ts"
+        test_case: "exposes authored product documents"
+        contexts: ["local", "pr-ci"]
+      - id: "map-feature-order-top-level"
+        type: "unit"
+        path: "tests/unit/project-map-parse.test.ts"
+        test_case: "reads feature order from the top level"
+        contexts: ["local", "pr-ci"]
+      - id: "map-no-roadmap"
+        type: "unit"
+        path: "tests/unit/project-map-parse.test.ts"
+        test_case: "carries no roadmap concept"
+        contexts: ["local", "pr-ci"]
+      - id: "map-no-release-areas"
+        type: "unit"
+        path: "tests/unit/project-map-parse.test.ts"
+        test_case: "does not carry a release-area grouping"
+        contexts: ["local", "pr-ci"]
+      - id: "map-template-parses"
+        type: "contract"
+        path: "tests/contract/project-map-template.contract.test.ts"
+        test_case: "parses the skill's template without diagnostics"
+        contexts: ["local", "pr-ci"]
+      - id: "map-template-delivers-docs"
+        type: "contract"
+        path: "tests/contract/project-map-template.contract.test.ts"
+        test_case: "delivers every document the template authors to the engine's product docs"
+        contexts: ["local", "pr-ci"]
+      - id: "map-template-no-removed-keys"
+        type: "contract"
+        path: "tests/contract/project-map-template.contract.test.ts"
+        test_case: "declares none of the removed keys and keeps ordering top-level"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-index-is-honest-about-what-it-knows"
+    title: "The project index says what it does not know"
+    description: >-
+      Rows are unique and ordered, missing optional metadata is labelled
+      unavailable rather than filled in, diagnostics from every source are
+      summarized in one place, and a change in how a target was classified
+      between refreshes is detected. A feature whose only record is a project-map
+      entry is downgraded rather than presented as though it were mapped.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/project-index/build-index.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "index-unique-ordered-rows"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "builds unique, ordered target rows for structured and fallback targets"
+        contexts: ["local", "pr-ci"]
+      - id: "index-unavailable-labels"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "uses unavailable labels when optional metadata is missing"
+        contexts: ["local", "pr-ci"]
+      - id: "index-diagnostic-summary"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "summarizes diagnostics from scan, quality-map, and Markdown fallback sources"
+        contexts: ["local", "pr-ci"]
+      - id: "index-classification-change"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "detects source classification changes between refresh results"
+        contexts: ["local", "pr-ci"]
+      - id: "index-navigation-preserved"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "preserves navigation context for owner and evidence destinations"
+        contexts: ["local", "pr-ci"]
+      - id: "index-reviewed-standalone-target"
+        type: "contract"
+        path: "tests/contract/project-index.contract.test.ts"
+        test_case: "lifts a structured (no project-map feature) target to HIGH when its check list is reviewed"
+        contexts: ["local", "pr-ci"]
+      - id: "index-project-map-entry-point"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "uses a project map as the project and feature entry point when available"
+        contexts: ["local", "pr-ci"]
+      - id: "index-empty-and-invalid-states"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "renders empty and invalid states from scan outcomes"
+        contexts: ["local", "pr-ci"]
+      - id: "index-valid-targets-with-diagnostics"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "preserves valid targets when project, map, or Markdown diagnostics exist"
+        contexts: ["local", "pr-ci"]
+
+  - id: "the-rollup-counts-the-right-things"
+    title: "The project summary counts each feature once, and only what it should"
+    description: >-
+      The summary is built from feature quality maps, excludes standalone
+      project-scope maps that would otherwise double-count, downgrades a feature
+      known only from the project map, and keeps freshness structural when no
+      observations have been ingested. Independent targets sharing a directory
+      stay independent, and unsupported artifacts are ignored rather than
+      counted.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/workspace/summaries.ts"
+      - path: "packages/core/src/workspace/project-evidence-scores.ts"
+    category: "other"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "rollup-owner-first-summary"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "builds an owner-first summary with structured and fallback target signals"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-downgrades-map-only"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "builds a project summary, ignores release-area metadata, and downgrades project-map-only feature confidence"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-excludes-standalone"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "keeps standalone project-scope quality maps out of the project summary rollup"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-freshness-structural"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "keeps freshness summaries structural-only when no observations are ingested"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-readiness-from-features"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "derives project readiness summary from feature quality maps when no project rollup map exists"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-independent-shared-directory"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "keeps independent structured targets that share a project-map feature directory"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-ignores-unsupported"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "ignores unsupported test-quality artifacts when building project-map feature entries"
+        contexts: ["local", "pr-ci"]
+      - id: "rollup-many-targets"
+        type: "integration"
+        path: "tests/integration/modern-workspace.test.ts"
+        test_case: "summarizes many targets without rendering a raw artifact-first model"
+        contexts: ["local", "pr-ci"]
+
+  - id: "a-saved-scope-filters-consistently"
+    title: "A saved scope narrows everything it should and nothing it should not"
+    description: >-
+      Selecting a saved view filters the index and the workspace to exactly the
+      features it names, without copying or altering them. The client-facing
+      entry point for views carries no server-only parsing code, so the browser
+      bundle cannot pull the filesystem layer in behind it.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "packages/ui consumes public read models and must not import filesystem, GitHub, authentication, or Shiplight platform code"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "view-filters-index"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "filters project-map targets to the selected saved QC view"
+        contexts: ["local", "pr-ci"]
+      - id: "view-filters-workspace"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "filters the workspace to the selected saved QC view"
+        contexts: ["local", "pr-ci"]
+      - id: "view-client-boundary"
+        type: "contract"
+        path: "tests/contract/views-client-boundary.contract.test.ts"
+        test_case: "keeps the client-facing views entrypoint free of server-only parser exports"
+        contexts: ["local", "pr-ci"]
+
+  - id: "a-link-resolves-to-what-it-named"
+    title: "A saved link opens the thing it was saved for"
+    description: >-
+      A bookmarked feature resolves back to its canonical target, an exact id
+      beats a colliding key, and an id that merely appears somewhere in a file
+      path is not mistaken for a real target. When the selected target vanishes
+      after a refresh the view recovers instead of showing the wrong one, and
+      identical requests against different features stay separate.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/workspace/navigation.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "nav-restores-canonical-target"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "restores bookmarkable project-map feature slugs to canonical evidence targets"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-no-incidental-path-match"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "does not restore stale feature ids from incidental source path segments"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-exact-id-wins"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "prefers exact target ids over colliding feature keys when restoring navigation"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-recovers-on-disappearance"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "recovers when a selected target disappears after refresh"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-keeps-requests-separate"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "keeps identical recommended action requests separate across features"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-context-across-sections"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "keeps selected target context while switching workspace sections"
+        contexts: ["local", "pr-ci"]
+      - id: "nav-details-are-read-only"
+        type: "contract"
+        path: "tests/contract/modern-workspace.contract.test.ts"
+        test_case: "opens diagnostic, gap, and artifact details as read-only trace records"
+        contexts: ["local", "pr-ci"]
+
+  - id: "markdown-only-projects-are-still-visible"
+    title: "A project with only specs and reports is still readable"
+    description: >-
+      Where no quality map exists yet, recognized sections of a test spec and
+      test report are parsed into a clearly attributed fallback target, using a
+      curated list of headings rather than guessing at meaning. Its identity
+      survives a retitled heading, a real quality map always takes precedence
+      over it, and no duplicate appears once one exists. Linked paths and
+      commands are preserved without ever being opened.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/markdown-fallback/parse-markdown.ts"
+      - path: "packages/core/src/markdown-fallback/headings.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "fallback-parses-sections"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "parses recognized test-spec and test-report sections with fallback attribution"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-curated-aliases"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "uses curated heading aliases without semantic matching"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-one-target"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "builds one Markdown fallback target from Markdown-only artifacts"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-stable-identity"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "keeps fallback identity stable when H1 display titles change"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-no-external-access"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "preserves linked paths, commands, and URLs without external access"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-suppressed-by-structured"
+        type: "contract"
+        path: "tests/contract/markdown-fallback.contract.test.ts"
+        test_case: "suppresses duplicate fallback targets when a usable structured graph exists"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-structured-precedence"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        test_case: "applies structured-map precedence for valid, blocking, and partial maps"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-non-blocking-diagnostics"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        test_case: "reports diagnostics without blocking parseable Markdown groups"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-read-only"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        test_case: "keeps parsing read-only and local-only"
+        contexts: ["local", "pr-ci"]
+      - id: "fallback-wired-into-scan"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        test_case: "wires discovered Markdown artifacts into scan results"
+        contexts: ["local", "pr-ci"]
+
+  - id: "key-documents-are-ranked-for-a-reviewer"
+    title: "A reviewer is pointed at the documents that matter most"
+    description: >-
+      Specs, requirements, READMEs, roadmaps, test specs, and test reports are
+      recognised as the artifacts worth reading first and ranked accordingly,
+      while plans, tasks, and quality maps are treated as supporting context.
+      Every role carries a label written for a person.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/workspace/key-artifacts.ts"
+    category: "ui"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "artifacts-classified"
+        type: "unit"
+        path: "tests/unit/key-artifacts.test.ts"
+        test_case: "classifies the feature spec, PRD, README, roadmap, test spec, and test report as key artifacts"
+        contexts: ["local", "pr-ci"]
+      - id: "artifacts-supporting"
+        type: "unit"
+        path: "tests/unit/key-artifacts.test.ts"
+        test_case: "treats plans, tasks, quality maps, and other context as supporting"
+        contexts: ["local", "pr-ci"]
+      - id: "artifacts-test-spec-distinct"
+        type: "unit"
+        path: "tests/unit/key-artifacts.test.ts"
+        test_case: "classifies the test spec as its own role distinct from the feature spec"
+        contexts: ["local", "pr-ci"]
+      - id: "artifacts-ranked"
+        type: "unit"
+        path: "tests/unit/key-artifacts.test.ts"
+        test_case: "ranks PRD and spec ahead of README, roadmap, test spec, and the test report"
+        contexts: ["local", "pr-ci"]
+      - id: "artifacts-labelled"
+        type: "unit"
+        path: "tests/unit/key-artifacts.test.ts"
+        test_case: "exposes a reviewer-facing label for every role"
+        contexts: ["local", "pr-ci"]
+
+  - id: "author-supplied-sources-are-honoured"
+    title: "Sources the scan cannot reach are read from where the author put them"
+    description: >-
+      Product sources a repository never mentions — a tracker project, an
+      external document — are read from the author's own sources file. A
+      duplicate key is reported while keeping the first entry, a supersession
+      pointing at nothing is flagged, and an absent file simply means the layer
+      was not used rather than an error.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "agent-skills/quality/references/_shared/layout.md"
+        anchor: "config/sources.yaml is an input, not Quality output"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "sources-parses"
+        type: "unit"
+        path: "tests/unit/sources-parse.test.ts"
+        test_case: "parses a valid sources file"
+        contexts: ["local", "pr-ci"]
+      - id: "sources-duplicate-key"
+        type: "unit"
+        path: "tests/unit/sources-parse.test.ts"
+        test_case: "reports a duplicate-key diagnostic and keeps the first entry"
+        contexts: ["local", "pr-ci"]
+      - id: "sources-dangling-supersession"
+        type: "unit"
+        path: "tests/unit/sources-parse.test.ts"
+        test_case: "flags a superseded source whose superseded_by is dangling"
+        contexts: ["local", "pr-ci"]
+      - id: "sources-optional-layer"
+        type: "unit"
+        path: "tests/unit/sources-parse.test.ts"
+        test_case: "treats a missing file as an empty document (the layer is optional)"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        The parsing of this layer is proven, but nothing proves it is ever read
+        during a real mapping pass. `map-project` is documented to consume these
+        entries and enrich the project map from them; no check asserts that a
+        `current` entry reaches the resulting map, or that a `rejected` one does
+        not. An author could fill this file in and see no effect, with every test
+        still green.
+      next_step: >-
+        Add a check that scans a project whose sources file names a source the
+        repository does not mention, and assert it appears in the project's
+        document list while a rejected entry does not.
+
+  - id: "writes-are-scoped-and-repeatable"
+    title: "Writing back touches only the named files and can be run twice"
+    description: >-
+      Committing graph changes includes only the files named, returns the new
+      revision, reports a typed error when the directory is not a repository, and
+      does nothing when there is nothing to change. Anything looser and a tool
+      that edits a person's repository could sweep unrelated work into a commit.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/git/commit.ts"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "commit-only-named-files"
+        type: "unit"
+        path: "tests/unit/git-commit.test.ts"
+        test_case: "commits only the named files and returns the new HEAD sha"
+        contexts: ["local", "pr-ci"]
+      - id: "commit-typed-not-a-repo"
+        type: "unit"
+        path: "tests/unit/git-commit.test.ts"
+        test_case: "throws a typed not_a_repo error outside a git repository"
+        contexts: ["local", "pr-ci"]
+      - id: "commit-idempotent-noop"
+        type: "unit"
+        path: "tests/unit/git-commit.test.ts"
+        test_case: "returns an idempotent no-op (committed: false) when the file has no staged change"
+        contexts: ["local", "pr-ci"]
+      - id: "commit-reports-staged"
+        type: "unit"
+        path: "tests/unit/git-commit.test.ts"
+        test_case: "reports committed: true when there are staged changes"
+        contexts: ["local", "pr-ci"]
+
+  - id: "large-projects-stay-workable"
+    title: "A large repository is scanned and summarized fast enough to use"
+    description: >-
+      A supported artifact is found within a few seconds among a thousand
+      unrelated files, a full workspace builds from scanned targets, and large
+      Markdown sections are previewed under bounded time. A tool too slow to open
+      on a real repository is a tool nobody runs.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/core/src/discovery/find-artifacts.ts"
+    category: "performance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "scale-discovery"
+        type: "integration"
+        path: "tests/integration/local-project-discovery.test.ts"
+        test_case: "discovers a supported artifact within five seconds alongside 1,000 unrelated files"
+        contexts: ["local", "pr-ci"]
+      - id: "scale-workspace-build"
+        type: "integration"
+        path: "tests/integration/modern-workspace.test.ts"
+        test_case: "builds a dashboard and target workspace from scanned structured and Markdown targets"
+        contexts: ["local", "pr-ci"]
+      - id: "scale-markdown-previews"
+        type: "integration"
+        path: "tests/integration/markdown-fallback.test.ts"
+        test_case: "preserves large sections with bounded previews under two seconds"
+        contexts: ["local", "pr-ci"]
+      - id: "scale-index-build"
+        type: "integration"
+        path: "tests/integration/project-index.test.ts"
+        test_case: "builds an index from scanned structured and Markdown fallback targets"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        These bounds are wall-clock on whatever machine runs the suite, so they
+        report the runner's speed as much as the code's and can pass on fast
+        hardware while a genuine complexity regression goes unnoticed.
+      next_step: >-
+        Add a hardware-independent bound alongside the timings, such as the
+        number of filesystem reads per scan, so an algorithmic regression fails
+        regardless of the machine.

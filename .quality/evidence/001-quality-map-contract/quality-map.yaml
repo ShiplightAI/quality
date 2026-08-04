@@ -1,0 +1,279 @@
+# Reconstructed from implementation and tests. No accepted specification exists
+# for this feature, so no artifact declares a priority level for any check below:
+# every `priority` is UNKNOWN as a read fact, not a guess.
+structure_provenance: "inferred_brownfield"
+checks_reviewed: false
+target:
+  id: "001-quality-map-contract"
+  name: "Quality map contract"
+  scope: "feature"
+  aliases: []
+  source_refs:
+    - path: "docs/architecture.md"
+      label: "packages/quality-map owns the quality-map contract"
+    - path: "packages/quality-map/src/quality-map.schema.json"
+      label: "Generated JSON Schema published to contract consumers"
+
+expectations:
+  - id: "valid-maps-parse"
+    title: "A well-formed quality map is read the same way every time"
+    description: >-
+      Both a fully populated map and a minimal one parse into the same
+      normalized shape, and the parse, validate, and normalize steps are
+      deterministic. Everything downstream — scoring, gap triage, the Explorer —
+      reads this one representation, so an inconsistency here would surface as
+      an unexplained score somewhere far away.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/parse.ts"
+      - path: "packages/quality-map/src/normalize.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "parse-complete-and-minimal"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "parses and normalizes complete and minimal structural quality maps"
+        contexts: ["local", "pr-ci"]
+      - id: "parse-deterministic-steps"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "exposes deterministic parse, validate, and normalize steps"
+        contexts: ["local", "pr-ci"]
+      - id: "parse-wires-into-scan"
+        type: "integration"
+        path: "tests/integration/quality-map-normalization.test.ts"
+        test_case: "wires discovered quality maps into scan results without changing scan status"
+        contexts: ["local", "pr-ci"]
+
+  - id: "broken-maps-are-rejected-clearly"
+    title: "A broken map is refused with a reason, never half-accepted"
+    description: >-
+      Invalid YAML and structurally wrong shapes produce blocking diagnostics
+      that say what is wrong and where, rather than a partially populated graph
+      that would score as though the missing parts did not matter.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/validate.ts"
+      - path: "packages/quality-map/src/diagnostics.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "invalid-blocking-diagnostics"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "returns blocking diagnostics for invalid YAML and structural shape errors"
+        contexts: ["local", "pr-ci"]
+      - id: "invalid-actionable-diagnostics"
+        type: "integration"
+        path: "tests/integration/quality-map-normalization.test.ts"
+        test_case: "returns actionable diagnostics for malformed maps and wrong field shapes"
+        contexts: ["local", "pr-ci"]
+
+  - id: "one-bad-map-does-not-spoil-the-rest"
+    title: "One unreadable map does not hide every other project"
+    description: >-
+      When several maps are read together, an invalid one is isolated: the valid
+      maps around it stay fully usable. A whole project going dark because of a
+      single typo would be a far worse failure than the typo.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/parse.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "batch-isolation"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "keeps valid maps independent from invalid maps in the same batch"
+        contexts: ["local", "pr-ci"]
+
+  - id: "unknown-fields-warn-not-fail"
+    title: "An unrecognised field is a warning, not a wall"
+    description: >-
+      A field the contract does not know about is reported as a warning while
+      every supported part of the map keeps working, including field names that
+      look unusual. A map written against a newer or older version of the
+      contract stays readable instead of becoming unusable.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/schema.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "unknown-fields-non-blocking"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "reports non-blocking unknown fields while preserving supported graph data"
+        contexts: ["local", "pr-ci"]
+      - id: "unusual-names-warn"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "treats unusual unknown field names as warnings instead of parse failures"
+        contexts: ["local", "pr-ci"]
+
+  - id: "proof-paths-are-checked"
+    title: "A proof path that cannot join to anything is called out"
+    description: >-
+      Evidence paths that are not canonical repo-relative file paths are
+      flagged. The path is the join key between a declared check and the runtime
+      result that proves it, so a malformed one silently produces a check that
+      can never be observed.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/validate.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "evidence-path-canonical-warning"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "warns when evidence paths are not canonical repo-relative file paths"
+        contexts: ["local", "pr-ci"]
+
+  - id: "identity-is-stable"
+    title: "A check keeps its identity when its wording changes"
+    description: >-
+      Records are identified by their declared stable ids and source attribution
+      rather than by their display names, so renaming a check for clarity does
+      not orphan its history or its observations. Duplicate entries are dropped
+      without taking coherent neighbouring data with them, and repeated nested
+      records are attributed to the exact YAML item they came from.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/normalize.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "identity-not-display-name"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "preserves stable identity and source attribution instead of display-name identity"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-duplicates-omitted"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "omits duplicate entities and dependent relationships without dropping coherent data"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-duplicate-children"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "omits duplicate child entities before they can collide in the graph"
+        contexts: ["local", "pr-ci"]
+      - id: "identity-nested-attribution"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "attributes repeated nested records to the matching YAML list item"
+        contexts: ["local", "pr-ci"]
+
+  - id: "diagnostics-point-at-the-line"
+    title: "A diagnostic points at the exact place in the file"
+    description: >-
+      Problems resolve to a precise YAML location even for awkward shapes:
+      bracket-quoted keys are not split on their dots, repeated records in a
+      sequence resolve by index, and a key that merely looks like a path
+      expression is treated as the literal key it is. Without this a diagnostic
+      names a problem the author cannot find.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/source-location.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "location-bracket-keys"
+        type: "unit"
+        path: "tests/unit/source-location.test.ts"
+        test_case: "locates bracket-quoted map keys without treating dots as path separators"
+        contexts: ["local", "pr-ci"]
+      - id: "location-sequence-index"
+        type: "unit"
+        path: "tests/unit/source-location.test.ts"
+        test_case: "locates repeated nested sequence records by index"
+        contexts: ["local", "pr-ci"]
+      - id: "location-literal-keys"
+        type: "unit"
+        path: "tests/unit/source-location.test.ts"
+        test_case: "locates bracket-looking literal keys as literal map keys"
+        contexts: ["local", "pr-ci"]
+
+  - id: "schema-cannot-drift-from-the-validator"
+    title: "The published schema is generated, so it cannot drift from the validator"
+    description: >-
+      The checked-in JSON Schema is byte-for-byte what the emitter produces, and
+      it draws its gap categories from the engine's own canonical list. A
+      hand-maintained copy would eventually disagree with the validator, and
+      external authoring tools would be told a shape the engine rejects.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/json-schema.ts"
+      - path: "packages/quality-map/src/generate.ts"
+    category: "data"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "schema-matches-emitter"
+        type: "contract"
+        path: "packages/quality-map/src/quality-map-schema.test.ts"
+        test_case: "the checked-in artifact is exactly what the emitter produces (regenerate with pnpm generate:qc-schema)"
+        contexts: ["local", "pr-ci"]
+      - id: "schema-canonical-gap-categories"
+        type: "contract"
+        path: "packages/quality-map/src/quality-map-schema.test.ts"
+        test_case: "sources gap categories from the engine's canonical GAP_CATEGORIES"
+        contexts: ["local", "pr-ci"]
+      - id: "schema-tracks-field-lifecycle"
+        type: "contract"
+        path: "packages/quality-map/src/quality-map-schema.test.ts"
+        test_case: "reflects the retired require_multi_layer and the live test_case fields"
+        contexts: ["local", "pr-ci"]
+
+  - id: "reading-a-map-changes-nothing"
+    title: "Reading a map never writes, uploads, or follows links"
+    description: >-
+      Parsing touches the file it was given and nothing else: it does not modify
+      the source map, does not send data anywhere, and does not open the
+      artifacts the map merely references. The contract layer runs against
+      repositories it does not own.
+    source_type: "SOURCE"
+    source_refs:
+      - path: "AGENTS.md"
+        anchor: "Quality reads and evaluates evidence; it does not create tests or modify producer artifacts"
+    category: "security"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "parse-no-upload-no-link-following"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "does not upload source data or read linked artifacts while parsing"
+        contexts: ["local", "pr-ci"]
+      - id: "parse-no-mutation"
+        type: "contract"
+        path: "tests/contract/quality-map.contract.test.ts"
+        test_case: "does not mutate source quality-map files while parsing"
+        contexts: ["local", "pr-ci"]
+
+  - id: "large-maps-stay-usable"
+    title: "A large map still parses fast enough to work with"
+    description: >-
+      A map with a hundred checks and five hundred pieces of evidence normalizes
+      within a couple of seconds, so a mature project's graph does not become
+      too slow to open.
+    source_type: "IMPLEMENTATION"
+    source_refs:
+      - path: "packages/quality-map/src/normalize.ts"
+    category: "performance"
+    priority: "UNKNOWN"
+    evidence:
+      - id: "scale-100-expectations"
+        type: "integration"
+        path: "tests/integration/quality-map-normalization.test.ts"
+        test_case: "normalizes 100 expectations and 500 evidence records within two seconds"
+        contexts: ["local", "pr-ci"]
+    proof_gap:
+      summary: >-
+        The bound is wall-clock on whatever machine runs the suite, so it
+        measures the runner as much as the parser and can pass on fast hardware
+        while a genuine complexity regression goes unnoticed.
+      next_step: >-
+        Assert a hardware-independent bound alongside the timing, such as the
+        number of passes over the document, so an algorithmic regression fails
+        everywhere rather than only on slow machines.

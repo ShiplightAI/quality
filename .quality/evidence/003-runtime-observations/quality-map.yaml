@@ -552,9 +552,13 @@ expectations:
     proof_gap:
       summary: >-
         One check proves that a recorded review is reflected in the snapshot. No
-        check in this feature proves the negative direction, that nothing other
-        than a recorded human decision can raise structure confidence.
+        check proves the negative direction, that nothing other than a recorded
+        human decision can raise structure confidence. Checked against
+        004-quality-scoring while mapping it: that feature proves the positive
+        direction thoroughly across seven checks, and does not cover the
+        negative either. The gap is real and shared, not a gap in this feature's
+        view of it.
       next_step: >-
-        Confirm whether that negative case is covered by
-        004-quality-scoring; if it is not, add a check asserting that ingesting
-        observations alone never changes structure confidence.
+        Add the check once, in 004-quality-scoring where the score is computed:
+        score a target, attach passing observations and stronger evidence, and
+        assert structure confidence is identical across both.
