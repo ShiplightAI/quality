@@ -184,6 +184,92 @@ describe("check evidence resolution", () => {
     expect(resolved.observations[0]?.evidenceLocalId).toBe("ci-runner-agent-payload");
   });
 
+  it("keeps a pinned check matching when the reporter qualifies with a plain '>' separator", () => {
+    // Vitest's JUnit reporter writes "suite > test" with a plain greater-than,
+    // where Playwright writes "suite › test" (U+203A). Recognising only the
+    // canonical separator means every pin authored against a bare name fails to
+    // match a vitest run: the observations arrive, resolve to nothing, and the
+    // checks read as unobserved even though the tests passed.
+    const ingested = ingestObservationManifest({
+      report_json: manifest([
+        {
+          path: ".github/workflows/release-ci-runner.yml",
+          test_case: "Release > agent_payload",
+          status: "pass"
+        }
+      ])
+    });
+
+    const resolved = resolveObservations(checksScanResult(), ingested);
+
+    expect(resolved.status).toBe("valid");
+    expect(resolved.observations[0]?.evidenceLocalId).toBe("ci-runner-agent-payload");
+  });
+
+  it("keeps a pin matching when the test title itself contains the separator", () => {
+    // Taking the last segment after splitting would yield "0" here and unmatch
+    // the check — reintroducing, for any title containing a comparison
+    // operator, exactly the silent unmatch the separator handling exists to
+    // prevent. The join has to be a suffix test, not a leaf lookup.
+    const ingested = ingestObservationManifest({
+      report_json: manifest([
+        {
+          path: "tests/release/thresholds.test.ts",
+          test_case: "guard > errors when count > 0",
+          status: "pass"
+        }
+      ])
+    });
+
+    const resolved = resolveObservations(checksScanResult(), ingested);
+
+    expect(resolved.status).toBe("valid");
+    expect(resolved.observations[0]?.evidenceLocalId).toBe("threshold-count-positive");
+  });
+
+  it("matches a canonically pinned check against a plain '>' observation", () => {
+    // The pin is authored in the documented canonical form the junit adapter
+    // emits; the observation comes from vitest. Normalising only the observed
+    // side leaves these unequal, so switching a project's reporter would
+    // silently unpin every suite-qualified check.
+    const ingested = ingestObservationManifest({
+      report_json: manifest([
+        {
+          path: "tests/release/canonical.test.ts",
+          test_case: "Release > agent_payload",
+          status: "pass"
+        }
+      ])
+    });
+
+    const resolved = resolveObservations(checksScanResult(), ingested);
+
+    expect(resolved.status).toBe("valid");
+    expect(resolved.observations[0]?.evidenceLocalId).toBe("canonical-qualified");
+  });
+
+  it("prefers an exactly named check over a suite-leaf match on the same file", () => {
+    // "parser > accepts a null body" matches one pin exactly and the other as a
+    // suite leaf. Treating both as equal candidates makes the observation
+    // ambiguous and drops it, taking BOTH checks to unobserved. An exact name
+    // is the more specific claim and wins.
+    const ingested = ingestObservationManifest({
+      report_json: manifest([
+        {
+          path: "tests/release/parser.test.ts",
+          test_case: "parser > accepts a null body",
+          status: "pass"
+        }
+      ])
+    });
+
+    const resolved = resolveObservations(checksScanResult(), ingested);
+
+    expect(resolved.status).toBe("valid");
+    expect(resolved.observations).toHaveLength(1);
+    expect(resolved.observations[0]?.evidenceLocalId).toBe("parser-qualified");
+  });
+
   it("does not match a pinned check when the observation carries no test_case", () => {
     const ingested = ingestObservationManifest({
       report_json: manifest([{ path: ".github/workflows/release-ci-runner.yml", status: "pass" }])
