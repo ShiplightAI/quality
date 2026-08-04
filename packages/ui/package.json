@@ -4,6 +4,10 @@
   "description": "Shared React/Mantine presentation for Quality Explorer and Shiplight Quality Center.",
   "license": "MIT",
   "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "sideEffects": [
     "*.css"
   ],
