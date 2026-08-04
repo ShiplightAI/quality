@@ -47,13 +47,15 @@ describe("project-map template contract", () => {
   // `discovery.orphan_code_refs` are deliberately for human and agent readers
   // and the engine never reads them. What must not come back are the keys that
   // were removed, and the ordering key must stay where the engine looks.
+  //
+  // Asserted against the parsed document rather than the raw text, so a BOM,
+  // CRLF line endings, or a reindent cannot change the verdict.
   it("declares none of the removed keys and keeps ordering top-level", () => {
-    const raw = readFileSync(path.join(repoRoot, TEMPLATE), "utf8");
+    const authored = parse(readFileSync(path.join(repoRoot, TEMPLATE), "utf8")) as Record<string, unknown>;
 
-    expect(raw).not.toMatch(/^intent_docs:/m);
-    expect(raw).not.toMatch(/^\s*release_areas:/m);
-    expect(raw).not.toMatch(/^\s*current_milestone:/m);
-    expect(raw).not.toMatch(/^roadmap:/m);
-    expect(raw).toMatch(/^feature_order:/m);
+    expect(authored.intent_docs).toBeUndefined();
+    // `release_areas` and `current_milestone` only ever lived under `roadmap:`.
+    expect(authored.roadmap).toBeUndefined();
+    expect(Array.isArray(authored.feature_order)).toBe(true);
   });
 });
