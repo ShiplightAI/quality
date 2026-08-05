@@ -18,7 +18,7 @@ target:
       label: "Four measures reported separately, never blended into one number"
     - path: "AGENTS.md"
       label: "Scores computed by the engine; agents must not set ratification fields"
-    - path: "docs/architecture.md"
+    - path: "ARCHITECTURE.md"
       label: "Non-negotiable boundaries"
 
 expectations:
@@ -171,7 +171,7 @@ expectations:
     source_refs:
       - path: "AGENTS.md"
         anchor: "Agents must not set human ratification fields or accept risk for a human"
-      - path: "docs/architecture.md"
+      - path: "ARCHITECTURE.md"
         anchor: "Non-negotiable boundaries, item 4"
     category: "compliance"
     priority: "UNKNOWN"
@@ -716,7 +716,7 @@ expectations:
       to judge it must not be able to alter what it is judging.
     source_type: "SOURCE"
     source_refs:
-      - path: "docs/architecture.md"
+      - path: "ARCHITECTURE.md"
         anchor: "Non-negotiable boundaries, item 3"
       - path: "README.md"
         anchor: "Quality Explorer never writes to the project it displays"

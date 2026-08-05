@@ -9,8 +9,6 @@ target:
   scope: "feature"
   aliases: []
   source_refs:
-    - path: "docs/architecture.md"
-      label: "quality-tools bundles the contract and engine so users install one package"
     - path: "packages/quality-tools/README.md"
       label: "Published CLI documentation"
 
@@ -209,7 +207,7 @@ expectations:
       real user on install.
     source_type: "SOURCE"
     source_refs:
-      - path: "docs/architecture.md"
+      - path: "ARCHITECTURE.md"
         anchor: "bundles the internal contract and engine packages so users install one npm package without workspace dependency leakage"
     category: "api"
     priority: "UNKNOWN"

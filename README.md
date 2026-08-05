@@ -186,7 +186,7 @@ proof producers ──▶ proof artifacts ──▶ Quality
 ```
 
 Lower-level packages do not depend on the UI, agent workflows, or the systems
-that produce proof. See [the architecture guide](docs/architecture.md) for
+that produce proof. See [the architecture guide](ARCHITECTURE.md) for
 the full package boundaries.
 
 ## Development
