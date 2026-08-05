@@ -47,8 +47,8 @@ export interface ApplyQualityMapEditsResult {
 }
 
 /**
- * Apply gate-4 (map-level `checks_reviewed`, add/remove checks) and gate-5
- * (per-check `policy_override`) edits to a raw quality-map YAML string, preserving
+ * Apply gate-4 (map-level `checks_reviewed`, add/remove checks) and per-check
+ * `policy_override` edits to a raw quality-map YAML string, preserving
  * comments and unrelated formatting by mutating the parsed document in place.
  * Unknown expectation ids are returned in `unknownIds`, not applied.
  *
