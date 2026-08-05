@@ -12,8 +12,8 @@ target:
   source_refs:
     - path: "AGENTS.md"
       label: "Independence: producers write facts, Quality reads and evaluates them"
-    - path: "ARCHITECTURE.md"
-      label: "Non-negotiable boundaries, including the data-source boundary"
+    - path: "docs/concepts/trust-boundaries.md"
+      label: "Proof remains independent and scores are deterministic"
     - path: "packages/core/src/observations/quality-observations.schema.json"
       label: "Canonical observation manifest schema"
 
@@ -337,8 +337,8 @@ expectations:
       test tooling out of the judgment.
     source_type: "SOURCE"
     source_refs:
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 5"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Scores are deterministic"
       - path: "packages/core/src/observations/evaluate.ts"
     category: "data"
     priority: "UNKNOWN"
@@ -370,8 +370,8 @@ expectations:
     source_refs:
       - path: "AGENTS.md"
         anchor: "Independence"
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 1"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Proof remains independent"
     category: "security"
     priority: "UNKNOWN"
     evidence:

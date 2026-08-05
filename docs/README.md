@@ -20,6 +20,7 @@ It explains the model in a few minutes. Then follow
 | --- | --- |
 | [The quality graph](concepts/quality-graph.md) | How product promises connect to proof and test results |
 | [The four scores](concepts/the-four-scores.md) | What each score means and why the scores stay separate |
+| [How Quality earns your trust](concepts/trust-boundaries.md) | The boundaries that keep proof, scores, and human decisions independent |
 | [Who decides what](concepts/who-decides-what.md) | Which work an agent can prepare and which decisions require you |
 | [Glossary](concepts/glossary.md) | The terms used throughout Quality |
 

@@ -21,7 +21,9 @@ project:
     - path: "README.md"
       label: "Project README and stated principles"
     - path: "ARCHITECTURE.md"
-      label: "Package boundaries and non-negotiable constraints"
+      label: "Package boundaries and enforcement mechanisms"
+    - path: "docs/concepts/trust-boundaries.md"
+      label: "User-facing trust guarantees"
     - path: "AGENTS.md"
       label: "Repository guidance: independence and dependency direction"
 
@@ -336,8 +338,8 @@ cross_feature_concerns:
     source_refs:
       - path: "AGENTS.md"
         label: "Independence"
-      - path: "ARCHITECTURE.md"
-        label: "Non-negotiable boundaries"
+      - path: "docs/concepts/trust-boundaries.md"
+        label: "Proof, scoring, and human-decision boundaries"
     notes: >-
       The product's core claim is that the systems producing proof cannot
       influence the judgment of it, and that no agent or UI can raise a human
