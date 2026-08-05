@@ -593,6 +593,10 @@ async function executeGitHubActionsProfile(
       if (missingSelectors.length > 0) {
         diagnostics.push(
           createDiagnostic({
+            // Deliberately a warning, not an error: the observations that DID
+            // arrive are valid and must keep counting. Raising this to an error
+            // would discard a whole run's real results because one job failed to
+            // publish, trading a silent gap for a total one.
             severity: "warning",
             code: "INCOMPLETE_OBSERVATION_ARTIFACT_MATCH",
             message: [
