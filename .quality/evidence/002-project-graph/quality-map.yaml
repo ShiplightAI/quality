@@ -110,8 +110,10 @@ expectations:
       it reads, and it must not read outside what it was given.
     source_type: "SOURCE"
     source_refs:
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 3 and item 5"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Read-only inspection"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "The selected project stays contained"
     category: "security"
     priority: "UNKNOWN"
     evidence:

@@ -17,8 +17,8 @@ target:
   source_refs:
     - path: "README.md"
       label: "Quality Explorer never writes to the project it displays"
-    - path: "ARCHITECTURE.md"
-      label: "The UI is read-only; the app fixes the project root at startup"
+    - path: "docs/concepts/trust-boundaries.md"
+      label: "Read-only inspection and project containment"
     - path: "AGENTS.md"
       label: "packages/ui must not import filesystem, GitHub, authentication, or platform code"
 
@@ -32,8 +32,8 @@ expectations:
       viewer cannot become a back door around that.
     source_type: "SOURCE"
     source_refs:
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 3"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Read-only inspection"
       - path: "README.md"
         anchor: "Quality Explorer never writes to the project it displays"
     category: "security"
@@ -142,8 +142,8 @@ expectations:
       a caller-chosen path would read any directory on the machine running it.
     source_type: "SOURCE"
     source_refs:
-      - path: "ARCHITECTURE.md"
-        anchor: "It fixes the project root at process startup"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "The selected project stays contained"
       - path: "README.md"
         anchor: "The project root is fixed when the process starts and cannot be changed by a browser request"
     category: "security"

@@ -170,7 +170,7 @@ packages/quality-map/        Quality-map contract, parser, and validation
 packages/core/               Deterministic analysis engine
 packages/quality-tools/      Published CLI and public API
 packages/ui/                 Shared presentation package under development
-docs/                        Architecture and contributor documentation
+docs/                        User guide, concepts, and how-to documentation
 examples/                    Example quality projects
 scripts/                     Repository checks used by CI
 tests/                       Cross-package contract and integration tests
@@ -186,8 +186,9 @@ proof producers ──▶ proof artifacts ──▶ Quality
 ```
 
 Lower-level packages do not depend on the UI, agent workflows, or the systems
-that produce proof. See [the architecture guide](ARCHITECTURE.md) for
-the full package boundaries.
+that produce proof. See [how Quality earns your trust](docs/concepts/trust-boundaries.md)
+for the user-facing guarantees and [the architecture guide](ARCHITECTURE.md) for
+the package boundaries that enforce them.
 
 ## Development
 

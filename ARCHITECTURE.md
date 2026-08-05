@@ -52,12 +52,23 @@ Markdown under `spec-project` orchestration. `/shiplight cover` owns
 but `spec-project` has no awareness of Quality and no dependency on the
 deterministic engine.
 
-## Non-negotiable boundaries
+## Trust guarantees and enforcement
 
-1. Evidence producers do not depend on Quality.
-2. The deterministic engine, not an LLM, computes scores.
-3. The UI is read-only; repository authoring happens through normal code-review
-   workflows and the agent skills.
-4. Human ratification cannot be inferred or promoted by an agent.
-5. Filesystem access stays behind a data-source boundary so new sources can be
-   added without changing scoring behavior.
+The user-facing [trust boundaries](docs/concepts/trust-boundaries.md) are the
+normative product guarantees. This contributor guide describes how the
+repository enforces them:
+
+- Independence is enforced by dependency direction: evidence producers emit
+  artifacts without importing or calling Quality, and observation sources only
+  transport canonical results.
+- Deterministic scoring lives in `packages/core`. Agents and presentation code
+  consume its read models instead of calculating scores.
+- Read-only presentation lives in `packages/ui`; filesystem capabilities are
+  injected by `apps/explorer`, which exposes only the operations the application
+  needs. Authoring operations remain explicit engine capabilities and are not
+  available to the Explorer interface.
+- Human ratification fields are contract inputs. Agent workflows may propose
+  changes but must not promote those fields.
+- Local and remote filesystem access stays behind data-source adapters. The
+  adapters discover and normalize inputs; scoring operates on the normalized
+  graph and observations.

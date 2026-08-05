@@ -18,8 +18,8 @@ target:
       label: "Four measures reported separately, never blended into one number"
     - path: "AGENTS.md"
       label: "Scores computed by the engine; agents must not set ratification fields"
-    - path: "ARCHITECTURE.md"
-      label: "Non-negotiable boundaries"
+    - path: "docs/concepts/trust-boundaries.md"
+      label: "Deterministic scores and human decisions"
 
 expectations:
   - id: "evidence-confidence-rubric"
@@ -171,8 +171,8 @@ expectations:
     source_refs:
       - path: "AGENTS.md"
         anchor: "Agents must not set human ratification fields or accept risk for a human"
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 4"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Human decisions stay human"
     category: "compliance"
     priority: "UNKNOWN"
     evidence:
@@ -716,8 +716,8 @@ expectations:
       to judge it must not be able to alter what it is judging.
     source_type: "SOURCE"
     source_refs:
-      - path: "ARCHITECTURE.md"
-        anchor: "Non-negotiable boundaries, item 3"
+      - path: "docs/concepts/trust-boundaries.md"
+        anchor: "Read-only inspection"
       - path: "README.md"
         anchor: "Quality Explorer never writes to the project it displays"
     category: "security"
