@@ -9,8 +9,6 @@ target:
   scope: "feature"
   aliases: []
   source_refs:
-    - path: "docs/architecture.md"
-      label: "packages/quality-map owns the quality-map contract"
     - path: "packages/quality-map/src/quality-map.schema.json"
       label: "Generated JSON Schema published to contract consumers"
 

@@ -9,8 +9,6 @@ target:
   scope: "feature"
   aliases: []
   source_refs:
-    - path: "docs/architecture.md"
-      label: "packages/core owns project discovery and read operations"
     - path: "AGENTS.md"
       label: "Agents must not set human ratification fields or accept risk for a human"
     - path: "agent-skills/quality/references/_shared/layout.md"
@@ -112,7 +110,7 @@ expectations:
       it reads, and it must not read outside what it was given.
     source_type: "SOURCE"
     source_refs:
-      - path: "docs/architecture.md"
+      - path: "ARCHITECTURE.md"
         anchor: "Non-negotiable boundaries, item 3 and item 5"
     category: "security"
     priority: "UNKNOWN"
