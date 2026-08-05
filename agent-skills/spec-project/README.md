@@ -52,8 +52,14 @@ This keeps the feature model stable and prevents overlapping specs.
 
 ## Install
 
-Follow the [agent-skill installation instructions](../../README.md#get-started),
-then invoke the installed skill from your coding agent.
+Install the skill from this repository with the
+[`skills`](https://www.npmjs.com/package/skills) CLI:
+
+```bash
+npx skills add ShiplightAI/quality/agent-skills --skill spec-project --all -y
+```
+
+Then invoke the installed skill from your coding agent.
 
 The default workflow uses portable Markdown and requires no other
 specification tool. GitHub Spec Kit is optional. Shiplight is required only
@@ -154,8 +160,9 @@ handoff.
 
 ## Completion means three separate things
 
-- **Specification complete:** the accepted `spec.md`, `plan.md`, and `tasks.md`
-  agree on the requested scope.
+- **Specification complete:** `spec.md` is accepted as the current product
+  snapshot, with no superseded behavior or chronological amendments, and
+  `plan.md` and `tasks.md` agree with it.
 - **Implementation complete:** the code implements that accepted scope and the
   relevant implementation checks pass.
 - **Evidence complete:** `/shiplight cover` has reconciled `test-spec.md`, run
