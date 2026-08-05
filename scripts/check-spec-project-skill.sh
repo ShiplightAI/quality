@@ -53,6 +53,7 @@ if ((failures > 0)); then
 fi
 
 for required in \
+  "${skill_root}/README.md" \
   "${skill_root}/SKILL.md" \
   "${skill_root}/assets/prd-template.md" \
   "${skill_root}/assets/feature-breakdown-template.md" \
@@ -74,6 +75,8 @@ if ((failures == 0)); then
     "portable Markdown must remain the default mode"
   require_fixed "## Reconcile Before Creating" "${skill_root}/SKILL.md" \
     "the existing-spec reconciliation gate is missing"
+  require_fixed "latest accepted product snapshot" "${skill_root}/SKILL.md" \
+    "the current-product snapshot rule is missing"
   require_fixed '| `specs/NNN-feature-name/test-spec.md` | `/shiplight cover`' \
     "${skill_root}/SKILL.md" \
     "the /shiplight cover ownership boundary is missing"

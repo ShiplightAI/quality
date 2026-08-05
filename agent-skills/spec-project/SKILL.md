@@ -1,6 +1,6 @@
 ---
 name: spec-project
-description: Drive specification-led project development from product intent through implementation and durable testing evidence. Use when an agent needs to create or refine a PRD, break a product into features, reconcile a product change into existing feature specs before considering a new feature, orchestrate specification, planning, and implementation, or orchestrate /shiplight cover so it produces test-spec.md, tests, and test-report.md. Use portable Markdown by default; delegate to GitHub Spec Kit only when the repository has adopted it or the user explicitly requests it.
+description: Drive specification-led project development from product intent through implementation and durable testing evidence. Use when an agent needs to create or refine a PRD, break a product into features, maintain accepted feature specs as current product snapshots rather than chronological change logs, reconcile a product change into existing feature specs before considering a new feature, orchestrate specification, planning, and implementation, or orchestrate /shiplight cover so it produces test-spec.md, tests, and test-report.md. Use portable Markdown by default; delegate to GitHub Spec Kit only when the repository has adopted it or the user explicitly requests it.
 ---
 
 # Spec Project
@@ -36,18 +36,24 @@ artifacts.
 - Treat code as an implementation of the product spec.
 - Treat `test-spec.md`, tests, reports, verification, and reviews as proof
   artifacts, not substitutes for product intent.
-- Keep specs as current snapshots; let git preserve history.
-- Remove superseded behavior instead of appending change logs, dated update
-  notes, or descriptions of what the feature used to do. Put migration history
-  in plans or release notes when it is operationally necessary, not in the
-  current product spec.
+- Keep every `spec.md` as the latest accepted product snapshot, never a
+  chronological change log. A reader must be able to determine all current
+  behavior without reconstructing it from amendments, tickets, release notes,
+  or git history.
+- When accepted intent changes, rewrite the affected requirements, scenarios,
+  constraints, and non-goals in place. Remove superseded behavior instead of
+  appending dated updates or descriptions of what the feature used to do.
+- Let git preserve the spec's history. Put migration history in plans or
+  release notes only when it is operationally necessary, not in the current
+  product spec.
 
-When behavior changes, have the active feature-spec writer update `spec.md` and
-obtain acceptance before changing the implementation. Then delegate
-implementation through the active mode and ask `/shiplight cover` to reconcile
-its testing contract and proof. If product intent is ambiguous or artifacts
-conflict materially, stop and ask the owner; never silently choose product
-semantics.
+When behavior changes, have the active feature-spec writer reconcile the whole
+`spec.md` into that current snapshot and obtain acceptance before changing the
+implementation. Do not satisfy this gate by appending the change request to the
+old spec. Then delegate implementation through the active mode and ask
+`/shiplight cover` to reconcile its testing contract and proof. If product
+intent is ambiguous or artifacts conflict materially, stop and ask the owner;
+never silently choose product semantics.
 
 ## Resolve the Operating Mode
 
@@ -81,7 +87,8 @@ When invoked without a specific operation, perform a read-only status pass:
 2. Detect portable or Spec Kit mode.
 3. Read the PRD, feature breakdown, and relevant feature artifacts.
 4. Report the active or inferred feature, phase, artifacts found, drift, and
-   next gate.
+   next gate. Treat chronological amendments or retained superseded behavior in
+   `spec.md` as specification drift.
 
 Do not create files, change pointers or branches, or run long suites during a
 status pass.
@@ -164,7 +171,9 @@ Then run the selected feature through these gates:
    or reconcile `spec.md`. In portable mode, direct the coding agent to create
    or reconcile `spec.md` from `assets/portable-feature-spec-template.md`. Keep
    actors, behavior, acceptance scenarios, constraints, non-goals,
-   dependencies, and open questions in product language.
+   dependencies, and open questions in product language. For an existing
+   feature, rewrite these sections into one coherent current snapshot; never
+   append the requested change as a chronological update.
 2. **Clarify and accept:** use Spec Kit's clarification workflow in Spec Kit
    mode; otherwise have the coding agent surface unresolved decisions. Obtain
    owner acceptance of product intent. Treat that acceptance only as approval
@@ -187,8 +196,10 @@ Then run the selected feature through these gates:
    run the relevant proof, and write `test-report.md`. Optionally invoke
    `/shiplight review` when the user requests review or the accepted plan calls
    for it.
-8. **Reconcile:** ask the relevant lower-level writer to resolve its artifact
-   drift before reporting completion; do not bypass its edit contract.
+8. **Reconcile:** confirm `spec.md` states only the latest accepted behavior and
+   can be understood without its history. Ask the relevant lower-level writer
+   to resolve that and all other artifact drift before reporting completion;
+   do not bypass its edit contract.
 
 ### Retrofit Existing Features (`maintenance`)
 
@@ -214,8 +225,9 @@ prerequisite work, or a proof decision requiring owner judgment.
 
 Report each state separately:
 
-- **Specification complete:** product intent is accepted and `spec.md`,
-  `plan.md`, and `tasks.md` are reconciled for the requested scope.
+- **Specification complete:** product intent is accepted; `spec.md` is a
+  coherent latest product snapshot with no superseded behavior or chronological
+  amendments; and `plan.md` and `tasks.md` are reconciled to it.
 - **Implementation complete:** code implements the accepted scope and relevant
   implementation checks pass.
 - **Evidence complete:** `/shiplight cover` produced a reconciled

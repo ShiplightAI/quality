@@ -33,6 +33,13 @@ Spec Kit workflow to create or reconcile them. Spec Kit does not own
 `test-spec.md`, `test-report.md`, or tests. Preserve the `/shiplight cover`
 handoffs in the main skill.
 
+When reconciling an existing feature, instruct the Spec Kit workflow to rewrite
+`spec.md` as the latest accepted product snapshot. Before accepting its output,
+confirm that superseded behavior and chronological amendments have been removed
+and that a reader does not need git history or prior change requests to
+understand current behavior. Spec Kit's ownership of the file does not weaken
+the snapshot rule.
+
 ## Workflow Mapping
 
 Map the core lifecycle to the commands installed for the active agent:
