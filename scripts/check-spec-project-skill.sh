@@ -77,6 +77,11 @@ if ((failures == 0)); then
     "the existing-spec reconciliation gate is missing"
   require_fixed "latest accepted product snapshot" "${skill_root}/SKILL.md" \
     "the current-product snapshot rule is missing"
+  require_fixed "current product" "${skill_root}/README.md" \
+    "README.md must explain that specs are current product snapshots"
+  require_fixed "no superseded behavior or chronological" \
+    "${skill_root}/README.md" \
+    "README.md must include the snapshot rule in specification completion"
   require_fixed '| `specs/NNN-feature-name/test-spec.md` | `/shiplight cover`' \
     "${skill_root}/SKILL.md" \
     "the /shiplight cover ownership boundary is missing"
@@ -87,7 +92,17 @@ fi
 forbid_regex 'speckit-project|spec-less|Spec-less' "${skill_root}" \
   "stale speckit-project or spec-less wording remains in spec-project"
 forbid_regex 'quality|\.quality' "${skill_root}" \
-  "spec-project must not know about Quality or .quality" -i
+  "spec-project must not know about Quality or .quality" -i \
+  --exclude=README.md
+
+# The canonical installer locator is distribution metadata, not a dependency.
+readme_quality_matches="$({
+  grep -Ein 'quality|\.quality' "${skill_root}/README.md" || true
+} | grep -Fv 'ShiplightAI/quality/agent-skills' || true)"
+if [[ -n "${readme_quality_matches}" ]]; then
+  printf '%s\n' "${readme_quality_matches}" >&2
+  fail "spec-project README must not describe a dependency on Quality or .quality"
+fi
 forbid_regex '^\| `specs/NNN-feature-name/(spec|plan|tasks)\.md` \| `?spec-project' \
   "${skill_root}/SKILL.md" \
   "spec-project must not claim Spec Kit artifact ownership"
