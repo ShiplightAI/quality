@@ -85,6 +85,24 @@ Keeping these measures separate makes the next action clearer. A low quality
 score calls for a different response from weak evidence or an unreviewed set of
 requirements.
 
+## Drive development with `spec-project`
+
+[`spec-project`](agent-skills/spec-project/README.md) is the companion agent
+skill for specification-driven development and testing. It acts as a project
+harness: it turns product intent into a PRD and feature breakdown, reconciles
+changes into accepted feature specs, coordinates planning and implementation,
+and hands testing work to Shiplight so tests and durable reports stay aligned
+with the specification.
+
+Those artifacts give the `quality` skill clearer product structure and stronger
+proof to map. Because feature specs remain current product snapshots rather
+than chronological change logs, `quality` does not have to infer which version
+of a requirement is operative. The relationship remains one-way:
+`spec-project` produces specs and evidence, while `quality` independently
+evaluates them. Neither skill requires the other, so `spec-project` can drive
+delivery without a quality map, and `quality` can assess projects that use a
+different development workflow.
+
 ## What is included
 
 This repository contains:
@@ -97,7 +115,7 @@ This repository contains:
   line interface and public programmatic API;
 - the [`quality` agent skill](agent-skills/quality/SKILL.md), which helps create
   and maintain a project's `.quality/` graph;
-- the [`spec-project` agent skill](agent-skills/spec-project/SKILL.md), which
+- the [`spec-project` agent skill](agent-skills/spec-project/README.md), which
   drives portable or Spec Kit-backed product specifications through
   implementation and Shiplight testing evidence; and
 - [Quality Explorer](apps/explorer/README.md), a local, read-only web interface
