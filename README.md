@@ -30,6 +30,11 @@ and other auditable artifacts can provide proof. Runtime observations record
 whether that proof passed. Quality maps these relationships in `.quality/`,
 finds gaps, and evaluates the result independently.
 
+![Quality Explorer showing the overview for a project: a quality score of
+100/100 alongside separate coverage, evidence confidence, and structure
+confidence scores, the gaps and release blockers counts, and the runtime
+observation set fetched from a CI workflow run.](docs/assets/quality-explorer-overview.png)
+
 ## Principles
 
 ### Let agents construct; let people control
