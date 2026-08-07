@@ -1,70 +1,52 @@
 # How Quality earns your trust
 
-Quality is useful only if the system judging the proof cannot quietly change the
-proof, the score, or a decision that belongs to you. The guarantees below define
-those boundaries from a user's point of view.
+Quality is trustworthy only when the system evaluating proof cannot quietly
+change the proof, the score, or a decision that belongs to you.
 
-## Proof remains independent
+## The guarantees
 
-The systems that build and test your software produce facts and artifacts.
-Quality reads and evaluates them; it does not create the tests it assesses or
-change the results they report.
+### Proof remains independent
 
-A result source may locate and retrieve an existing observation file. It cannot
-reinterpret the result or decide whether the proof passed. Support for a new test
-runner must normalize its output before evaluation, so the runner's report
-format cannot change how an existing result is scored.
+Systems that build and test software produce facts and artifacts. Quality reads
+and evaluates them; it does not create the tests it assesses or change reported
+results. A result source may retrieve an existing observation file, but cannot
+reinterpret it or decide whether proof passed. New runner formats must be
+normalized before evaluation.
 
-## Scores are deterministic
+### Scores are deterministic
 
-The scoring engine calculates every score from the saved quality graph, the
-selected scope, the available observations, and recorded human decisions. An
-agent and the user interface can explain a score, but neither can invent one or
-adjust it by opinion.
+The engine calculates every score from the saved graph, selected scope,
+available observations, and recorded human decisions. Agents and the UI can
+explain a score, but cannot invent or adjust it. The same inputs produce the
+same result, with Quality, Coverage, Evidence confidence, and Structure
+confidence kept separate.
 
-Given the same inputs, the engine produces the same result. Coverage, evidence
-confidence, structure confidence, and current test results remain separate so a
-strong result in one area cannot conceal a weakness in another.
+### Inspection is read-only and contained
 
-## Read-only inspection
+Scanning and assessment views do not change the files being assessed or upload
+them. Quality Explorer has no controls that edit or publish changes; it provides
+instructions for changes to go through normal review. Its project root is fixed
+at process startup, browser requests cannot select another directory, and the
+scanner refuses symlinks to artifacts outside that root.
 
-Scanning a project and producing assessment views do not change the files being
-assessed or upload them. Quality Explorer is also read-only: it has no controls
-that edit or publish changes to the project it displays. When a change is
-needed, it provides instructions that you can give to an agent and review through
-your normal version-control process.
+These controls limit local reads, not every network request. A configured remote
+source such as GitHub may still retrieve a selected artifact.
 
-Some commands are intentionally authoring commands. For example, `analyze`
-writes generated recommendations under `.quality/generated/`, and an agent may
-prepare changes to the quality graph when you ask it to. Those actions are
-separate from scanning and viewing, and their changes remain visible for review.
+Some commands intentionally write output: `analyze` writes generated
+recommendations under `.quality/generated/`, and an agent may prepare graph
+changes when asked. Those actions are separate from scanning and remain visible
+for review.
 
-## The selected project stays contained
+### Human decisions stay human
 
-Quality Explorer fixes the project root when its process starts. A browser
-request cannot select a different directory. The local scanner also refuses to
-follow a symbolic link to an artifact outside the selected project.
+Agents may propose features, checks, priorities, or accepted risks. They cannot
+approve their own proposals, mark a person's review complete, or accept risk on
+that person's behalf; passing tests are not human approval. Structure confidence
+reaches full trust only when a person confirms the feature and reviews its
+complete set of checks.
 
-These controls limit which local files the Explorer and scanner can read. They
-do not mean that every possible evidence source is offline: a configured remote
-source, such as GitHub, may make the network request needed to retrieve the
-artifact you selected.
+## Implementation
 
-## Human decisions stay human
-
-An agent may propose features, checks, priorities, or that a risk be accepted.
-It cannot approve its own proposal, mark a person's review as complete, or
-accept risk on a person's behalf. Passing tests also do not count as human
-approval.
-
-Quality records the origin of proposed structure separately from explicit human
-review. Structure confidence reaches full trust only after both required human
-decisions are recorded: the feature is confirmed and its complete set of checks
-is reviewed.
-
-## How the repository enforces these guarantees
-
-These are product guarantees: users should be able to rely on them without
-understanding the codebase. Contributors can read
-[Architecture](../../ARCHITECTURE.md) to see the package boundaries and
-implementation mechanisms that enforce them.
+These are product guarantees; users should not need to understand the codebase
+to rely on them. Contributors can see the enforcing package boundaries and
+mechanisms in [Architecture](../../ARCHITECTURE.md).

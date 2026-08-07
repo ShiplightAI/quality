@@ -1,6 +1,6 @@
 # Shiplight Quality guide
 
-Shiplight Quality connects the promises your product makes to the proof that
+Shiplight Quality connects the expected behaviors your product requires to the proof that
 supports them. It shows what is covered, what is uncertain, what happened in the
 latest test runs, and which decisions still need a person.
 
@@ -18,7 +18,7 @@ It explains the model in a few minutes. Then follow
 
 | Page | What you will learn |
 | --- | --- |
-| [The quality graph](concepts/quality-graph.md) | How product promises connect to proof and test results |
+| [The quality graph](concepts/quality-graph.md) | How expected behaviors connect to proof and test results |
 | [The four scores](concepts/the-four-scores.md) | What each score means and why the scores stay separate |
 | [How Quality earns your trust](concepts/trust-boundaries.md) | The boundaries that keep proof, scores, and human decisions independent |
 | [Who decides what](concepts/who-decides-what.md) | Which work an agent can prepare and which decisions require you |
@@ -33,7 +33,7 @@ It explains the model in a few minutes. Then follow
 | Define what one feature must guarantee | [Map a feature](how-to/map-a-feature.md) |
 | Review and approve an agent's proposal | [Review and approve the graph](how-to/review-and-ratify.md) |
 | Connect CI test results | [Make CI results count](how-to/make-ci-results-count.md) |
-| Require stronger proof for an important promise | [Require stronger proof](how-to/require-stronger-proof.md) |
+| Require stronger proof for an important expected behavior | [Require stronger proof](how-to/require-stronger-proof.md) |
 | Record a risk we have chosen to accept | [Accept a known gap](how-to/accept-a-known-gap.md) |
 | Assess only the features in one release | [Scope an assessment](how-to/scope-an-assessment.md) |
 | Understand and improve a low score | [Act on a low score](how-to/act-on-a-weak-score.md) |

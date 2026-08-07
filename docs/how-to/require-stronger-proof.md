@@ -3,7 +3,7 @@
 **Outcome:** One check is treated as incomplete until its proof meets a standard
 you specify.
 
-**Use this when:** A promise is more important than its current proof justifies,
+**Use this when:** An expected behavior is more important than its current proof justifies,
 especially for money, permissions, privacy, data integrity, or failures that
 would be expensive and quiet.
 

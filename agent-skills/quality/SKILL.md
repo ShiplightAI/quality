@@ -147,6 +147,13 @@ pnpm exec tsx packages/quality-tools/src/cli.ts observations --help
 
 ## Commands
 
+The optional `[scope]` argument is a natural-language focus, not a required
+project name, filesystem path, or saved assessment view. For `start`, use it to
+tell the agent which capability or risk area to map first (for example,
+`billing` or `checkout`); omit it when the agent should choose from the
+repository's priorities. A saved assessment scope is a separate named view in
+`.quality/config/views.yaml`.
+
 | Command | Outcome | Reference |
 | --- | --- | --- |
 | `start [scope]` | Bootstrap the graph in a new, brownfield, or partially mapped repository | [start](references/start.md) |

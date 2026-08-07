@@ -26,8 +26,8 @@ Disagreement is equally useful:
 
 ```text
 Feature 002 is a folder, not a product capability. Merge it into 001. The third
-check on 001 describes a test rather than a customer promise; rewrite it for
-review.
+check on 001 describes a test rather than a customer-facing expected behavior;
+rewrite it as an outcome and ask for review.
 ```
 
 ## What the agent does
@@ -48,17 +48,17 @@ history is useful and must not be rewritten as human authorship.
 | Confirm the feature | Is this a genuine capability of the product? |
 | Set the priority | How serious would failure be for users or a release? |
 | Confirm the origin | Did these checks come from a specification, a person, an agent, or an inference from code? |
-| Approve the checks | Are these the right promises, and is anything important missing? |
+| Approve the checks | Are these the right expected behaviors, and is anything important missing? |
 
 ### What to look for
 
 You are not reviewing implementation details. Ask whether the checks describe
 the behavior the product must preserve.
 
-- **A test description instead of a promise:** “The parser handles null input”
+- **A test description instead of an expected behavior:** “The parser handles null input”
   describes implementation. “A malformed upload is rejected without damaging
   the existing record” describes an outcome.
-- **A missing promise:** Add contractual commitments, past incident lessons, or
+- **A missing expected behavior:** Add contractual commitments, past incident lessons, or
   fragile behavior the repository could not reveal.
 - **Unhelpful priorities:** A list in which everything has the same priority
   does not identify what matters most.

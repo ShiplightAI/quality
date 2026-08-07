@@ -29,7 +29,7 @@ Why is evidence confidence low for the payments feature?
 | **Structure confidence** | Check origin is weak or undeclared, or the complete list has not been approved for a confirmed feature | Correct the recorded origin and ask a person to review the list |
 
 Do not average these explanations. A passing runtime result does not repair a
-coverage gap, and stronger proof does not approve the product promises.
+coverage gap, and stronger proof does not approve the product's expected behaviors.
 
 ## Separate missing proof from missing results
 
@@ -53,12 +53,12 @@ reaching the graph.
 
 ## Decisions that remain yours
 
-- Whether a promise belongs in the graph at all.
+- Whether an expected behavior belongs in the graph at all.
 - Whether a proof policy reflects the risk correctly.
 - Whether the list of checks is complete and approved.
 - Whether a known gap is acceptable.
 
-Removing a real promise or narrowing a release view solely to raise a score
+Removing a real expected behavior or narrowing a release view solely to raise a score
 hides risk rather than resolving it.
 
 ## Verify the improvement

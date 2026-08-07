@@ -1,144 +1,107 @@
 # The four scores
 
-Quality reports four scores because one number cannot tell the whole story.
-Together, they help you answer a practical question: **do we have enough reliable
+One score cannot tell the whole story. Quality reports four measures side by
+side; they are never averaged, and a high score in one area does not cancel a
+low score in another. Together they answer: **do we have enough reliable
 information to decide whether this release is ready?**
-
-The scores are shown side by side. They are never averaged into a single rating,
-and a high score in one area does not cancel out a low score in another.
 
 ## At a glance
 
-| Score | Question it answers | What it reads |
+| Score | Question | What it reads |
 | --- | --- | --- |
-| **Quality** | Are the promises we made holding right now? | The latest available test and proof results |
-| **Coverage** | Does every promise have proof connected to it? | The quality maps saved with the project |
-| **Evidence confidence** | How convincing is that proof? | The kind of proof, where it runs, and any proof requirements |
-| **Structure confidence** | How trustworthy is the list of promises itself? | Where the promises came from and whether a person reviewed them |
+| **Quality** | Are the expected behaviors holding right now? | Latest test and proof results |
+| **Coverage** | Does every expected behavior have connected proof? | Quality maps saved with the project |
+| **Evidence confidence** | How convincing is that proof? | Proof type, runtime context, and proof requirements |
+| **Structure confidence** | Is the list of expected behaviors trustworthy? | Their origin and whether a person reviewed them |
 
-Promises with a higher priority count more heavily in every score. Quality does
-not choose a passing score for you; your team decides what each release requires.
+Priority weights affect every score. Quality does not choose your release
+threshold; your team does.
 
 ## Quality
 
-**Are the promises holding right now?**
+Quality is the runtime score. It evaluates what happened when each expected
+behavior's proof last ran in the selected assessment:
 
-Quality is the runtime score: it looks at what happened when the proof for each
-promise last ran in the selected assessment.
+- passing: full credit;
+- mixed results: partial credit;
+- failed, errored, skipped, or unobserved: no credit.
 
-- A passing promise receives full credit.
-- A promise with mixed results receives partial credit.
-- A failed, errored, skipped, or unobserved promise receives no credit.
-
-The score is **unavailable** when no usable set of results has been loaded. That
-is different from zero. Once an assessment is available, a promise with no
-matching result is unobserved and receives no credit.
-
-Quality is the score most directly connected to a release decision, but it must
-be read with the other three. A high quality score based on incomplete, weak, or
-unreviewed checks is not a strong release signal.
+The score is **unavailable**, not zero, until usable results are loaded. Once an
+assessment exists, an expected behavior with no matching result is unobserved
+and receives no credit. Quality is most directly tied to release decisions, but
+a high score based on incomplete, weak, or unreviewed checks is not a strong
+release signal.
 
 ## Coverage
 
-**Does every promise have proof connected to it?**
+Coverage reads the saved quality maps and checks whether every expected behavior
+has proof. Manual, indirect, incomplete, or policy-violating proof earns partial
+credit. Running tests does not change coverage; mapping meaningful proof,
+connecting existing proof, or resolving a proof gap does.
 
-Coverage reads the quality maps stored with the project. It checks whether each
-promise has proof defined for it and gives partial credit when that proof is
-manual, indirect, incomplete, or does not meet a declared requirement.
+Raising a proof requirement can lower Coverage, Evidence confidence, and the
+static quality readout, but it does not change runtime results or Structure
+confidence.
 
-Running the tests does not change coverage. Adding meaningful proof, connecting
-existing proof, or resolving a recorded proof gap does.
-
-A feature without a quality map lowers coverage because none of its promises can
-yet be evaluated. A promise with no proof also becomes unobserved in a runtime
-assessment, but the coverage score itself is not multiplied into the quality
-score.
+A feature without a quality map lowers coverage because none of its expected
+behaviors can be evaluated. An expected behavior without proof becomes
+unobserved at runtime, but coverage is not multiplied into Quality.
 
 ## Evidence confidence
 
-**How convincing is the proof?**
+Evidence confidence measures the strength of the proof setup, not whether the
+latest run passed. Automated proof is stronger than a supporting or manual
+artifact; proof is stronger when it runs in CI or when multiple automated
+methods check the same expected behavior. A proof requirement can also require
+a particular type or runtime context.
 
-Evidence confidence describes the strength of the proof setup, not whether the
-latest run passed.
-
-Automated proof is stronger than a manual or supporting artifact. Proof becomes
-stronger when it runs in a delivery gate such as CI or when different automated
-methods check the same promise. A project can also declare that a particular
-promise requires a specific kind of proof or must run in a particular context.
-
-The engine evaluates those recorded facts. It does not independently understand
-that a particular unit test is too narrow for a business promise unless the
-quality map records the stronger requirement.
-
-A failing end-to-end test can therefore have high evidence confidence: the proof
-is trustworthy, and it is clearly reporting a problem.
+The engine evaluates those recorded facts. It does not know that a unit test is
+too narrow for an important behavior unless the map records that requirement.
+Therefore a failing end-to-end test can still have high evidence confidence:
+the proof is trustworthy and is reporting a problem.
 
 ## Structure confidence
 
-**How trustworthy is the list of promises itself?**
+Structure confidence measures whether the expected behaviors are the right ones
+and whether their origins are trustworthy. A behavior from a specification or
+person receives more confidence than one generated by an agent, inferred from
+code, or missing a source.
 
-Structure confidence starts with the recorded origin of each promise. A promise
-drawn from a specification or written by a person receives more confidence than
-one generated by an agent, inferred from existing code, or left without a
-recorded source.
-
-Human review provides the strongest confirmation. When a person approves the
-complete list of checks for a confirmed feature, every promise in that feature
-receives full structure confidence. Its original source remains visible, so the
-record still distinguishes, for example, an agent-written promise from a
-person-written one.
-
-Running tests does not change structure confidence. This score changes when the
-origin of the promises is recorded honestly or when a person reviews and
-confirms the list.
+When a feature is confirmed and a person approves its complete list of checks,
+those checks receive full structure confidence. Original sources remain visible;
+approval does not turn an agent-drafted list into human authorship. Running tests
+does not change this score; honest provenance and human review do.
 
 ## Read the four scores together
 
-The same quality score can support very different conclusions:
-
 | What you see | What it means |
 | --- | --- |
-| High quality, strong coverage and confidence | The measured promises are holding, and the result has a strong foundation. Apply your release threshold. |
-| High quality, low coverage | The measured promises are holding, but important areas may have no proof. |
-| High quality, low evidence confidence | The available proof passes, but it may not be strong enough to rely on. |
-| High quality, low structure confidence | Something is passing, but the team has not established enough trust in what is being measured. |
+| High quality, strong coverage and confidence | Measured behaviors are holding and the result has a strong foundation. Apply your release threshold. |
+| High quality, low coverage | Measured behaviors are holding, but important areas may have no proof. |
+| High quality, low evidence confidence | Available proof passes, but may not be strong enough to rely on. |
+| High quality, low structure confidence | Something passes, but the team has not established enough trust in what is being measured. |
 
-The quality score is based on runtime results and priority. The other three
-scores are not numerical ingredients in that formula; they tell you how much
-confidence to place in the result.
+Quality uses runtime results and priority. The other three scores are not
+ingredients in its formula; they tell you how much confidence to place in it.
 
 ## Read them honestly
 
-A high number is not the goal. An honest low score is more useful than a high
-score built from missing or misleading information.
-
-Every score can be made to look better without making the software safer:
-
-| Score | A misleading way to raise it |
-| --- | --- |
-| Quality | Publish only successful runs |
-| Coverage | Remove promises that have no proof |
-| Evidence confidence | Describe weak proof as stronger than it is |
-| Structure confidence | Record an origin or human approval that did not happen |
-
-Quality cannot protect against every biased or inaccurate input. If a score
-rises but the software, proof, and review have not improved, investigate why.
-
-**Unavailable is a real answer.** It means the engine does not have enough
-information to calculate that score. Do not treat it as zero, a pass, or a
-failure.
+A high number is not the goal. Scores can rise without safer software by
+publishing only successful runs, removing expected behaviors without proof,
+describing weak proof as strong, or recording provenance or human approval that
+did not happen. If the score rises without better software, proof, or review,
+investigate why. **Unavailable** means there is not enough information to
+calculate the score; it is not zero, pass, or failure.
 
 ## How to see the scores
 
-You can see the scores in three places:
-
 - Ask your agent to run `/quality assess` for an explanation of all four.
-- Open Quality Explorer. See [Use Quality Explorer](../how-to/inspect-in-the-browser.md).
-- Run `analyze` to write the scores and recommendations to a file. See
+- Open [Quality Explorer](../how-to/inspect-in-the-browser.md).
+- Use `analyze` to write scores and recommendations to a file; see
   [Commands](../commands.md).
 
 ## The exact arithmetic
 
-This page explains what the scores mean. For the point value of every status,
-priority weighting, rounding, and the treatment of features without quality
-maps, open **Help → How scoring works** in Quality Explorer.
+This page explains meaning, not point values. For status points, priority
+weighting, rounding, and treatment of features without quality maps, open
+**Help → How scoring works** in Quality Explorer.

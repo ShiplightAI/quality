@@ -1,7 +1,7 @@
 # Set up Quality
 
-**Outcome:** A first, reviewable map of your project, its features, the promises
-one feature must keep, and the proof already available.
+**Outcome:** A first, reviewable map of your project, its features, the expected
+behaviors one feature must keep, and the proof already available.
 
 **Use this when:** You are introducing Quality to a repository. It works with a
 detailed specification, with existing code and tests, or with a partially built

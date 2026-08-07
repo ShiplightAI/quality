@@ -1,26 +1,26 @@
 # The quality graph
 
-The quality graph is a written map from what your product promises to the latest
-results that can show whether those promises hold.
+The quality graph is a written map from what your product must deliver to the
+latest results that can show whether those expectations hold.
 
 ## Why it exists
 
 A green test suite tells you that the tests which ran passed. It does not tell
-you whether an important promise has no test, whether a result failed to reach
-the reporting system, or whether the team agrees that the right things are being
-tested.
+you whether an important expected behavior has no test, whether a result failed
+to reach the reporting system, or whether the team agrees that the right things
+are being tested.
 
-Quality starts with the promises. It then connects each promise to proof and,
-when available, to a runtime result. Missing links stay visible as gaps even
-when every existing test is green.
+Quality starts with expected behaviors. It then connects each behavior to proof
+and, when available, to a runtime result. Missing links stay visible as gaps
+even when every existing test is green.
 
 ## The five layers
 
 ```text
 project          what you are assessing
   └── features         the capabilities it provides
-        └── checks           the promises each capability must keep
-              └── proof            tests and other artifacts that can support a promise
+        └── checks           the expected behaviors each capability must keep
+              └── proof            tests and other artifacts that can support a behavior
                     └── results          what happened when that proof ran
 ```
 
@@ -65,7 +65,7 @@ A feature is a capability that can be understood and assessed on its own.
 
 This distinction matters because the graph is meant to support a release
 decision. A list of folders says little about user impact. A list of capabilities
-with their promises, proof, and gaps shows where the risk is.
+with their expected behaviors, proof, and gaps shows where the risk is.
 
 A useful test is: **if this failed, can I explain what would be broken for a user
 or operator?** If not, it may not be a feature.
