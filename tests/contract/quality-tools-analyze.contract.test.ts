@@ -71,6 +71,63 @@ describe("quality tools analyze command", () => {
     }
   });
 
+  it("reports the static scores when no observation set is given", async () => {
+    // Regression: analyze used to reject the command outright without
+    // --observation-set, hiding the three scores that need no runtime data.
+    const fixture = await createFixtureProject(
+      "quality-tools-analyze-no-observation-set",
+      unobservedViewTargetFiles()
+    );
+
+    try {
+      const stdout = execFileSync(
+        "pnpm",
+        [
+          "exec",
+          "tsx",
+          "packages/quality-tools/src/cli.ts",
+          "analyze",
+          "--project-path",
+          fixture.root
+        ],
+        {
+          cwd: path.resolve("."),
+          encoding: "utf8",
+          env: process.env
+        }
+      ).trim();
+      const outputPath = path.join(
+        fixture.root,
+        ".quality/generated/recommendations/static--whole-project.json"
+      );
+      const payload = JSON.parse(await readFile(outputPath, "utf8")) as {
+        readonly schema_version: string;
+        readonly observation_set_id?: string;
+        readonly runtime_review?: unknown;
+        readonly quality_score_availability: {
+          readonly status: string;
+          readonly reason?: string;
+        };
+        readonly structural_scores?: {
+          readonly coverage_score?: number;
+          readonly evidence_confidence_score?: number;
+          readonly structure_confidence_score?: number;
+        };
+      };
+
+      expect(stdout).toBe(outputPath);
+      expect(payload.schema_version).toBe("6");
+      expect(payload.observation_set_id).toBeUndefined();
+      expect(payload.runtime_review).toBeUndefined();
+      expect(payload.quality_score_availability.status).toBe("not_requested");
+      expect(typeof payload.structural_scores?.coverage_score).toBe("number");
+      expect(typeof payload.structural_scores?.evidence_confidence_score).toBe("number");
+      expect(typeof payload.structural_scores?.structure_confidence_score).toBe("number");
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it("writes recommendations to an explicit output path", async () => {
     const fixture = await createFixtureProject(
       "quality-tools-analyze-explicit-output",
@@ -111,7 +168,7 @@ describe("quality tools analyze command", () => {
 
       expect(stdout).toBe(outputPath);
       expect(payload).toMatchObject({
-        schema_version: "5",
+        schema_version: "6",
         observation_set_id: "runtime-review",
         scope: {
           id: "release-scope"

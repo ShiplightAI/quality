@@ -128,6 +128,18 @@ function observationSetFrom(
     return undefined;
   }
 
+  if (id.toLowerCase() === "static") {
+    diagnostics.push(
+      diagnostic(source, {
+        severity: "error",
+        code: "RESERVED_OBSERVATION_SET_ID",
+        message: "Observation set id static is reserved for assessments without runtime observations.",
+        yamlPath: `$.observation_sets[${index}].id`
+      })
+    );
+    return undefined;
+  }
+
   if (setProfiles.length === 0) {
     diagnostics.push(
       diagnostic(source, {

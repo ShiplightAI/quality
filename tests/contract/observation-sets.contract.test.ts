@@ -89,4 +89,38 @@ describe("observation set contract", () => {
       await fixture.cleanup();
     }
   });
+
+  it("rejects the reserved static export id", async () => {
+    const fixture = await createFixtureProject("reserved-static-observation-set", [
+      {
+        relativePath: ".quality/config/observation-sets.yaml",
+        contents: `observation_sets:
+  - id: "STATIC"
+    name: "Static"
+    profiles:
+      - profile_id: "local"
+`
+      }
+    ]);
+
+    try {
+      const batch = parseObservationSets([
+        {
+          projectRelativePath: ".quality/config/observation-sets.yaml",
+          resolvedLocalPath: path.join(fixture.root, ".quality/config/observation-sets.yaml"),
+          sourcePattern: ".quality/config/observation-sets.yaml"
+        }
+      ]);
+
+      expect(batch.primary?.status).toBe("invalid");
+      expect(batch.primary?.document?.observationSets).toEqual([]);
+      expect(batch.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ code: "RESERVED_OBSERVATION_SET_ID" })
+        ])
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });

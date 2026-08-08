@@ -44,15 +44,23 @@ export interface RecommendationProfileRecord {
   readonly observed_at?: string;
 }
 
+export interface QualityScoreAvailabilityRecord {
+  readonly status: "available" | "not_requested" | "unavailable";
+  readonly reason?: string;
+}
+
 export interface RecommendationExportFile {
-  readonly schema_version: "5";
+  readonly schema_version: "6";
   readonly generated_at: string;
   readonly project_path: string;
   readonly project_root: string;
-  readonly observation_set_id: string;
-  readonly observation_set_name: string;
+  // Absent when the export was generated without an observation set.
+  readonly observation_set_id?: string;
+  readonly observation_set_name?: string;
   readonly scope: RecommendationScope;
-  readonly runtime_review: {
+  readonly quality_score_availability: QualityScoreAvailabilityRecord;
+  // Absent when the export was generated without an observation set.
+  readonly runtime_review?: {
     readonly execution_status: string;
     readonly resolution_status: string;
     readonly observation_count: number;

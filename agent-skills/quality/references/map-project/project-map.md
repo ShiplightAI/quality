@@ -135,6 +135,14 @@ do not paste whole specs into the map.
 
 ## Status values
 
+Status records both lifecycle and whether the feature boundary is accepted.
+Reserve `candidate` for a boundary reconstructed or proposed without accepted
+intent. If accepted intent defines the feature, use the most conservative
+supported lifecycle status (`specified` when only the accepted spec is known;
+later statuses only with corresponding repository evidence). Do not infer
+acceptance from a directory name, and do not erase acceptance because an agent
+performed the mapping.
+
 Recommended feature statuses:
 
 - `candidate`: proposed but not human-ratified

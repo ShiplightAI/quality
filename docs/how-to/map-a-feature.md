@@ -1,7 +1,7 @@
 # Map a feature
 
-**Outcome:** One capability gets a readable list of the promises it must keep,
-the existing proof for each promise, and the gaps that remain.
+**Outcome:** One capability gets a readable list of the expected behaviors it
+must keep, the existing proof for each behavior, and the gaps that remain.
 
 **Use this when:** After initial setup, when adding the next important feature,
 or when a feature's responsibilities have changed.
@@ -11,14 +11,17 @@ or when a feature's responsibilities have changed.
 If you know the feature identifier:
 
 ```text
-/quality map-feature 002-checkout
+/quality map-feature <feature-id>
 ```
+
+Replace `<feature-id>` with an ID from `.quality/project-map.yaml`, such as
+`002-recorder-session-upload`.
 
 Or describe the feature:
 
 ```text
-Map the checkout feature. Show what must remain true, what proof already exists,
-and what is still missing.
+Map the feature responsible for recording uploads. Show what must remain true,
+what proof already exists, and what is still missing.
 ```
 
 ## What the agent does
@@ -28,7 +31,7 @@ and what is still missing.
 - Drafts checks in product language.
 - Connects existing tests, workflows, and other proof.
 - Records the source of the checks honestly.
-- Records missing or inadequate proof instead of omitting the promise.
+- Records missing or inadequate proof instead of omitting the expected behavior.
 
 The agent does not write tests during feature mapping. Creating missing proof is
 a separate implementation task.

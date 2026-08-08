@@ -16,9 +16,9 @@ target:
   aliases: []
   source_refs:
     - path: "README.md"
-      label: "Quality Explorer never writes to the project it displays"
+      label: "Quality Explorer is fixed to one project root"
     - path: "docs/concepts/trust-boundaries.md"
-      label: "Read-only inspection and project containment"
+      label: "Inspection is read-only and contained"
     - path: "AGENTS.md"
       label: "packages/ui must not import filesystem, GitHub, authentication, or platform code"
 
@@ -33,9 +33,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "docs/concepts/trust-boundaries.md"
-        anchor: "Read-only inspection"
-      - path: "README.md"
-        anchor: "Quality Explorer never writes to the project it displays"
+        anchor: "Inspection is read-only and contained"
     category: "security"
     priority: "UNKNOWN"
     evidence:
@@ -84,7 +82,7 @@ expectations:
       - path: "AGENTS.md"
         anchor: "Agents must not set human ratification fields or accept risk for a human"
       - path: "README.md"
-        anchor: "Make human approval explicit"
+        anchor: "It will pause when a human needs to confirm feature boundaries, priorities, or quality checks"
     category: "compliance"
     priority: "UNKNOWN"
     evidence:
@@ -143,7 +141,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "docs/concepts/trust-boundaries.md"
-        anchor: "The selected project stays contained"
+        anchor: "Inspection is read-only and contained"
       - path: "README.md"
         anchor: "The project root is fixed when the process starts and cannot be changed by a browser request"
     category: "security"

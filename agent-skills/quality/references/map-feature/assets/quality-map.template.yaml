@@ -78,16 +78,17 @@ expectations:
         notes: "<Optional structural note about this proof definition>"
 
       # Smoke / health check that runs in CI but is not a test file. Point `path`
-      # at the workflow file so a reviewer can open it, and pin `test_case` to the
-      # unit being proven (a step name, or a finer check name when one step bundles
-      # several). The workflow's canonical quality-observations.json supplies
-      # the pass/fail; test_case here must match the emitted test_case.
+      # at the workflow file so a reviewer can open it. Add `test_case` only after
+      # a canonical observation proves the emitted identity, or when improve wires
+      # that identity at the producer boundary in the same change. A visible job,
+      # step, or manual-check label is never sufficient by itself; keep that
+      # readable pointer in notes or command until canonical emission exists.
       # Matching is case-insensitive. The output contract lives under
       # improve/assets/quality-observations.template.json.
       - id: "<check-evidence-id>"
         type: "smoke"
         path: ".github/workflows/<workflow-file>.yml"
-        test_case: "<step-or-check-name>" # Must match the observation record's test_case
+        # test_case: "<verified-emitted-identity>"
         command: "<human pointer to the workflow step>"
         contexts: ["ci"]
 

@@ -32,7 +32,12 @@
       "additionalProperties": false,
       "required": ["id", "name", "profiles"],
       "properties": {
-        "id": { "$ref": "#/definitions/nonEmptyString" },
+        "id": {
+          "allOf": [
+            { "$ref": "#/definitions/nonEmptyString" },
+            { "not": { "pattern": "^[Ss][Tt][Aa][Tt][Ii][Cc]$" } }
+          ]
+        },
         "name": { "$ref": "#/definitions/nonEmptyString" },
         "description": { "$ref": "#/definitions/nonEmptyString" },
         "profiles": {

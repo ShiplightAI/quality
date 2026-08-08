@@ -16,15 +16,17 @@ export async function GET(request: Request): Promise<Response> {
 
   if (
     projectPath === undefined ||
-    projectPath.length === 0 ||
-    observationSetId === undefined ||
-    observationSetId.length === 0
+    projectPath.length === 0
   ) {
-    return problem(400, "invalid-ranked-recommendations-request", "Project path and observation set id are required.");
+    return problem(400, "invalid-ranked-recommendations-request", "Project path is required.");
   }
 
   try {
-    const response = await (await getQcDataAccessForRequest()).getRecommendations({ projectPath, observationSetId, viewId });
+    const response = await (await getQcDataAccessForRequest()).getRecommendations({
+      projectPath,
+      ...(observationSetId === undefined ? {} : { observationSetId }),
+      ...(viewId === undefined ? {} : { viewId })
+    });
     return NextResponse.json(response);
   } catch (error) {
     if (isQcOperationError(error)) return problem(error.status, error.code, error.message);

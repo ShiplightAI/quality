@@ -19,8 +19,9 @@ descriptions help people understand the graph but do not change scoring.
 
 ## What is in the graph
 
-**Check** — A promise that must remain true, such as “A customer is never
-charged twice for one order.” Quality map files call checks *expectations*.
+**Check** — An expected behavior that must remain true, such as “A customer is
+never charged twice for one order.” Quality map files call checks
+*expectations*.
 
 **Proof** — An artifact that can support a check: a test, workflow gate,
 monitoring signal, static check, or manual procedure. Quality map files call

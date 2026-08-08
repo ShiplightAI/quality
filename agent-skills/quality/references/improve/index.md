@@ -60,7 +60,8 @@ Resolve all assessment dimensions:
 - project from `.quality/project-map.yaml`
 - feature scope: whole project or one saved view from
   `.quality/config/views.yaml`
-- observation set from `.quality/config/observation-sets.yaml`
+- observation set from `.quality/config/observation-sets.yaml`, when one exists;
+  without it the baseline carries the three static scores and no Quality score
 - observed revision/run from source artifacts, when available
 - generated recommendations baseline, when named by the user
 
@@ -76,7 +77,7 @@ Follow `assess` and retain:
 
 - feature scope, observation set, and observed revision/run
 - generated recommendation path
-- all four scores
+- every score the run produced, and the stated reason for any that is unavailable
 - acquisition and resolution diagnostics
 - recommendations in priority order
 
@@ -192,7 +193,8 @@ observation.
 Run the same observation set and scope through `assess`. Compare like with like:
 
 - acquisition/resolution state before and after
-- each of the four scores before and after
+- each available score before and after; a score that was unavailable in the
+  baseline stays reported as unavailable, never as zero
 - recommendations closed, changed, or still open
 - new evidence and the command that proved it
 
@@ -253,14 +255,21 @@ the observed revision/run identifies a concrete release candidate.
 - `evidence.path` is the canonical repo-relative proof identity.
 - `evidence.test_case` optionally pins one case within the path; matching is
   trimmed and case-insensitive.
+- Use the exact `test_case` emitted after native-report conversion. Never derive
+  it from a shortened source-code label when the reporter emits a nested or
+  otherwise transformed identity.
+- Apply the same rule to manual, smoke, and agent proof: a checklist heading,
+  workflow label, or scenario title becomes a pin only when the canonical
+  producer emits that exact identity. Before then it belongs in `notes` or
+  `command`, not `test_case`.
 - An unpinned row matches any observed case for its path.
 - A pinned row matches only that case.
 - Never mix pinned and unpinned evidence rows for the same path.
 - Every canonical record supplies `path` plus optional `test_case`. `path`
   matches `evidence.path`; `test_case` matches `evidence.test_case`.
 
-If one observation matches both a file-level and pinned row, remove the overlap:
-keep the proof file-level or pin every distinct row.
+If one observation matches both a file-level and pinned row, remove the overlap
+across all feature maps: keep the proof file-level or pin every distinct row.
 
 ## Connect an observation source
 
@@ -269,7 +278,9 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
 1. **Choose the producer.** Identify the workflow, local command, telemetry
    query, or manual gate that determines the result.
 2. **Choose stable join keys.** Read the mapped `evidence.path` and optional
-   `evidence.test_case`. The producer must emit those exact identities.
+   `evidence.test_case`. The producer must emit those exact identities. Search
+   all maps for the path and reject mixed pinned/unpinned strategies before
+   configuring the source.
 3. **Arrange canonical emission at the producer boundary.**
 
    If editing the producer is explicitly authorized, add only the mechanical
@@ -324,6 +335,11 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    npx --yes @shiplightai/quality-tools@^0.3.0 observations validate \
      quality-observations.json
    ```
+   Compare the canonical observations with every mapped identity they are meant
+   to satisfy. Count exact matches, unmatched mapped proof, unmatched
+   observations, and ambiguous observations from parsed output—not prose
+   estimates. Do not call the connection complete while intended proof is
+   unmatched or ambiguous.
 
 5. **Publish canonical files.** Upload one `quality-observations.json` per
    selected artifact. A workflow may publish several selected artifacts, but
@@ -335,7 +351,9 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    configuration contains no parser list or format selection.
 7. **Add the profile to an observation set.**
 8. **Run `assess`.** Verify source acquisition first, then verify every
-   observation resolves to the intended evidence identity.
+   observation resolves to the intended evidence identity. Use the engine's
+   resolution audit as the authority; repair mechanical join keys or report the
+   remaining structural decision.
 
 The canonical file is strict JSON:
 
@@ -414,6 +432,6 @@ Report:
 - root-cause class for each addressed recommendation
 - graph, proof, implementation, or wiring changes made
 - verification commands and auditable outcomes
-- all four scores before and after
+- every available score before and after, with the reason for any unavailable one
 - remaining work split into agent-actionable, external blocker, deferred, and
   human decision
