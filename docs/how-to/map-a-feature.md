@@ -11,14 +11,17 @@ or when a feature's responsibilities have changed.
 If you know the feature identifier:
 
 ```text
-/quality map-feature 002-checkout
+/quality map-feature <feature-id>
 ```
+
+Replace `<feature-id>` with an ID from `.quality/project-map.yaml`, such as
+`002-recorder-session-upload`.
 
 Or describe the feature:
 
 ```text
-Map the checkout feature. Show what must remain true, what proof already exists,
-and what is still missing.
+Map the feature responsible for recording uploads. Show what must remain true,
+what proof already exists, and what is still missing.
 ```
 
 ## What the agent does

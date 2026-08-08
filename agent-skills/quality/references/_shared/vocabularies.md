@@ -5,7 +5,7 @@ reading runtime analysis. The runtime-analysis vocabularies are owned by the too
 never authored into hand-written artifacts.
 
 `quality-map.yaml` evidence rows carry **no authored strength vocabulary**. A
-proof definition is a `type` (a fact about the artifact) at a `path`; **evidence
+proof definition is a `type` at a `path` and optional `test_case`; **evidence
 confidence is derived downstream from `type`**, and flakiness/staleness/pass
 come from runtime observations. There is no authored `depth` or `reliability`,
 and no hand-authored `HIGH/MEDIUM/LOW` overall-confidence verdict — the verdict

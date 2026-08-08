@@ -24,6 +24,7 @@ import {
   findObservationSourceProfile,
   generateFixPrompts,
   parseSavedQcViews,
+  recommendationExportOutputPath,
   resolveObservations,
   scanProject,
   serializeHumanSources,
@@ -102,7 +103,7 @@ export interface QcScanResult {
 }
 export interface QcRecommendationsInput {
   readonly projectPath: string;
-  readonly observationSetId: string;
+  readonly observationSetId?: string;
   readonly viewId?: string;
 }
 export interface QcRecommendationsResult {
@@ -284,22 +285,6 @@ function hasUsableProof(input: {
   );
 }
 
-function sanitizeFileSegment(value: string): string {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, "-");
-}
-
-function recommendationsOutputPath(
-  projectPath: string,
-  observationSetId: string,
-  scopeId: string,
-): string {
-  return path.join(
-    projectPath,
-    ".quality/generated/recommendations",
-    `${sanitizeFileSegment(observationSetId)}--${sanitizeFileSegment(scopeId)}.json`,
-  );
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -315,15 +300,21 @@ function isRecommendationProfileRecord(value: unknown): boolean {
 }
 
 function isRecommendationExportFile(value: unknown): value is RecommendationExportFile {
-  if (!isRecord(value) || !isRecord(value.scope) || !isRecord(value.runtime_review)) return false;
-  const profiles = value.runtime_review.profiles;
+  if (!isRecord(value) || !isRecord(value.scope)) return false;
+  const hasObservationSet = typeof value.observation_set_id === "string";
+  const runtimeReview = value.runtime_review;
+  const hasRuntimeReview = isRecord(runtimeReview);
+  if (hasObservationSet !== hasRuntimeReview) return false;
+  if (hasRuntimeReview) {
+    const profiles = runtimeReview.profiles;
+    if (!Array.isArray(profiles) || !profiles.every(isRecommendationProfileRecord)) return false;
+  }
   return (
-    value.schema_version === "5" &&
+    value.schema_version === "6" &&
     typeof value.project_root === "string" &&
-    typeof value.observation_set_id === "string" &&
+    isRecord(value.quality_score_availability) &&
+    typeof value.quality_score_availability.status === "string" &&
     typeof value.scope.id === "string" &&
-    Array.isArray(profiles) &&
-    profiles.every(isRecommendationProfileRecord) &&
     Array.isArray(value.recommendations)
   );
 }
@@ -428,7 +419,11 @@ export async function getRecommendationsOp(
 ): Promise<QcRecommendationsResult> {
   const scopeId =
     input.viewId !== undefined && input.viewId.length > 0 ? input.viewId : "whole-project";
-  const filePath = recommendationsOutputPath(input.projectPath, input.observationSetId, scopeId);
+  const filePath = recommendationExportOutputPath({
+    repoRoot: input.projectPath,
+    ...(input.observationSetId === undefined ? {} : { observationSetId: input.observationSetId }),
+    scopeId
+  });
   if (!existsSync(filePath)) {
     throw new QcOperationError(
       404,
@@ -801,6 +796,11 @@ export async function saveObservationSetsOp(
   const diagnostics: ScanDiagnostic[] = [];
   const seenSetIds = new Set<string>();
   for (const set of input.observationSets) {
+    if (set.id.toLowerCase() === "static") {
+      diagnostics.push(
+        diag(CODE, "Observation set id static is reserved for assessments without runtime observations."),
+      );
+    }
     if (seenSetIds.has(set.id)) {
       diagnostics.push(diag(CODE, `Observation set id ${set.id} is defined more than once.`));
     }

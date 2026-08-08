@@ -34,10 +34,7 @@ usually `/quality improve` or `/quality map-feature <feature>`.
 Want to control the first slice? Include it in the prompt:
 
 ```text
-/quality start checkout
-
-Start with the checkout feature. Map existing proof, identify gaps, and stop
-when you need me to confirm the proposed structure or checks.
+/quality start, focus on the highest-risk user-facing workflow first
 ```
 
 The skill evaluates existing specifications, tests, workflows, reports, and

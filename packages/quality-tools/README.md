@@ -11,8 +11,8 @@ npx --yes @shiplightai/quality-tools@^0.3.0 observations --help
 ```
 
 Inside this source checkout, use
-`pnpm exec tsx packages/quality-tools/src/cli.ts` in place of the pinned `npx`
-prefix until 0.3.0 is published.
+`pnpm exec tsx packages/quality-tools/src/cli.ts` to exercise changes that have
+not reached the published package yet.
 
 ## Produce workflow observations
 
@@ -70,6 +70,19 @@ npx --yes @shiplightai/quality-tools@^0.3.0 analyze \
 The command scans the target repository, executes the selected observation set,
 applies the optional saved view, and writes recommendation JSON under
 `.quality/generated/recommendations/`.
+
+The repository-local CLI makes `--observation-set` optional. Run its static-only
+form with:
+
+```bash
+pnpm exec tsx packages/quality-tools/src/cli.ts analyze --project-path .
+```
+
+It loads no runtime results and writes `static--<scope>.json` carrying coverage,
+evidence confidence, and structure confidence. Before omitting the flag from an
+installed package, inspect `analyze --help`; older published 0.3.x versions
+still require it. The Quality score needs runtime observations, and
+`quality_score_availability` explains when it is absent.
 
 ## Generate fix prompts
 

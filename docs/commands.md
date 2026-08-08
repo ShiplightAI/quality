@@ -37,7 +37,7 @@ command to see all options.
 | Command | What it does |
 | --- | --- |
 | `validate` | Validates one feature quality map and exits with an error code when the map is invalid |
-| `analyze` | Loads a saved observation set, calculates the available scores, and writes ranked recommendations to JSON |
+| `analyze` | Calculates the available scores, optionally loads a saved observation set, and writes the result and any ranked recommendations to JSON |
 | `fix-prompts` | Turns structural proof gaps into instructions for a coding agent |
 | `observations` | Converts JUnit or Playwright reports, records individual outcomes, merges files, validates them, or prints their schema |
 | `schema` | Prints the quality-map JSON Schema |
@@ -49,19 +49,28 @@ required and unknown fields, identifiers, references, and canonical evidence
 paths. It does not check whether a referenced proof file currently exists. A
 full project scan reports missing evidence files separately.
 
-**`analyze` requires an observation-set identifier.** It scans the repository,
-tries to load the selected result sources, optionally applies a saved view, and
-writes a file under `.quality/generated/recommendations/` unless you choose a
-different output path. If runtime acquisition fails, the file can still contain
-the structural scores calculated from the maps saved with the project.
+**`analyze` needs an observation-set identifier only for the Quality score.** It
+scans the repository, optionally applies a saved view, and writes a file under
+`.quality/generated/recommendations/` unless you choose a different output path.
+Coverage, evidence confidence, and structure confidence are calculated from the
+maps saved with the project, so the file reports them whether or not runtime
+results were loaded.
+
+Pass `--observation-set` to also load runtime results and calculate the Quality
+score. Leave it out and the command still writes the three static scores, to
+`static--<scope>.json`. The `quality_score_availability` field in the file says
+whether the Quality score is present and, when it is not, why: `not_requested`
+when no observation set was selected, `unavailable` when acquisition or
+resolution failed.
 
 **`observations` is normally used in CI.** It produces the canonical
 `quality-observations.json` file from JUnit, Playwright, or a directly recorded
 status. Canonical statuses are `pass`, `fail`, `error`, and `skipped`.
 
-**There is no CLI command that only prints the four scores.** Use `/quality
-assess`, open [Quality Explorer](how-to/inspect-in-the-browser.md), or inspect the
-JSON file written by `analyze`.
+**No CLI command prints the four scores to the terminal.** `analyze` writes them
+to JSON. Use `/quality assess` for an explanation, open
+[Quality Explorer](how-to/inspect-in-the-browser.md), or inspect the file written
+by `analyze`.
 
 ## Common examples
 
@@ -71,6 +80,17 @@ Validate one quality map:
 npx --yes @shiplightai/quality-tools@^0.3.0 validate \
   .quality/evidence/checkout/quality-map.yaml
 ```
+
+Report the three static scores, without any runtime results:
+
+```bash
+pnpm exec tsx packages/quality-tools/src/cli.ts analyze \
+  --project-path .
+```
+
+That static-only form is available in this source checkout. Before using it with
+the pinned `npx` command, inspect `analyze --help`: older published 0.3.x
+versions describe `--observation-set` as required and reject the omission.
 
 Assess the whole project with a saved observation set:
 

@@ -265,7 +265,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "README.md"
-        anchor: "Show what is uncertain"
+        anchor: "The engine reports four separate measures"
       - path: "AGENTS.md"
         anchor: "Scores are computed by the deterministic engine, never by an agent or UI"
     category: "other"
@@ -717,9 +717,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "docs/concepts/trust-boundaries.md"
-        anchor: "Read-only inspection"
-      - path: "README.md"
-        anchor: "Quality Explorer never writes to the project it displays"
+        anchor: "Inspection is read-only and contained"
     category: "security"
     priority: "UNKNOWN"
     evidence:

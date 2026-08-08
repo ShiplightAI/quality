@@ -30,7 +30,7 @@ Use these terms consistently:
 | Feature | A reusable, independently checkable project capability with one `quality-map.yaml` |
 | View | A named, saved assessment scope selecting feature ids; it never copies or changes those features |
 | Observation set | A named bundle of runtime-result sources; orthogonal to the feature scope |
-| Assessment | Project + whole-project or view scope + observation set + observed revision/run, producing one quality index |
+| Assessment | Project + whole-project or view scope + optional observation set + observed revision/run, producing one quality index; without an observation set the index carries the three static scores and no Quality score |
 | Release candidate | A concrete build, version, commit, or artifact covered by an assessment; not a persistent graph grouping |
 | Product | Optional descriptive language for what the project delivers; it has no graph or scoring semantics |
 
@@ -105,7 +105,9 @@ artifact names:
 4. **Connect runtime.** Arrange for proof producers to publish canonical
    `quality-observations.json`, within the producer edit boundary below, then
    configure transport-only sources and sets that locate those files.
-5. **Assess.** Run `quality-tools` and explain all four scores together.
+5. **Assess.** Run `quality-tools` and explain the scores together. Coverage,
+   evidence confidence, and structure confidence are available from step 3
+   onward; Quality also needs step 4.
 6. **Improve.** Diagnose the weak score, improve the underlying structure,
    proof, implementation, or runtime wiring, then assess again.
 7. **Repeat.** Expand feature by feature, highest priority and risk first.
@@ -125,6 +127,18 @@ change test commands, gates, retries, or failure semantics.
 Without explicit authorization, propose the exact emit/upload change and record
 the observation gap without editing the producer. Follow
 [independence](references/_shared/independence.md) for the complete boundary.
+
+## Canonical join-key invariant
+
+`evidence.test_case` is a runtime join key, not a readable sub-artifact label.
+Before retaining or adding one, locate an actual canonical observation record
+(or a freshly converted native report) containing the same `path` and
+`test_case`. Cite that record during the audit. Source test names, checklist
+headings, workflow jobs/steps, and scenario titles do not satisfy this
+precondition, even when copied verbatim. If no record exists, remove or omit the
+pin, keep the readable pointer in `notes` or `command`, and record the runtime
+emission gap. The only exception is `improve` wiring the producer to emit that
+exact key in the same change.
 
 ## Tool version gate
 
@@ -199,9 +213,32 @@ verdict.
 | Quality | Is current proving evidence passing? | Fix the implementation/proof, stale results, or runtime wiring and rerun it |
 | Structure confidence | Are these the right features, checks, and priorities? | Ask a human to correct or ratify proposed structure |
 
+Quality is the only one of the four that needs runtime observations. When no
+observation set is configured or its results cannot be acquired, report the other
+three as measured and say why Quality is missing.
+
 Treat the score as a diagnostic, not a target. Never remove scope, weaken a
 check, misclassify evidence, accept risk, or promote provenance to make a number
 rise.
+
+## Reporting integrity
+
+- Copy scores, counts, and resolution totals from engine or parsed artifact
+  output. When no structured total exists, enumerate first and calculate the
+  count mechanically; verify that headings, totals, and lists agree.
+- Group every cause under the score it actually affects. Missing or
+  policy-insufficient proof affects coverage; proof type and gate strength
+  affect evidence confidence; runtime outcomes/acquisition/resolution affect
+  Quality; feature/check/priority provenance and review affect structure
+  confidence. Do not cite a structure gate as an evidence-confidence cause.
+- Interpret policy fields independently using engine semantics. `require_gate`
+  means any engine-recognized gate context; `required_contexts` carries exact
+  context requirements such as `release-ci`. Prefer engine diagnostics over a
+  narrower natural-language reinterpretation.
+- Record a human decision without adding a name, email, account, or other
+  attribution unless the user explicitly supplied that identity for the record
+  or an authoritative artifact already contains it. Never infer attribution
+  from Git config, environment metadata, or the operating-system account.
 
 ## Relationship to proof producers
 

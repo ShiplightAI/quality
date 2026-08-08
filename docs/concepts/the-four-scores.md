@@ -28,7 +28,9 @@ behavior's proof last ran in the selected assessment:
 
 The score is **unavailable**, not zero, until usable results are loaded. Once an
 assessment exists, an expected behavior with no matching result is unobserved
-and receives no credit. Quality is most directly tied to release decisions, but
+and receives no credit. Quality is the only one of the four that needs runtime
+results: a project with no observation set, or one whose results could not be
+loaded, still reports Coverage, Evidence confidence, and Structure confidence. Quality is most directly tied to release decisions, but
 a high score based on incomplete, weak, or unreviewed checks is not a strong
 release signal.
 

@@ -313,7 +313,7 @@ export function ProjectScanner({
   }, [recommendationScopeKey]);
 
   useEffect(() => {
-    if (currentResult === undefined || selectedObservationSetId === undefined) {
+    if (currentResult === undefined) {
       return;
     }
 
@@ -326,7 +326,9 @@ export function ProjectScanner({
       try {
         const query = new URLSearchParams();
         query.set("projectPath", projectPath);
-        query.set("observationSetId", observationSetId);
+        if (observationSetId !== undefined) {
+          query.set("observationSetId", observationSetId);
+        }
         if (viewId !== undefined) {
           query.set("viewId", viewId);
         }
@@ -762,7 +764,7 @@ export function ProjectScanner({
           <div className="workspace-overview-row">
             <OwnerDashboard
               observationExecution={effectiveObservationExecution}
-              recommendationContext={selectedObservationSetId === undefined
+              recommendationContext={currentResult === undefined
                 ? undefined
                 : {
                     observationSetId: selectedObservationSetId,

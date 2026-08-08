@@ -74,14 +74,16 @@ judgments**, and it verifies facts rather than copying the dev session's claims:
   breakdown, spec, or per-behavior test-spec), never invented. Mark `UNKNOWN`
   when nothing declares it; do not guess. It is the importance signal — there is
   no 1–5 risk weight — and its trust rides on `structure_provenance`.
-- **Evidence `type`** — a fact about each proof artifact, confirmed against the
-  artifact at `evidence.path` (a Shiplight YAML is `e2e`, a `/shiplight
-  create-agent-verification` case is `agent`, a `*.test.ts` with no browser is
-  `unit`), not copied from the
-  report's self-label. Evidence confidence is **derived from type** by a
-  transparent rubric (manual < single automated < direct automated + gate); do
-  not author `depth`, `reliability`, or a `HIGH/MEDIUM/LOW` verdict — flakiness,
-  staleness, and pass/fail come from runtime observations joined on `path`.
+- **Evidence `type`** — a fact about the cited proof definition, confirmed from
+  what it actually executes at `evidence.path` and optional `evidence.test_case`,
+  not copied from its filename, directory, runner, or report label. Classify the
+  execution boundary: isolated behavior is `unit`; proof that exercises a
+  contract or interaction across real components is `contract` or `integration`
+  even when external infrastructure is simulated. Evidence confidence is
+  **derived from type** by a transparent rubric (manual < single automated <
+  direct automated + gate); do not author `depth`, `reliability`, or a
+  `HIGH/MEDIUM/LOW` verdict — flakiness, staleness, and pass/fail come from
+  runtime observations joined on `path` and optional `test_case`.
 
 ## Target Slug Naming
 
@@ -129,6 +131,26 @@ claims whose correctness depends on integration between components, user or
 runtime state, external systems, persistence, permissions, transport/protocol
 behavior, browser or CLI execution, deployment wiring, or release gates.
 
+## Evidence Type Consistency
+
+Before adding an evidence row, search existing quality maps for the same `path`
+and optional `test_case`. Reuse a previously verified type when it describes the
+same proof boundary. If an existing mapping conflicts with the artifact, report
+the conflict and use the type justified by inspection; do not silently create a
+second classification.
+
+A file can contain proofs with different boundaries. Distinguish them with
+`test_case` and classify each cited case independently. Unpinned file-level
+evidence must accurately describe the proof claimed for the file as a whole;
+do not use an unpinned row to hide mixed execution modes. Different types for
+one path are valid only when distinct pinned cases actually exercise different
+boundaries.
+
+Before validation, audit the whole project for each evidence path. Choose one
+identity strategy per path: file-level, or exact pins for every mapped case.
+Report and resolve mixed pinned/unpinned rows; schema validity alone does not
+prove that runtime observations will resolve unambiguously.
+
 ## Structure Provenance And Structure Confidence
 
 Declare `structure_provenance` at the top of `quality-map.yaml` (and optionally
@@ -163,6 +185,10 @@ Rules:
   example, a map described as reconstructed from implementation cannot also
   claim `user_authored`; human review belongs in `checks_reviewed` and never
   rewrites the origin.
+- Determine origin from the source of the check list, not the author of the YAML:
+  use `spec` when the complete list and priorities trace to accepted
+  requirements, even when an agent performs the transcription. Use per-check
+  provenance for inferred additions instead of downgrading the whole map.
 
 `structure_provenance` is an **origin ladder**, not an agent edit:
 `inferred_brownfield` (0.4) → `agent_generated` (0.7) → `user_authored` / `spec`
@@ -213,9 +239,18 @@ configures sources that locate it; evidence authored here must honor it:
   repo-relative paths aligned with emitted artifact paths.
 - `evidence.test_case` is an optional pin within that path. Matching is
   whitespace-trimmed and case-insensitive.
+- A pin is the exact identity emitted by the configured reporter/converter, not
+  a shortened `describe`, `it`, method, or display label. Derive it from a real
+  native report converted to canonical observations whenever that producer is
+  available. If the exact identity cannot be verified, do not invent a pin.
+- This requirement applies to every evidence type, including `manual`, `smoke`,
+  and `agent`: a checklist section, workflow step, or scenario title remains a
+  documentation pointer until a canonical observation actually emits it. Put
+  the readable pointer in `notes` or `command`; do not copy it into `test_case`.
 - Evidence without `test_case` is file-level and matches any observed test case
   for the same path; evidence with `test_case` matches only that test case.
-- Do not mix pinned and unpinned rows for the same path.
+- Do not mix pinned and unpinned rows for the same path anywhere in the project.
+  Search every quality map, not only the feature being edited.
 - Canonical observation records populate the observed side with `path` plus
   optional `test_case`. The producer converts native reports before upload.
 
@@ -223,12 +258,14 @@ configures sources that locate it; evidence authored here must honor it:
 
 Many release gates are smoke/health checks that run in CI but are not test files.
 They are valid runtime evidence. Author the map side: set `path` to the workflow
-file that wires the gate and `test_case` to the unit being proven (the workflow
-step, or a finer check name). Choose a schema-valid evidence `type` and validate.
-When no canonical observation file exists yet, record the missing runtime
-backing as a `proof_gap`—a legitimate gap, not an error—and hand the producer
-emit step and observation source to `improve`. Do not record run outcomes in
-the map.
+file that wires the gate. Add `test_case` only when an existing canonical
+observation proves the exact emitted identity, or when `improve` configures that
+identity at the producer boundary in the same change. A workflow job/step label
+or manual-check heading is never sufficient by itself. When no
+canonical observation exists yet, keep the evidence file-level, record the
+missing runtime backing as a `proof_gap`—a legitimate gap, not an error—and hand
+the producer emit step and observation source to `improve`. Do not record run
+outcomes in the map.
 
 ## User-facing check writing
 
@@ -261,8 +298,13 @@ check compact and secondary — do not let it carry the feature's coverage story
    `priority` (read, not invented — mark `UNKNOWN` if undeclared) and set
    `source_type`.
 4. **Map evidence.** For each check, add evidence rows of `type` + `path`,
-   confirming the type against the artifact. Honor the Runtime Join Contract.
-   Record `proof_gap` where proof is missing or weak.
+   confirming the type against the cited proof boundary and checking existing
+   maps for conflicting classifications. Honor the Runtime Join Contract.
+   For every existing or proposed `test_case`, locate and cite the canonical
+   observation record containing the same `path` + `test_case`. If none exists,
+   remove the pin, preserve its human-readable label in `notes` or `command`,
+   and record the emission gap. A matching label in the proof source is not a
+   substitute. Record `proof_gap` where proof is missing or weak.
 5. **Set provenance.** Set `structure_provenance` honestly. Surface unratified,
    highest-priority checks for human ratification.
 6. **Validate.** Run
@@ -277,6 +319,11 @@ check compact and secondary — do not let it carry the feature's coverage story
    ```
 
    Keep the map structural—no run outcomes or rollups.
+   When a native report can be produced without changing proof semantics,
+   convert a representative report to canonical observations and verify every
+   new `path` + `test_case` identity against it. Remove any pin that cannot be
+   supported by a canonical record; report its runtime-emission gap rather than
+   claiming the map is fully connected.
 7. **Optional runtime hand-off.** When the user wants runtime results connected,
    use `improve` for `.quality/config/*`, then `assess`. This command contributes
    the map side: evidence `path`/`test_case` and proof gaps.

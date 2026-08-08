@@ -25,16 +25,21 @@ interface AnalyzeArgs {
 }
 
 function printAnalyzeHelp(): void {
-  console.log(`Generate ranked runtime-quality recommendations and write them to a repo-owned JSON file.
+  console.log(`Calculate the available quality scores and write them, with any ranked runtime
+recommendations, to a repo-owned JSON file.
+
+Without --observation-set the command reports the static scores derived from the
+graph alone (coverage, evidence confidence, structure confidence). The Quality
+score needs runtime observations, so it is reported as unavailable.
 
 Usage:
-  quality-tools analyze --project-path <repo-root> --observation-set <set-id> [options]
+  quality-tools analyze --project-path <repo-root> [--observation-set <set-id>] [options]
 
 Options:
   --project-path <path>   Target repo root. Defaults to the positional repo path or current directory.
-  --observation-set <id>  Saved observation-set id to execute. Required.
+  --observation-set <id>  Saved observation-set id to execute. Optional; without it only the static scores are reported.
   --view <id>             Optional saved QC view id. Defaults to whole-project.
-  --output <path>         Override the output path. Defaults to .quality/generated/recommendations/<set>--<scope>.json
+  --output <path>         Override the output path. Defaults to .quality/generated/recommendations/<set>--<scope>.json, or static--<scope>.json without an observation set.
   --limit <n>             Limit the number of emitted ranked recommendations.
   --branch <name>         Optional branch override for the saved observation set run selection.
   --commit <sha>          Optional commit override for the saved observation set run selection.
@@ -213,8 +218,8 @@ export async function runAnalyzeCommand(argv: readonly string[]): Promise<Comman
       printAnalyzeHelp();
       return { exitCode: 0 };
     }
-    if (args.observationSetId === undefined || args.observationSetId.length === 0) {
-      throw new Error("--observation-set is required.");
+    if (args.observationSetId !== undefined && args.observationSetId.length === 0) {
+      throw new Error("--observation-set must name a saved observation set.");
     }
 
     const output = await buildRecommendationExport({
@@ -229,6 +234,12 @@ export async function runAnalyzeCommand(argv: readonly string[]): Promise<Comman
     });
     mkdirSync(dirname(output.outputPath), { recursive: true });
     writeFileSync(output.outputPath, `${JSON.stringify(output.file, null, 2)}\n`, "utf8");
+    // stdout stays the output path alone, so callers can pipe it. The reason the
+    // Quality score is missing goes to stderr instead of being silently dropped.
+    const availability = output.file.quality_score_availability;
+    if (availability.status !== "available" && availability.reason !== undefined) {
+      console.error(`Quality score unavailable: ${availability.reason}`);
+    }
     console.log(output.outputPath);
     return { exitCode: 0 };
   } catch (error) {

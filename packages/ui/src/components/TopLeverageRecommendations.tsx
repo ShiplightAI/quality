@@ -12,7 +12,6 @@ interface TopLeverageRecommendationsProps {
   readonly generatedRecommendations?: GenerateRecommendationsResponse;
   readonly isPanelOpen: boolean;
   readonly loadError?: string;
-  readonly projectPath?: string;
   readonly selectedView?: SavedQcView;
   onOpenPanel(): void;
 }
@@ -33,11 +32,10 @@ export function TopLeverageRecommendations({
   generatedRecommendations,
   isPanelOpen,
   loadError,
-  projectPath,
   selectedView,
   onOpenPanel
 }: TopLeverageRecommendationsProps): React.ReactElement {
-  const selectionSummary = `${observationSetName ?? observationSetId ?? "Saved observation set"} for ${recommendationScopeLabel(selectedView)}`;
+  const selectionSummary = `${observationSetName ?? observationSetId ?? "Static scores"} for ${recommendationScopeLabel(selectedView)}`;
 
   return (
     <section className="overview-recommendations" aria-label="Top leverage recommendations">
@@ -54,9 +52,7 @@ export function TopLeverageRecommendations({
         </div>
       </div>
 
-      {observationSetId === undefined || projectPath === undefined ? (
-        <p className="muted-text">Select and run a saved observation set to view its recommendations.</p>
-      ) : generatedRecommendations === undefined ? (
+      {generatedRecommendations === undefined ? (
         <>
           {loadError === undefined ? null : <p className="recoverable-notice">{loadError}</p>}
           <p className="muted-text">
@@ -85,7 +81,14 @@ export function TopLeverageRecommendations({
           <div className="overview-recommendation-status">
             <span>Generated {new Date(generatedRecommendations.file.generated_at).toLocaleString()}</span>
             <span>{displayOutputPath(generatedRecommendations)}</span>
-            {generatedRecommendations.file.runtime_review.quality_score === undefined ? null : (
+            {generatedRecommendations.file.runtime_review?.quality_score === undefined ? (
+              <span>
+                Quality score unavailable
+                {generatedRecommendations.file.quality_score_availability?.reason === undefined
+                  ? ""
+                  : `: ${generatedRecommendations.file.quality_score_availability.reason}`}
+              </span>
+            ) : (
               <span>Score {generatedRecommendations.file.runtime_review.quality_score} / 100</span>
             )}
           </div>

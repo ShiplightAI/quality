@@ -3,6 +3,8 @@ dist/
 .next/
 coverage/
 reports/
+reviews/
+.quality/generated/
 .turbo/
 *.tsbuildinfo
 .DS_Store

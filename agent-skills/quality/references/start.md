@@ -44,6 +44,11 @@ config before explaining their roles.
   human-owned fields, repair only the missing or stale layers, and never replace
   the graph wholesale.
 
+Classification controls defaults; directory names do not. A `specs/` directory
+or file named `spec.md` is not acceptance by itself. Conversely, do not downgrade
+features and checks that trace to accepted intent merely because an agent writes
+the Quality YAML.
+
 If intent or priority cannot be recovered from accepted documents, ask where to
 start. Do not autonomously map an entire brownfield repository.
 
@@ -64,14 +69,18 @@ start. Do not autonomously map an entire brownfield repository.
    - Create or reconcile `.quality/project-map.yaml`.
    - In brownfield work, propose `candidate` features rather than presenting
      reconstructed behavior as accepted intent.
+   - In spec-driven work, use the lifecycle status supported by accepted intent
+     and repository facts. An accepted feature with a spec is at least
+     `specified`; use `implemented` only when implementation evidence supports
+     it. Do not use `candidate` for an accepted feature boundary.
 
 4. **Stop for the project-level human gates**
-   - A human confirms feature boundaries by moving `candidate` to the accurate
-     lifecycle status, such as `planned`, `specified`, or `implemented`.
-   - Set `priority_provenance: human` only when a human set or confirmed that
-     priority.
-   - Preserve `candidate` and `priority_provenance: agent` until those decisions
-     actually occur.
+   - For brownfield candidates, a human confirms feature boundaries by moving
+     `candidate` to the accurate lifecycle status.
+   - An explicit priority in accepted human-authored intent is already a human
+     priority decision; copy it with `priority_provenance: human`. A priority
+     inferred from ordering, risk, code, or agent judgment remains `agent`.
+   - Never reinterpret who copied a value as who originated the decision.
 
 5. **Map the first feature**
    - Follow `map-feature <target>`.
@@ -79,6 +88,9 @@ start. Do not autonomously map an entire brownfield repository.
      reconstruct them from implementation with honest provenance.
    - Connect existing proof by canonical path and optional test-case name.
    - Record missing or weak proof as `proof_gap`; do not create tests here.
+   - Set `structure_provenance: spec` when the check list and priorities trace
+     to accepted requirements. Agent authorship of the YAML does not make that
+     list `agent_generated`; use per-check provenance for genuine exceptions.
 
 6. **Stop for feature-level human gates**
    - `structure_provenance` records origin and is never rewritten merely because

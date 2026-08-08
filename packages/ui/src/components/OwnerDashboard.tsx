@@ -16,7 +16,7 @@ import { hasLoadedRuntimeProof } from "../lib/runtime-proof";
 
 interface OwnerDashboardProps {
   readonly recommendationContext?: {
-    readonly observationSetId: string;
+    readonly observationSetId?: string;
     readonly observationSetName?: string;
     readonly generatedRecommendations?: GenerateRecommendationsResponse;
     readonly isPanelOpen: boolean;
@@ -215,7 +215,7 @@ export function OwnerDashboard({
         </Paper>
       ) : null}
 
-      {hasLoadedProof ? (
+      {recommendationContext !== undefined ? (
         <TopLeverageRecommendations
           observationSetId={recommendationContext?.observationSetId}
           observationSetName={recommendationContext?.observationSetName}
@@ -223,7 +223,6 @@ export function OwnerDashboard({
           isPanelOpen={recommendationContext?.isPanelOpen ?? false}
           loadError={recommendationContext?.loadError}
           onOpenPanel={recommendationContext?.onOpenPanel ?? (() => undefined)}
-          projectPath={workspace.summary.projectPath}
           selectedView={selectedView}
         />
       ) : null}

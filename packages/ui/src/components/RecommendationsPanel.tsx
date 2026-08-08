@@ -44,6 +44,7 @@ export function RecommendationsPanel({
   const [copiedRecommendationId, setCopiedRecommendationId] = useState<string>();
   const recommendationCount = payload.file.recommendations.length;
   const scopeDescription = payload.file.scope.description;
+  const qualityScoreReason = payload.file.quality_score_availability?.reason;
 
   async function copyRecommendationPrompt(recommendation: RankedRecommendationRecord): Promise<void> {
     if (navigator.clipboard === undefined) {
@@ -65,7 +66,7 @@ export function RecommendationsPanel({
           <Text size="xs" c="dimmed" tt="uppercase">Recommendations</Text>
           <Title order={2}>Ranked fix queue</Title>
           <Text size="sm" c="dimmed">
-            {payload.file.observation_set_name} for <strong>{payload.file.scope.name}</strong>
+            {payload.file.observation_set_name ?? "Static scores"} for <strong>{payload.file.scope.name}</strong>
             {scopeDescription === undefined ? "" : ` · ${scopeDescription}`}
           </Text>
         </Stack>
@@ -76,13 +77,19 @@ export function RecommendationsPanel({
 
       <Group gap="sm" mt="sm">
         <Text size="sm">{recommendationCount} ranked recommendation{recommendationCount === 1 ? "" : "s"}</Text>
-        <Code>{payload.file.observation_set_id}</Code>
+        {payload.file.observation_set_id === undefined ? null : (
+          <Code>{payload.file.observation_set_id}</Code>
+        )}
       </Group>
 
       <Group gap="md" mt="xs">
         <Text size="sm" c="dimmed">Generated {new Date(payload.file.generated_at).toLocaleString()}</Text>
         <Text size="sm" c="dimmed">{displayOutputPath(payload)}</Text>
-        {payload.file.runtime_review.quality_score === undefined ? null : (
+        {payload.file.runtime_review?.quality_score === undefined ? (
+          <Text size="sm" c="dimmed">
+            Quality score unavailable{qualityScoreReason === undefined ? "" : `: ${qualityScoreReason}`}
+          </Text>
+        ) : (
           <Text size="sm" c="dimmed">Score {payload.file.runtime_review.quality_score} / 100</Text>
         )}
       </Group>

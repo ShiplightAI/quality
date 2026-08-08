@@ -59,6 +59,11 @@ construct at the untrusted end of every gate (`inferred_brownfield`, `candidate`
 on the owner's behalf — including flipping `checks_reviewed` to true or accepting a
 gap risk (`accepted_gaps`) for the owner.
 
+An explicit user decision authorizes the requested field change, not an inferred
+identity. Unless the user supplies an attribution for the record, write the
+decision without a name or email; do not mine Git configuration, environment
+metadata, or the operating-system account for one.
+
 ## The two human decisions that are *not* gates
 
 Two other fields record a human decision and move a score. Neither touches

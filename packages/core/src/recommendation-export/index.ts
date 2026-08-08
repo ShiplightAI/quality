@@ -109,6 +109,16 @@ export interface StructuralScoresRecord {
   readonly basis?: string;
 }
 
+// Whether the observation-backed Quality score could be produced, and why not
+// when it could not. The three static scores in structural_scores never depend
+// on this: they are derived from the graph alone.
+export interface QualityScoreAvailabilityRecord {
+  // "not_requested": no observation set was selected, so no runtime data was
+  // asked for. "unavailable": an observation set ran but yielded no score.
+  readonly status: "available" | "not_requested" | "unavailable";
+  readonly reason?: string;
+}
+
 export interface RecommendationExportFile {
   // Bumped to "3" when risk was removed: risk_weight -> priority_weight (priority
   // is now the sole importance signal) and evidence confidence became
@@ -117,15 +127,22 @@ export interface RecommendationExportFile {
   // structural_scores was added additively (optional) under "4". Version "5"
   // replaces runtime_review.profiles[].source_kind with transport so readers
   // reject stale profile records instead of silently accepting the old field.
-  readonly schema_version: "5";
+  // Version "6" makes the observation set optional: a run without one omits
+  // observation_set_id, observation_set_name, and runtime_review entirely and
+  // reports only the static scores. quality_score_availability was added as a
+  // required field, so version-5 files (which lack it) must be regenerated.
+  readonly schema_version: "6";
   readonly generated_at: string;
   readonly project_path: string;
   readonly project_root: string;
-  readonly observation_set_id: string;
-  readonly observation_set_name: string;
+  // Absent when the run selected no observation set.
+  readonly observation_set_id?: string;
+  readonly observation_set_name?: string;
   readonly scope: RecommendationScope;
   readonly structural_scores?: StructuralScoresRecord;
-  readonly runtime_review: {
+  readonly quality_score_availability: QualityScoreAvailabilityRecord;
+  // Absent when the run selected no observation set: no runtime review happened.
+  readonly runtime_review?: {
     readonly execution_status: string;
     readonly resolution_status: string;
     readonly observation_count: number;
@@ -144,7 +161,9 @@ export interface RecommendationExportFile {
 
 export interface BuildRecommendationExportInput {
   readonly projectPath: string;
-  readonly observationSetId: string;
+  // Optional: without it the export carries the static scores only, and the
+  // observation-backed Quality score is reported as not requested.
+  readonly observationSetId?: string;
   readonly viewId?: string;
   readonly output?: string;
   readonly limit?: number;
@@ -171,16 +190,22 @@ function sanitizeFileSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]+/g, "-");
 }
 
-function defaultOutputPath(repoRoot: string, observationSetId: string, scopeId: string): string {
+// A run without an observation set writes under the reserved "static" prefix, so
+// a static-only export never overwrites an observation set's export for the same
+// scope.
+const staticOnlyFileSegment = "static";
+
+function defaultOutputPath(repoRoot: string, observationSetId: string | undefined, scopeId: string): string {
+  const setSegment = observationSetId === undefined ? staticOnlyFileSegment : sanitizeFileSegment(observationSetId);
   return path.join(
     repoRoot,
     ".quality/generated/recommendations",
-    `${sanitizeFileSegment(observationSetId)}--${sanitizeFileSegment(scopeId)}.json`
+    `${setSegment}--${sanitizeFileSegment(scopeId)}.json`
   );
 }
 
 export function recommendationExportOutputPath(input: {
-  readonly observationSetId: string;
+  readonly observationSetId?: string;
   readonly repoRoot: string;
   readonly requested?: string;
   readonly scopeId: string;
@@ -419,6 +444,70 @@ function structuralScoresFor(result: ScanResult): StructuralScoresRecord | undef
   return record;
 }
 
+function firstErrorMessage(diagnostics: readonly ScanDiagnostic[]): string | undefined {
+  return diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message;
+}
+
+// Explains the observation-backed Quality score: present, never asked for, or
+// asked for but not produced. Only the Quality score is affected — coverage,
+// evidence confidence, and structure confidence come from the graph either way.
+function qualityScoreAvailabilityFor(input: {
+  readonly observationSetSelected: boolean;
+  readonly qualityScore?: number;
+  readonly execution?: ObservationSetExecutionResult;
+  readonly resolution?: ObservationResolutionResult;
+  readonly scopedObservationCount: number;
+}): QualityScoreAvailabilityRecord {
+  if (!input.observationSetSelected) {
+    return {
+      status: "not_requested",
+      reason:
+        "No observation set was selected, so no runtime results were loaded. The Quality score needs runtime observations; coverage, evidence confidence, and structure confidence do not."
+    };
+  }
+
+  if (input.qualityScore !== undefined) {
+    return { status: "available" };
+  }
+
+  const execution = input.execution;
+  const resolution = input.resolution;
+
+  if (execution !== undefined && execution.status === "invalid") {
+    const detail = firstErrorMessage(execution.diagnostics);
+    return {
+      status: "unavailable",
+      reason:
+        detail === undefined
+          ? "Runtime results could not be acquired from the observation set."
+          : `Runtime results could not be acquired from the observation set: ${detail}`
+    };
+  }
+
+  if (resolution !== undefined && resolution.status === "invalid") {
+    const detail = firstErrorMessage(resolution.diagnostics);
+    return {
+      status: "unavailable",
+      reason:
+        detail === undefined
+          ? "Loaded observations could not be resolved against the mapped proof."
+          : `Loaded observations could not be resolved against the mapped proof: ${detail}`
+    };
+  }
+
+  if (input.scopedObservationCount === 0) {
+    return {
+      status: "unavailable",
+      reason: "The observation set loaded no observations that resolve to mapped proof in this scope."
+    };
+  }
+
+  return {
+    status: "unavailable",
+    reason: "No runtime check in this scope could be evaluated, so no Quality score was produced."
+  };
+}
+
 export async function buildRecommendationExport(
   input: BuildRecommendationExportInput
 ): Promise<RecommendationExportBuildResult> {
@@ -426,8 +515,11 @@ export async function buildRecommendationExport(
   if (!existsSync(repoRoot) || !statSync(repoRoot).isDirectory()) {
     throw new Error(`Repo path is not a directory: ${repoRoot}`);
   }
-  if (input.observationSetId.length === 0) {
-    throw new Error("--observation-set is required.");
+  if (input.observationSetId !== undefined && input.observationSetId.length === 0) {
+    throw new Error("The observation set id must not be empty.");
+  }
+  if (input.observationSetId?.toLowerCase() === staticOnlyFileSegment) {
+    throw new Error(`The observation set id ${staticOnlyFileSegment} is reserved for static-only assessments.`);
   }
 
   const scan = await scanProject({
@@ -442,36 +534,51 @@ export async function buildRecommendationExport(
     throw new Error(`Saved QC view not found: ${input.viewId}`);
   }
 
-  const observationSet = findObservationSet(scan.observationSets, input.observationSetId);
-  if (observationSet === undefined) {
+  // Without an observation set the whole runtime half is skipped: no acquisition,
+  // no resolution, no runtime_review block. The static scores below are unaffected.
+  const observationSet =
+    input.observationSetId === undefined
+      ? undefined
+      : findObservationSet(scan.observationSets, input.observationSetId);
+  if (input.observationSetId !== undefined && observationSet === undefined) {
     throw new Error(`Observation set not found: ${input.observationSetId}`);
   }
 
-  const execution = await executeObservationSet({
-    observationSet,
-    observationSourceProfiles: scan.observationSourceProfiles.primary?.document?.profiles ?? [],
-    projectRoot: scan.target.resolvedPath,
-    env: input.env,
-    selection: input.selection
-  });
-  const resolution = resolveObservations(scan, execution);
+  const execution =
+    observationSet === undefined
+      ? undefined
+      : await executeObservationSet({
+          observationSet,
+          observationSourceProfiles: scan.observationSourceProfiles.primary?.document?.profiles ?? [],
+          projectRoot: scan.target.resolvedPath,
+          env: input.env,
+          selection: input.selection
+        });
+  const resolution = execution === undefined ? undefined : resolveObservations(scan, execution);
   const effectiveResult = applySavedQcView(scan, input.viewId) ?? scan;
-  const scopedResolution = filterResolutionForScope({
-    result: effectiveResult,
-    resolution
-  });
-  const hasUsableProof = hasUsableRuntimeProofStatus({
-    executionStatus: execution.status,
-    resolutionStatus: resolution.status,
-    observationCount: execution.observations.length
-  });
-  const evaluations = hasUsableProof
-    ? buildEvaluationTargets({
-        result: effectiveResult,
-        resolution: scopedResolution,
-        execution
-      })
-    : [];
+  const scopedResolution =
+    resolution === undefined
+      ? undefined
+      : filterResolutionForScope({
+          result: effectiveResult,
+          resolution
+        });
+  const hasUsableProof =
+    execution !== undefined &&
+    resolution !== undefined &&
+    hasUsableRuntimeProofStatus({
+      executionStatus: execution.status,
+      resolutionStatus: resolution.status,
+      observationCount: execution.observations.length
+    });
+  const evaluations =
+    hasUsableProof && execution !== undefined && scopedResolution !== undefined
+      ? buildEvaluationTargets({
+          result: effectiveResult,
+          resolution: scopedResolution,
+          execution
+        })
+      : [];
   const rollups = hasUsableProof
     ? buildObservationContextQualityRollups({
         result: effectiveResult,
@@ -480,6 +587,13 @@ export async function buildRecommendationExport(
     : [];
   const rollup = primaryRollup(rollups);
   const structuralScores = structuralScoresFor(effectiveResult);
+  const qualityScoreAvailability = qualityScoreAvailabilityFor({
+    observationSetSelected: observationSet !== undefined,
+    ...(rollup?.qualityScore === undefined ? {} : { qualityScore: rollup.qualityScore }),
+    ...(execution === undefined ? {} : { execution }),
+    ...(resolution === undefined ? {} : { resolution }),
+    scopedObservationCount: scopedResolution?.observations.length ?? 0
+  });
   const fixPromptLookup = new Map(
     (input.fixPromptRecords ?? []).map(
       (record) => [`${record.quality_map}::${record.expectation_id}`, record.prompt] as const
@@ -494,55 +608,61 @@ export async function buildRecommendationExport(
   const outputPath = recommendationExportOutputPath({
     repoRoot,
     requested: input.output,
-    observationSetId: observationSet.id,
+    ...(observationSet === undefined ? {} : { observationSetId: observationSet.id }),
     scopeId: scope.id
   });
+  const runtimeReview =
+    execution === undefined || resolution === undefined || scopedResolution === undefined
+      ? undefined
+      : {
+          execution_status: execution.status,
+          resolution_status: resolution.status,
+          observation_count: scopedResolution.observations.length,
+          ...(execution.resolvedCommit === undefined ? {} : { resolved_commit: execution.resolvedCommit }),
+          evaluated_target_count: rollup?.evaluatedTargetCount ?? 0,
+          evaluated_expectation_count: rollup?.evaluatedExpectationCount ?? 0,
+          ...(rollup?.qualityScore === undefined ? {} : { quality_score: rollup.qualityScore }),
+          ...(rollup?.basis === undefined ? {} : { basis: rollup.basis }),
+          profiles: execution.profiles.map((profile) => ({
+            profile_id: profile.profileId,
+            profile_name: profile.profileName,
+            status: profile.execution.status,
+            transport: profile.execution.transport,
+            ...(profile.execution.selectedRun?.runId === undefined
+              ? {}
+              : { run_id: profile.execution.selectedRun.runId }),
+            ...(profile.execution.selectedRun?.runUrl === undefined
+              ? {}
+              : { run_url: profile.execution.selectedRun.runUrl }),
+            ...(profile.execution.selectedRun?.commit === undefined
+              ? {}
+              : { commit: profile.execution.selectedRun.commit }),
+            ...(profile.execution.selectedRun?.branch === undefined
+              ? {}
+              : { branch: profile.execution.selectedRun.branch }),
+            ...(profile.execution.selectedRun?.observedAt === undefined
+              ? {}
+              : { observed_at: profile.execution.selectedRun.observedAt })
+          })),
+          execution_diagnostics: execution.diagnostics,
+          resolution_diagnostics: resolution.diagnostics,
+          resolution_audit: resolutionAuditSummary(scopedResolution.auditRows)
+        };
 
   return {
     outputPath,
     file: {
-      schema_version: "5",
+      schema_version: "6",
       generated_at: (input.generatedAt ?? new Date()).toISOString(),
       project_path: scan.target.inputPath,
       project_root: scan.target.resolvedPath,
-      observation_set_id: observationSet.id,
-      observation_set_name: observationSet.name,
+      ...(observationSet === undefined
+        ? {}
+        : { observation_set_id: observationSet.id, observation_set_name: observationSet.name }),
       scope,
       ...(structuralScores === undefined ? {} : { structural_scores: structuralScores }),
-      runtime_review: {
-        execution_status: execution.status,
-        resolution_status: resolution.status,
-        observation_count: scopedResolution.observations.length,
-        ...(execution.resolvedCommit === undefined ? {} : { resolved_commit: execution.resolvedCommit }),
-        evaluated_target_count: rollup?.evaluatedTargetCount ?? 0,
-        evaluated_expectation_count: rollup?.evaluatedExpectationCount ?? 0,
-        ...(rollup?.qualityScore === undefined ? {} : { quality_score: rollup.qualityScore }),
-        ...(rollup?.basis === undefined ? {} : { basis: rollup.basis }),
-        profiles: execution.profiles.map((profile) => ({
-          profile_id: profile.profileId,
-          profile_name: profile.profileName,
-          status: profile.execution.status,
-          transport: profile.execution.transport,
-          ...(profile.execution.selectedRun?.runId === undefined
-            ? {}
-            : { run_id: profile.execution.selectedRun.runId }),
-          ...(profile.execution.selectedRun?.runUrl === undefined
-            ? {}
-            : { run_url: profile.execution.selectedRun.runUrl }),
-          ...(profile.execution.selectedRun?.commit === undefined
-            ? {}
-            : { commit: profile.execution.selectedRun.commit }),
-          ...(profile.execution.selectedRun?.branch === undefined
-            ? {}
-            : { branch: profile.execution.selectedRun.branch }),
-          ...(profile.execution.selectedRun?.observedAt === undefined
-            ? {}
-            : { observed_at: profile.execution.selectedRun.observedAt })
-        })),
-        execution_diagnostics: execution.diagnostics,
-        resolution_diagnostics: resolution.diagnostics,
-        resolution_audit: resolutionAuditSummary(scopedResolution.auditRows)
-      },
+      quality_score_availability: qualityScoreAvailability,
+      ...(runtimeReview === undefined ? {} : { runtime_review: runtimeReview }),
       recommendations: rankedRecommendations
     }
   };

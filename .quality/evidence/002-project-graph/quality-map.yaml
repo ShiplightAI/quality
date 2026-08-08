@@ -111,9 +111,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "docs/concepts/trust-boundaries.md"
-        anchor: "Read-only inspection"
-      - path: "docs/concepts/trust-boundaries.md"
-        anchor: "The selected project stays contained"
+        anchor: "Inspection is read-only and contained"
     category: "security"
     priority: "UNKNOWN"
     evidence:

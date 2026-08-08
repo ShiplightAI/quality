@@ -163,9 +163,10 @@ describe("ranked recommendations export", () => {
         path.join(fixture.root, ".quality/generated/recommendations/runtime-review--feature-a.json")
       );
       expect(output.file).toMatchObject({
-        schema_version: "5",
+        schema_version: "6",
         generated_at: "2026-06-12T00:00:00.000Z",
         observation_set_id: "runtime-review",
+        quality_score_availability: { status: "available" },
         scope: {
           kind: "view",
           id: "feature-a",
@@ -180,7 +181,7 @@ describe("ranked recommendations export", () => {
           evaluated_expectation_count: 2
         }
       });
-      expect(output.file.runtime_review.profiles).toContainEqual(
+      expect(output.file.runtime_review?.profiles).toContainEqual(
         expect.objectContaining({
           profile_id: "local-runtime",
           transport: "local-folder"
@@ -287,9 +288,14 @@ expectations:
         generatedAt: new Date("2026-06-12T00:00:00.000Z")
       });
 
-      // Runtime acquisition failed -> no observation-backed quality score.
-      expect(output.file.runtime_review.execution_status).toBe("invalid");
-      expect(output.file.runtime_review.quality_score).toBeUndefined();
+      // Runtime acquisition failed -> no observation-backed quality score, and the
+      // export says why rather than leaving the gap unexplained.
+      expect(output.file.runtime_review?.execution_status).toBe("invalid");
+      expect(output.file.runtime_review?.quality_score).toBeUndefined();
+      expect(output.file.quality_score_availability.status).toBe("unavailable");
+      expect(output.file.quality_score_availability.reason).toEqual(
+        expect.stringContaining("could not be acquired")
+      );
 
       // ...but the static structural scores are fully present.
       expect(output.file.structural_scores).toMatchObject({
@@ -302,6 +308,142 @@ expectations:
         total_check_count: 2
       });
       expect(typeof output.file.structural_scores?.basis).toBe("string");
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it("reports the static scores without an observation set", async () => {
+    // The three static scores come from the graph alone, so an export must be
+    // producible with no observation set at all. Only the runtime Quality score
+    // depends on observations, and its absence has to be explained.
+    const fixture = await createFixtureProject("ranked-recommendations-export-static-only", [
+      {
+        relativePath: ".quality/evidence/feature-a/quality-map.yaml",
+        contents: `structure_provenance: "user_authored"
+target:
+  id: "feature-a"
+  name: "Feature A"
+  scope: "feature"
+expectations:
+  - id: "feature-a-proof"
+    title: "Feature A proof exists"
+    source_type: "IMPLEMENTATION"
+    category: "runtime"
+    priority: "P1"
+    evidence:
+      - id: "feature-a-proof-source"
+        type: "unit"
+        path: "apps/feature-a/src/feature-a.proof.test.ts"
+        contexts:
+          - "local"
+  - id: "feature-a-runtime"
+    title: "Feature A runtime check passes"
+    source_type: "IMPLEMENTATION"
+    category: "runtime"
+    priority: "P1"
+    evidence:
+      - id: "feature-a-runtime-source"
+        type: "unit"
+        path: "apps/feature-a/src/feature-a.runtime.test.ts"
+        contexts:
+          - "local"
+`
+      }
+    ]);
+
+    try {
+      const output = await buildRecommendationExport({
+        projectPath: fixture.root,
+        generatedAt: new Date("2026-06-12T00:00:00.000Z")
+      });
+
+      // A static-only export writes under its own reserved prefix, so it can never
+      // overwrite an observation set's export for the same scope.
+      expect(output.outputPath).toBe(
+        path.join(fixture.root, ".quality/generated/recommendations/static--whole-project.json")
+      );
+      expect(output.file.schema_version).toBe("6");
+      expect(output.file.observation_set_id).toBeUndefined();
+      expect(output.file.observation_set_name).toBeUndefined();
+      // No observation set was selected, so there was no runtime review at all.
+      expect(output.file.runtime_review).toBeUndefined();
+      expect(output.file.quality_score_availability.status).toBe("not_requested");
+      expect(output.file.quality_score_availability.reason).toEqual(
+        expect.stringContaining("No observation set was selected")
+      );
+
+      // The three graph-derived scores are reported in full.
+      expect(output.file.structural_scores).toMatchObject({
+        coverage_score: 100,
+        evidence_confidence_score: 70,
+        structure_confidence_score: 100,
+        evidence_confidence_label: "MEDIUM",
+        structure_confidence_label: "HIGH",
+        total_check_count: 2
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it.each(["static", "STATIC", "Static"])(
+    "rejects the reserved observation-set id %s in the export write path",
+    async (observationSetId) => {
+      const fixture = await createFixtureProject("ranked-recommendations-reserved-static", []);
+
+      try {
+        await expect(
+          buildRecommendationExport({
+            projectPath: fixture.root,
+            observationSetId
+          })
+        ).rejects.toThrow("reserved for static-only assessments");
+      } finally {
+        await fixture.cleanup();
+      }
+    }
+  );
+
+  it("scopes the static-only export to a saved view", async () => {
+    const fixture = await createFixtureProject(
+      "ranked-recommendations-export-static-only-view",
+      unobservedViewTargetFiles()
+    );
+
+    try {
+      const output = await buildRecommendationExport({
+        projectPath: fixture.root,
+        viewId: "release-scope",
+        generatedAt: new Date("2026-06-12T00:00:00.000Z")
+      });
+
+      expect(output.outputPath).toBe(
+        path.join(fixture.root, ".quality/generated/recommendations/static--release-scope.json")
+      );
+      expect(output.file.scope).toMatchObject({ kind: "view", id: "release-scope" });
+      expect(output.file.quality_score_availability.status).toBe("not_requested");
+      expect(typeof output.file.structural_scores?.coverage_score).toBe("number");
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it("rejects an unknown observation set instead of falling back to static scores", async () => {
+    // Asking for runtime data that does not exist is still an error: only omitting
+    // --observation-set entirely selects the static-only export.
+    const fixture = await createFixtureProject(
+      "ranked-recommendations-export-unknown-set",
+      unobservedViewTargetFiles()
+    );
+
+    try {
+      await expect(
+        buildRecommendationExport({
+          projectPath: fixture.root,
+          observationSetId: "missing-set"
+        })
+      ).rejects.toThrow("Observation set not found: missing-set");
     } finally {
       await fixture.cleanup();
     }

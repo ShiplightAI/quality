@@ -63,6 +63,12 @@ decisions as intended project behavior. Record their facts as `SOURCE`.
 The existence of a file named `spec.md` is not enough. It must be an accepted
 statement of intended behavior rather than a reconstruction draft.
 
+For an accepted feature boundary, choose the lifecycle status supported by the
+accepted source and repository facts; an accepted spec is at least `specified`.
+Do not write `candidate` merely because an agent constructed the map. When an
+accepted human-authored source explicitly declares a priority, copy that value
+with `priority_provenance: human`; use `agent` only for an inferred priority.
+
 ### Brownfield
 
 When accepted feature structure is missing, follow
@@ -118,6 +124,8 @@ Reconcile rather than rebuild:
 4. **Apply safe defaults**
    - Agent-proposed brownfield feature: `status: candidate`.
    - Agent-guessed priority: `priority_provenance: agent`.
+   - Accepted spec-driven feature: never `candidate`; use the supported
+     lifecycle status and preserve its declared priority provenance.
    - Do not convert non-`SOURCE` facts to `SOURCE`.
 
 5. **Write or reconcile the map**
