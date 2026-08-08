@@ -137,6 +137,7 @@ function observationSetFrom(
         yamlPath: `$.observation_sets[${index}].id`
       })
     );
+    return undefined;
   }
 
   if (setProfiles.length === 0) {

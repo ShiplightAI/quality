@@ -9,7 +9,7 @@ import type { GenerateRecommendationsResponse } from "../lib/ranked-recommendati
 import { RecommendationsPanel } from "./RecommendationsPanel";
 import { TopLeverageRecommendations } from "./TopLeverageRecommendations";
 
-const legacyStaticPayload = {
+const incompleteV6Payload = {
   path: "/repo/.quality/generated/recommendations/static--whole-project.json",
   file: {
     schema_version: "6",
@@ -41,7 +41,7 @@ describe("recommendations compatibility", () => {
   it("renders the panel without crashing when an older payload lacks score availability", () => {
     render(
       <MantineProvider>
-        <RecommendationsPanel payload={legacyStaticPayload} onClose={() => undefined} />
+        <RecommendationsPanel payload={incompleteV6Payload} onClose={() => undefined} />
       </MantineProvider>
     );
 
@@ -52,7 +52,7 @@ describe("recommendations compatibility", () => {
     render(
       <MantineProvider>
         <TopLeverageRecommendations
-          generatedRecommendations={legacyStaticPayload}
+          generatedRecommendations={incompleteV6Payload}
           isPanelOpen={false}
           onOpenPanel={() => undefined}
         />

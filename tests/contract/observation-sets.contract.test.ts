@@ -113,6 +113,7 @@ describe("observation set contract", () => {
       ]);
 
       expect(batch.primary?.status).toBe("invalid");
+      expect(batch.primary?.document?.observationSets).toEqual([]);
       expect(batch.diagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: "RESERVED_OBSERVATION_SET_ID" })
