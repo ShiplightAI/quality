@@ -449,7 +449,7 @@ export async function getRecommendationsOp(
   }
   if (!isRecommendationExportFile(parsed)) {
     throw new QcOperationError(
-      500,
+      422,
       "The saved recommendations file is unreadable. Regenerate it for this scope with the quality-tools analyze command.",
       { code: "invalid-ranked-recommendations-output" },
     );

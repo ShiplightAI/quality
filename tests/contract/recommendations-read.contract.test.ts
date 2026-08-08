@@ -45,4 +45,54 @@ describe("saved recommendations read contract", () => {
       await fixture.cleanup();
     }
   });
+
+  it("reports a stale schema as an actionable client error", async () => {
+    const fixture = await createFixtureProject("recommendations-read-stale-schema", [
+      {
+        relativePath: ".quality/generated/recommendations/ci--whole-project.json",
+        contents: JSON.stringify({
+          schema_version: "5",
+          generated_at: "2026-08-06T00:00:00.000Z",
+          project_path: ".",
+          project_root: "/fixture",
+          observation_set_id: "ci",
+          observation_set_name: "CI",
+          scope: { kind: "whole-project", id: "whole-project", name: "Whole project" },
+          runtime_review: {
+            execution_status: "valid",
+            resolution_status: "valid",
+            observation_count: 1,
+            evaluated_target_count: 1,
+            evaluated_expectation_count: 1,
+            profiles: [],
+            execution_diagnostics: [],
+            resolution_diagnostics: [],
+            resolution_audit: {
+              matched_observation_count: 1,
+              unmatched_observation_count: 0,
+              ambiguous_observation_count: 0,
+              unmatched_examples: [],
+              ambiguous_examples: []
+            }
+          },
+          recommendations: []
+        })
+      }
+    ]);
+
+    try {
+      await expect(
+        getRecommendationsOp({
+          projectPath: fixture.root,
+          observationSetId: "ci"
+        })
+      ).rejects.toMatchObject({
+        status: 422,
+        code: "invalid-ranked-recommendations-output",
+        message: expect.stringContaining("Regenerate it")
+      });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 });

@@ -1,7 +1,7 @@
 # Quality prompt sweep: `screen-recorder`
 
 Date: 2026-08-07
-Target: `/Users/feng/Shiplight/screen-recorder`
+Target: `screen-recorder`
 Claude Code: 2.1.224, `sonnet` alias
 Quality CLI: `@shiplightai/quality-tools@^0.3.0`
 
