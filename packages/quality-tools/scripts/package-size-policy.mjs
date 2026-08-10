@@ -30,6 +30,11 @@ export function evaluatePackageSize(input) {
   if (!Number.isFinite(input.maxIncreasePercent) || input.maxIncreasePercent < 0) {
     throw new Error("package-size.json maxIncreasePercent must be a non-negative number.");
   }
+  for (const key of ["packedBytes", "unpackedBytes"]) {
+    if (!Number.isInteger(input.baseline[key]) || input.baseline[key] <= 0) {
+      throw new Error(`baseline ${key} must be a positive integer.`);
+    }
+  }
 
   const measurements = [
     {

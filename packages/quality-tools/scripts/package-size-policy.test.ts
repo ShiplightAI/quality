@@ -83,5 +83,64 @@ describe("quality-tools package-size policy", () => {
         }
       })
     ).toThrow(/does not cover the measured artifact/u);
+    expect(() =>
+      evaluatePackageSize({
+        ...common,
+        approvedIncrease: {
+          version: "0.3.3",
+          packedBytes: 10_200,
+          unpackedBytes: 101_999,
+          approvedBy: "Jane Maintainer",
+          reason: "Reviewed."
+        }
+      })
+    ).toThrow(/does not cover the measured artifact/u);
+  });
+
+  it("requires the human approver and reason to be explicit", () => {
+    const common = {
+      packageVersion: "0.3.3",
+      currentPackedBytes: 10_200,
+      currentUnpackedBytes: 102_000,
+      baseline,
+      maxIncreasePercent: 1
+    };
+    expect(() =>
+      evaluatePackageSize({
+        ...common,
+        approvedIncrease: {
+          version: "0.3.3",
+          packedBytes: 10_200,
+          unpackedBytes: 102_000,
+          approvedBy: "   ",
+          reason: "Reviewed."
+        }
+      })
+    ).toThrow(/does not identify its human approver/u);
+    expect(() =>
+      evaluatePackageSize({
+        ...common,
+        approvedIncrease: {
+          version: "0.3.3",
+          packedBytes: 10_200,
+          unpackedBytes: 102_000,
+          approvedBy: "Jane Maintainer",
+          reason: "   "
+        }
+      })
+    ).toThrow(/does not explain why/u);
+  });
+
+  it("rejects a non-positive published baseline", () => {
+    expect(() =>
+      evaluatePackageSize({
+        packageVersion: "0.3.3",
+        currentPackedBytes: 10_000,
+        currentUnpackedBytes: 100_000,
+        baseline: { ...baseline, packedBytes: 0 },
+        maxIncreasePercent: 1,
+        approvedIncrease: null
+      })
+    ).toThrow(/baseline packedBytes must be a positive integer/u);
   });
 });
