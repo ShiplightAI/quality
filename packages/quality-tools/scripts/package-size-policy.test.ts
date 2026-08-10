@@ -9,16 +9,15 @@ const baseline = {
 
 describe("quality-tools package-size policy", () => {
   it("allows growth up to one percent over the published release", () => {
-    expect(() =>
-      evaluatePackageSize({
-        packageVersion: "0.3.3",
-        currentPackedBytes: 10_100,
-        currentUnpackedBytes: 101_000,
-        baseline,
-        maxIncreasePercent: 1,
-        approvedIncrease: null
-      })
-    ).not.toThrow();
+    const result = evaluatePackageSize({
+      packageVersion: "0.3.3",
+      currentPackedBytes: 10_100,
+      currentUnpackedBytes: 101_000,
+      baseline,
+      maxIncreasePercent: 1,
+      approvedIncrease: null
+    });
+    expect(result.usedApproval).toBe(false);
   });
 
   it("rejects growth above one percent without explicit human approval", () => {
@@ -35,22 +34,21 @@ describe("quality-tools package-size policy", () => {
   });
 
   it("accepts a human approval for the exact release and measured bounds", () => {
-    expect(() =>
-      evaluatePackageSize({
-        packageVersion: "0.3.3",
-        currentPackedBytes: 10_200,
-        currentUnpackedBytes: 102_000,
-        baseline,
-        maxIncreasePercent: 1,
-        approvedIncrease: {
-          version: "0.3.3",
-          packedBytes: 10_200,
-          unpackedBytes: 102_000,
-          approvedBy: "Jane Maintainer",
-          reason: "Reviewed dependency required for the new command."
-        }
-      })
-    ).not.toThrow();
+    const result = evaluatePackageSize({
+      packageVersion: "0.3.3",
+      currentPackedBytes: 10_200,
+      currentUnpackedBytes: 102_000,
+      baseline,
+      maxIncreasePercent: 1,
+      approvedIncrease: {
+        version: "0.3.3",
+        packedBytes: 10_200,
+        unpackedBytes: 102_000,
+        approvedBy: "Jane Maintainer",
+        reason: "Reviewed dependency required for the new command."
+      }
+    });
+    expect(result.usedApproval).toBe(true);
   });
 
   it("rejects approval for another version or a smaller artifact", () => {

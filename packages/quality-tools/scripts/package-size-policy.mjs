@@ -50,7 +50,7 @@ export function evaluatePackageSize(input) {
 
   const exceeded = measurements.filter((measurement) => measurement.current > measurement.limit);
   if (exceeded.length === 0) {
-    return measurements;
+    return { measurements, usedApproval: false };
   }
 
   const problem = approvalProblem(
@@ -73,5 +73,5 @@ export function evaluatePackageSize(input) {
     );
   }
 
-  return measurements;
+  return { measurements, usedApproval: true };
 }
