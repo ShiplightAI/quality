@@ -122,6 +122,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check quality-tools package size
+        run: pnpm --filter @shiplightai/quality-tools check:size
+
       # The 1% size gate is otherwise only wired into quality-ui's
       # prepublishOnly, so a regression would surface at publish time rather
       # than on the PR that caused it. It needs the build output above.

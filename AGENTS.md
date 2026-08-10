@@ -23,6 +23,15 @@ Quality evaluates evidence independently of the systems that produce it.
 Do not introduce dependencies from the engine into evidence producers or from
 open-source packages into the Shiplight platform monorepo.
 
+## Release size gate
+
+The `quality-tools` release artifact may grow by at most 1% in both packed and
+unpacked size relative to the current published npm version. A larger increase
+requires a human maintainer to add an exact, version-specific
+`approvedIncrease`, including their name and reason, to
+`packages/quality-tools/package-size.json`. Agents must not add, modify, or
+claim this approval on a human's behalf.
+
 ## Extraction discipline
 
 During migration, preserve behavior before reorganizing it. Move regression
