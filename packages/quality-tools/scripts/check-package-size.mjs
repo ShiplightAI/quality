@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global console, fetch */
+/* global AbortSignal, console, fetch */
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -39,7 +39,7 @@ try {
       "versions",
       "--json"
     ],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 }
   );
 } catch (cause) {
   throw new Error(`Could not read the published ${packageName} baseline from npm.`, { cause });
@@ -60,6 +60,14 @@ if (integrityMatch === null) {
   throw new Error(`npm did not return valid integrity metadata for ${packageName}@${baselineVersion}.`);
 }
 
+const publishRegistry = new URL(String(packageManifest.publishConfig?.registry ?? ""));
+const baselineUrl = new URL(baselineTarball);
+if (baselineUrl.origin !== publishRegistry.origin || baselineUrl.protocol !== "https:") {
+  throw new Error(
+    `npm returned a tarball outside the configured HTTPS registry: ${baselineUrl.origin}.`
+  );
+}
+
 const publishedVersions = registry.versions;
 if (
   Array.isArray(publishedVersions) &&
@@ -71,7 +79,12 @@ if (
   );
 }
 
-const baselineResponse = await fetch(baselineTarball);
+let baselineResponse;
+try {
+  baselineResponse = await fetch(baselineUrl, { signal: AbortSignal.timeout(60_000) });
+} catch (cause) {
+  throw new Error(`Could not download ${packageName}@${baselineVersion} from npm.`, { cause });
+}
 if (!baselineResponse.ok) {
   throw new Error(
     `Could not download ${packageName}@${baselineVersion} for the size comparison: HTTP ${baselineResponse.status}.`
@@ -148,7 +161,9 @@ try {
   measurementComplete = true;
 } finally {
   // The archive exists only to measure the exact pnpm-published artifact.
-  // It is never retained or used as the input to `pnpm publish`.
+  // Defer cleanup after a successful measurement because policy evaluation
+  // below still owns the archive's lifecycle. A failed measurement has no
+  // second stage, so it cleans up here.
   if (!measurementComplete) {
     rmSync(packRoot, { recursive: true, force: true });
   }
