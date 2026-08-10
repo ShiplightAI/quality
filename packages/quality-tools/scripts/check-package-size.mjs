@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* global console, fetch */
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdtempSync,
@@ -34,6 +35,7 @@ try {
       "version",
       "dist.tarball",
       "dist.unpackedSize",
+      "dist.integrity",
       "versions",
       "--json"
     ],
@@ -46,11 +48,16 @@ const registry = JSON.parse(registryOutput);
 const baselineVersion = String(registry.version ?? "");
 const baselineTarball = String(registry["dist.tarball"] ?? "");
 const baselineUnpackedBytes = Number(registry["dist.unpackedSize"]);
+const baselineIntegrity = String(registry["dist.integrity"] ?? "");
 if (baselineVersion.length === 0 || baselineTarball.length === 0) {
   throw new Error(`npm did not return the current published ${packageName} release.`);
 }
 if (!Number.isInteger(baselineUnpackedBytes) || baselineUnpackedBytes <= 0) {
   throw new Error(`npm did not return the unpacked size for ${packageName}@${baselineVersion}.`);
+}
+const integrityMatch = /^([a-z0-9]+)-([A-Za-z0-9+/=]+)$/u.exec(baselineIntegrity);
+if (integrityMatch === null) {
+  throw new Error(`npm did not return valid integrity metadata for ${packageName}@${baselineVersion}.`);
 }
 
 const publishedVersions = registry.versions;
@@ -70,7 +77,12 @@ if (!baselineResponse.ok) {
     `Could not download ${packageName}@${baselineVersion} for the size comparison: HTTP ${baselineResponse.status}.`
   );
 }
-const baselinePackedBytes = (await baselineResponse.arrayBuffer()).byteLength;
+const baselineBytes = Buffer.from(await baselineResponse.arrayBuffer());
+const baselineDigest = createHash(integrityMatch[1]).update(baselineBytes).digest("base64");
+if (baselineDigest !== integrityMatch[2]) {
+  throw new Error(`The downloaded ${packageName}@${baselineVersion} tarball failed its npm integrity check.`);
+}
+const baselinePackedBytes = baselineBytes.byteLength;
 
 const packRoot = mkdtempSync(join(tmpdir(), "quality-tools-size-"));
 let pack;
@@ -107,6 +119,9 @@ try {
   function directorySize(path) {
     return readdirSync(path, { withFileTypes: true }).reduce((total, entry) => {
       const entryPath = resolve(path, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(`Symlink must not be included in the npm package: ${entryPath}`);
+      }
       return total + (entry.isDirectory() ? directorySize(entryPath) : statSync(entryPath).size);
     }, 0);
   }
@@ -140,7 +155,7 @@ try {
 }
 
 try {
-  const measurements = evaluatePackageSize({
+  const result = evaluatePackageSize({
     packageVersion,
     currentPackedBytes,
     currentUnpackedBytes,
@@ -153,12 +168,18 @@ try {
     approvedIncrease: policy.approvedIncrease
   });
 
-  for (const measurement of measurements) {
+  for (const measurement of result.measurements) {
     console.log(
       `${packageName} ${measurement.label} size: ${measurement.current} bytes ` +
         `(previous ${baselineVersion}: ${measurement.baseline}, ` +
         `${measurement.percent >= 0 ? "+" : ""}${measurement.percent.toFixed(2)}%, ` +
         `limit ${measurement.limit})`
+    );
+  }
+  if (result.usedApproval) {
+    console.warn(
+      `${packageName}@${packageVersion} exceeds the standard size limit and uses the human approval ` +
+        `recorded by ${policy.approvedIncrease.approvedBy}: ${policy.approvedIncrease.reason}`
     );
   }
 } finally {
