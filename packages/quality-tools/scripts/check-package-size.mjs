@@ -1,79 +1,144 @@
 #!/usr/bin/env node
-/* global console */
+/* global console, fetch */
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { evaluatePackageSize } from "./package-size-policy.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(scriptDir, "..");
-const baselinePath = resolve(packageRoot, "package-size.json");
-const baseline = JSON.parse(readFileSync(baselinePath, "utf8"));
-const maxIncreasePercent = Number(baseline.maxIncreasePercent);
-const baselinePackedSize = Number(baseline.baselinePackedBytes);
-const baselineUnpackedSize = Number(baseline.baselineUnpackedBytes);
+const packageManifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
+const policy = JSON.parse(readFileSync(resolve(packageRoot, "package-size.json"), "utf8"));
+const packageName = String(packageManifest.name);
+const packageVersion = String(packageManifest.version);
 
-if (!Number.isFinite(maxIncreasePercent) || maxIncreasePercent < 0) {
-  throw new Error("package-size.json maxIncreasePercent must be a non-negative number.");
+const registryOutput = execFileSync(
+  "npm",
+  ["view", `${packageName}@latest`, "version", "dist.tarball", "dist.unpackedSize", "--json"],
+  { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+);
+const registry = JSON.parse(registryOutput);
+const baselineVersion = String(registry.version ?? "");
+const baselineTarball = String(registry["dist.tarball"] ?? "");
+const baselineUnpackedBytes = Number(registry["dist.unpackedSize"]);
+if (baselineVersion.length === 0 || baselineTarball.length === 0) {
+  throw new Error(`npm did not return the current published ${packageName} release.`);
 }
-if (!Number.isInteger(baselinePackedSize) || baselinePackedSize <= 0) {
-  throw new Error("package-size.json baselinePackedBytes must be a positive integer.");
-}
-if (!Number.isInteger(baselineUnpackedSize) || baselineUnpackedSize <= 0) {
-  throw new Error("package-size.json baselineUnpackedBytes must be a positive integer.");
-}
-
-// `npm pack --dry-run` only measures size — no tarball, no workspace:* resolution — so the "never npm pack" publish rule does not apply here.
-const output = execFileSync("npm", ["pack", "--dry-run", "--json"], {
-  cwd: packageRoot,
-  encoding: "utf8",
-  stdio: ["ignore", "pipe", "pipe"]
-});
-const [pack] = JSON.parse(output);
-if (pack === undefined || !Number.isInteger(pack.size) || !Number.isInteger(pack.unpackedSize)) {
-  throw new Error("npm pack --dry-run did not return package sizes.");
-}
-if (!Array.isArray(pack.files)) {
-  throw new Error("npm pack --dry-run did not return package file entries.");
+if (!Number.isInteger(baselineUnpackedBytes) || baselineUnpackedBytes <= 0) {
+  throw new Error(`npm did not return the unpacked size for ${packageName}@${baselineVersion}.`);
 }
 
-const allowedFilePatterns = [
-  /^README\.md$/u,
-  /^package\.json$/u,
-  /^dist\/[^/]+\.js$/u,
-  /^dist\/[^/]+\.d\.ts$/u,
-  // The quality-map JSON Schema shipped as a resolvable asset (exports["./quality-map.schema.json"]).
-  /^dist\/quality-map\.schema\.json$/u,
-  // The canonical workflow-observation contract (exports["./quality-observations.schema.json"]).
-  /^dist\/quality-observations\.schema\.json$/u
-];
-
-for (const file of pack.files) {
-  const filePath = String(file.path ?? "");
-  if (filePath.endsWith(".map")) {
-    throw new Error(`Source map must not be included in the npm package: ${filePath}`);
-  }
-  if (!allowedFilePatterns.some((pattern) => pattern.test(filePath))) {
-    throw new Error(`Unexpected file in npm package: ${filePath}`);
-  }
-}
-
-function checkSize(label, current, baselineValue) {
-  const maxSize = Math.floor(baselineValue * (1 + maxIncreasePercent / 100));
-  const delta = current - baselineValue;
-  const percent = (delta / baselineValue) * 100;
-
-  console.log(
-    `@shiplightai/quality-tools ${label} size: ${current} bytes ` +
-      `(baseline ${baselineValue}, ${percent >= 0 ? "+" : ""}${percent.toFixed(2)}%, limit ${maxSize})`
+const publishedVersions = JSON.parse(
+  execFileSync("npm", ["view", packageName, "versions", "--json"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"]
+  })
+);
+if (
+  Array.isArray(publishedVersions) &&
+  publishedVersions.includes(packageVersion) &&
+  packageVersion !== baselineVersion
+) {
+  throw new Error(
+    `${packageName}@${packageVersion} is older than the current published release ${baselineVersion}.`
   );
+}
 
-  if (current > maxSize) {
-    throw new Error(
-      `${label} size ${current} exceeds the ${maxIncreasePercent}% release limit (${maxSize} bytes).`
+const baselineResponse = await fetch(baselineTarball);
+if (!baselineResponse.ok) {
+  throw new Error(
+    `Could not download ${packageName}@${baselineVersion} for the size comparison: HTTP ${baselineResponse.status}.`
+  );
+}
+const baselinePackedBytes = (await baselineResponse.arrayBuffer()).byteLength;
+
+const packRoot = mkdtempSync(join(tmpdir(), "quality-tools-size-"));
+let pack;
+let currentPackedBytes;
+let currentUnpackedBytes;
+let measurementComplete = false;
+try {
+  const packOutput = execFileSync(
+    "pnpm",
+    ["pack", "--pack-destination", packRoot, "--json"],
+    { cwd: packageRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+  );
+  pack = JSON.parse(packOutput);
+  const archivePath = String(pack.filename ?? "");
+  if (archivePath.length === 0 || !Array.isArray(pack.files)) {
+    throw new Error("pnpm pack did not return the package archive and file list.");
+  }
+  currentPackedBytes = statSync(archivePath).size;
+
+  const extractRoot = resolve(packRoot, "package");
+  execFileSync("tar", ["-xzf", archivePath, "-C", packRoot], {
+    stdio: ["ignore", "ignore", "pipe"]
+  });
+  function directorySize(path) {
+    return readdirSync(path, { withFileTypes: true }).reduce((total, entry) => {
+      const entryPath = resolve(path, entry.name);
+      return total + (entry.isDirectory() ? directorySize(entryPath) : statSync(entryPath).size);
+    }, 0);
+  }
+  currentUnpackedBytes = directorySize(extractRoot);
+
+  const allowedFilePatterns = [
+    /^LICENSE$/u,
+    /^README\.md$/u,
+    /^package\.json$/u,
+    /^dist\/[^/]+\.js$/u,
+    /^dist\/[^/]+\.d\.ts$/u,
+    /^dist\/quality-map\.schema\.json$/u,
+    /^dist\/quality-observations\.schema\.json$/u
+  ];
+  for (const file of pack.files) {
+    const filePath = String(file.path ?? "");
+    if (filePath.endsWith(".map")) {
+      throw new Error(`Source map must not be included in the npm package: ${filePath}`);
+    }
+    if (!allowedFilePatterns.some((pattern) => pattern.test(filePath))) {
+      throw new Error(`Unexpected file in npm package: ${filePath}`);
+    }
+  }
+  measurementComplete = true;
+} finally {
+  // The archive exists only to measure the exact pnpm-published artifact.
+  // It is never retained or used as the input to `pnpm publish`.
+  if (!measurementComplete) {
+    rmSync(packRoot, { recursive: true, force: true });
+  }
+}
+
+try {
+  const measurements = evaluatePackageSize({
+    packageVersion,
+    currentPackedBytes,
+    currentUnpackedBytes,
+    baseline: {
+      version: baselineVersion,
+      packedBytes: baselinePackedBytes,
+      unpackedBytes: baselineUnpackedBytes
+    },
+    maxIncreasePercent: Number(policy.maxIncreasePercent),
+    approvedIncrease: policy.approvedIncrease
+  });
+
+  for (const measurement of measurements) {
+    console.log(
+      `${packageName} ${measurement.label} size: ${measurement.current} bytes ` +
+        `(previous ${baselineVersion}: ${measurement.baseline}, ` +
+        `${measurement.percent >= 0 ? "+" : ""}${measurement.percent.toFixed(2)}%, ` +
+        `limit ${measurement.limit})`
     );
   }
+} finally {
+  rmSync(packRoot, { recursive: true, force: true });
 }
-
-checkSize("packed", pack.size, baselinePackedSize);
-checkSize("unpacked", pack.unpackedSize, baselineUnpackedSize);
