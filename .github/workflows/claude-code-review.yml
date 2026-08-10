@@ -1,10 +1,15 @@
 name: Claude Code Review
 
-# Thin caller: the prompt, severity/approval logic, checkout, and pinned action
-# refs all live in the shared ShiplightAI/internal-tools/claude-review action.
-# This file only owns the trigger, permissions, and repo-specific review focus
-# (GitHub requires the trigger + permissions in the caller, and
-# claude-code-action's tamper guard requires the token wired here).
+# Self-contained: this repo is public, so its review gate is inlined rather than
+# called out to the private ShiplightAI/internal-tools/claude-review action. A
+# public repo whose CI depends on a private action cannot be read or reproduced
+# by outside contributors, never runs for fork PRs (secrets are withheld there),
+# and breaks whenever org-side action access changes. Nothing in the shared
+# action was secret — the OAuth token is supplied here, from this repo's secrets
+# — so inlining costs only the automatic propagation of shared prompt edits.
+#
+# The two actions below are the ones the shared action ran internally, at the
+# same pinned SHAs. Keep them pinned by SHA.
 on:
   pull_request:
     types: [opened, synchronize]
@@ -18,10 +23,29 @@ jobs:
       issues: read
       id-token: write # required: claude-code-action mints its App token via OIDC
     steps:
-      - uses: ShiplightAI/internal-tools/claude-review@v1
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@51705da45eecce209d4700538bf8377d5b5fc695 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          review-focus: |
+          # The review (including approvals) is submitted by the Claude GitHub App
+          # token the action mints via OIDC — a distinct identity from the PR author,
+          # so it can approve without the self-approval restriction.
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Please review this pull request and provide feedback on:
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Security concerns (secret handling, injection, least privilege)
+            - Performance considerations
+            - Test coverage
+
             This repo is a quality oracle: it scores how well *other* projects are
             verified. Its credibility rests on scores nobody can fake. Weight these
             project invariants:
@@ -61,3 +85,19 @@ jobs:
             - Docs must match reality: `README.md` documents the install path and
               the package layout, so a stale skill list, command set, or install
               ref there is a real defect, not a nit.
+
+            Use the repository's CLAUDE.md for guidance on style and conventions.
+            Be constructive and specific; cite file and line.
+
+            Classify every issue you find by severity: CRITICAL, HIGH, MEDIUM, or LOW.
+
+            Then submit your review with your Bash tool, choosing the event by severity:
+            - If there are NO CRITICAL, NO HIGH and no MEDIUM issues, approve:
+                gh pr review ${{ github.event.pull_request.number }} --approve --body "<summary>"
+            - If there is any CRITICAL, HIGH or MEDIUM issue, request changes:
+                gh pr review ${{ github.event.pull_request.number }} --request-changes --body "<summary>"
+            - If you cannot confidently classify the severity, comment:
+                gh pr review ${{ github.event.pull_request.number }} --comment --body "<summary>"
+
+            Always include the full severity-labelled findings in the review body.
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr review:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
