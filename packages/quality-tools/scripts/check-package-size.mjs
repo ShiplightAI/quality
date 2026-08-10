@@ -2,6 +2,7 @@
 /* global console, fetch */
 import { execFileSync } from "node:child_process";
 import {
+  existsSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
@@ -9,7 +10,7 @@ import {
   statSync
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { evaluatePackageSize } from "./package-size-policy.mjs";
 
@@ -20,11 +21,27 @@ const policy = JSON.parse(readFileSync(resolve(packageRoot, "package-size.json")
 const packageName = String(packageManifest.name);
 const packageVersion = String(packageManifest.version);
 
-const registryOutput = execFileSync(
-  "npm",
-  ["view", `${packageName}@latest`, "version", "dist.tarball", "dist.unpackedSize", "--json"],
-  { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
-);
+// The comparison deliberately fails closed when npm is unavailable: publishing
+// without a known previous artifact would bypass the release policy. The error
+// distinguishes registry access failures from an actual size violation.
+let registryOutput;
+try {
+  registryOutput = execFileSync(
+    "npm",
+    [
+      "view",
+      `${packageName}@latest`,
+      "version",
+      "dist.tarball",
+      "dist.unpackedSize",
+      "versions",
+      "--json"
+    ],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+  );
+} catch (cause) {
+  throw new Error(`Could not read the published ${packageName} baseline from npm.`, { cause });
+}
 const registry = JSON.parse(registryOutput);
 const baselineVersion = String(registry.version ?? "");
 const baselineTarball = String(registry["dist.tarball"] ?? "");
@@ -36,12 +53,7 @@ if (!Number.isInteger(baselineUnpackedBytes) || baselineUnpackedBytes <= 0) {
   throw new Error(`npm did not return the unpacked size for ${packageName}@${baselineVersion}.`);
 }
 
-const publishedVersions = JSON.parse(
-  execFileSync("npm", ["view", packageName, "versions", "--json"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"]
-  })
-);
+const publishedVersions = registry.versions;
 if (
   Array.isArray(publishedVersions) &&
   publishedVersions.includes(packageVersion) &&
@@ -72,16 +84,26 @@ try {
     { cwd: packageRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
   );
   pack = JSON.parse(packOutput);
-  const archivePath = String(pack.filename ?? "");
-  if (archivePath.length === 0 || !Array.isArray(pack.files)) {
+  const archiveName = String(pack.filename ?? "");
+  if (archiveName.length === 0 || !Array.isArray(pack.files)) {
     throw new Error("pnpm pack did not return the package archive and file list.");
   }
+  // Current pnpm returns an absolute filename. Resolve a bare filename against
+  // --pack-destination as well so a harmless output-format change cannot turn
+  // the release check into an opaque ENOENT.
+  const archivePath = isAbsolute(archiveName)
+    ? archiveName
+    : resolve(packRoot, basename(archiveName));
   currentPackedBytes = statSync(archivePath).size;
 
+  // npm-compatible tarballs always extract under package/.
   const extractRoot = resolve(packRoot, "package");
   execFileSync("tar", ["-xzf", archivePath, "-C", packRoot], {
     stdio: ["ignore", "ignore", "pipe"]
   });
+  if (!existsSync(extractRoot) || !statSync(extractRoot).isDirectory()) {
+    throw new Error("pnpm pack produced an archive without the expected package/ directory.");
+  }
   function directorySize(path) {
     return readdirSync(path, { withFileTypes: true }).reduce((total, entry) => {
       const entryPath = resolve(path, entry.name);

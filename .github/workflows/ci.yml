@@ -122,6 +122,8 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # prepublishOnly enforces this again, but CI should catch growth on the PR
+      # that introduces it rather than waiting for a maintainer to publish.
       - name: Check quality-tools package size
         run: pnpm --filter @shiplightai/quality-tools check:size
 
