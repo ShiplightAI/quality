@@ -28,7 +28,6 @@ import type {
 
 const categoryLabels: Record<GapCategory, string> = {
   missing: "Missing evidence",
-  blocked: "Blocked evidence",
   stale: "Stale evidence",
   deferred: "Deferred evidence",
   "manual-only": "Manual-only evidence",
@@ -39,7 +38,6 @@ const categoryLabels: Record<GapCategory, string> = {
 
 export const gapCategoryOrder: readonly GapCategory[] = [
   "missing",
-  "blocked",
   "stale",
   "deferred",
   "manual-only",
@@ -136,10 +134,6 @@ function categoriesFor(input: {
 
   if (evidenceEntries.length === 0) {
     categories.add("missing");
-  }
-
-  if (includesStandaloneAny(evidenceText, ["blocked"]) || input.assessmentStatus.toLowerCase() === "blocked") {
-    categories.add("blocked");
   }
 
   if (includesStandaloneAny(evidenceText, ["deferred"])) {
@@ -263,9 +257,6 @@ function fallbackCategories(row: FallbackCoverageRow | undefined, hasEvidence: b
 
   if (!hasEvidence) {
     categories.add("missing");
-  }
-  if (includesStandaloneTerm(text, "blocked")) {
-    categories.add("blocked");
   }
   if (includesStandaloneTerm(text, "deferred")) {
     categories.add("deferred");

@@ -44,7 +44,7 @@ details.
 
 ![Quality Explorer showing the overview for a project: a quality score of
 100/100 alongside separate coverage, evidence confidence, and structure
-confidence scores, the gaps and release blockers counts, and the runtime
+confidence scores, the feature and gap counts, and the runtime
 observation set fetched from a CI workflow run.](docs/assets/quality-explorer-overview.png)
 
 ## What Quality does

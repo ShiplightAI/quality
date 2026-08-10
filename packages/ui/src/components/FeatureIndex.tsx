@@ -4,7 +4,7 @@ import { useQcRoute } from "../host";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import {
   Anchor,
   Badge,
@@ -20,7 +20,7 @@ import type { HumanSource, ProjectMapFeature, ScanResult } from "@shiplightai/qu
 import type { TargetSummary } from "@shiplightai/quality-core/workspace";
 
 // Explorer (spec 045): a flat, read-only feature index — the project's sources, then a scannable
-// feature table carrying at-a-glance quality columns (confidence · checks · gaps · blockers). QC is
+// feature table carrying at-a-glance quality columns (confidence · checks · gaps). QC is
 // view-only: curation (priority, confirm, sources, add-source) is authored in the repo by a coding
 // agent via the `quality` skill (PRs), not here. Per-feature depth lives on the feature page.
 
@@ -114,7 +114,6 @@ function FeatureRow({
   const hasDescription = feature.description !== undefined && feature.description.trim().length > 0;
   const confirmed = feature.status !== "candidate";
   const gaps = target === undefined ? undefined : sumGaps(target.gapCounts);
-  const blockers = target?.releaseRiskCounts.blockers ?? 0;
 
   return (
     <div className="feature-index-rowwrap">
@@ -180,18 +179,6 @@ function FeatureRow({
         <Text ta="right" size="sm" c={gaps !== undefined && gaps > 0 ? "orange" : "dimmed"}>
           {gaps ?? "—"}
         </Text>
-
-        <div style={{ textAlign: "right" }}>
-          {blockers > 0 ? (
-            <Badge variant="light" color="red" leftSection={<AlertTriangle size={12} aria-hidden />}>
-              {blockers}
-            </Badge>
-          ) : (
-            <Text ta="right" size="sm" c="dimmed">
-              {target === undefined ? "—" : 0}
-            </Text>
-          )}
-        </div>
       </div>
 
       {hasDescription ? (
@@ -309,7 +296,6 @@ export function FeatureIndex({
               <Text size="xs" c="dimmed" fw={700} tt="uppercase" ta="right">Status</Text>
               <Text size="xs" c="dimmed" fw={700} tt="uppercase" ta="right">Checks</Text>
               <Text size="xs" c="dimmed" fw={700} tt="uppercase" ta="right">Gaps</Text>
-              <Text size="xs" c="dimmed" fw={700} tt="uppercase" ta="right">Blockers</Text>
             </div>
             {features.map((feature) => (
               <FeatureRow key={feature.id} feature={feature} target={targetByFeatureKey.get(feature.id)} />

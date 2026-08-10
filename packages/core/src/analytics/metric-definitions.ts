@@ -52,16 +52,6 @@ export const metricDefinitions = [
     limitations: ["Missing source fields are labeled unavailable."]
   },
   {
-    metricId: "blocked-gaps",
-    title: "Blocked Gaps",
-    formulaName: "blocked-gap-count",
-    numeratorDefinition: "Blocked gap records",
-    denominatorDefinition: "All source-backed gap records",
-    includedCriteria: "Gap category must be blocked.",
-    excludedCriteria: "Deferred-only gaps without blocked context are excluded.",
-    limitations: ["Blocker reasons are preserved from source text."]
-  },
-  {
     metricId: "accepted-risks",
     title: "Accepted Impact",
     formulaName: "accepted-risk-context-count",

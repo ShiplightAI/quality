@@ -8,11 +8,11 @@ export function riskBadgeFor(input: {
 }): OwnerRiskBadge {
   const status = input.status?.toUpperCase() ?? "";
 
-  if (status.includes("BLOCK")) {
-    return "Blocked";
-  }
-
-  if (status.includes("FAIL")) {
+  // Markdown-fallback rows carry the Result cell verbatim from the scanned project,
+  // so any stated-but-not-passing result arrives here as a producer claim. "BLOCK"
+  // is still such a claim even though the blocked gap category is gone — it maps to
+  // the surviving Gap vocabulary rather than being dropped.
+  if (status.includes("FAIL") || status.includes("BLOCK")) {
     return "Gap";
   }
 
@@ -24,7 +24,14 @@ export function riskBadgeFor(input: {
     return "Missing";
   }
 
-  if (status.includes("COVER") || status.includes("PASS") || input.evidenceConfidence?.toUpperCase() === "HIGH") {
+  if (status.includes("COVER") || status.includes("PASS")) {
+    return "Covered";
+  }
+
+  // Confidence may only settle a row that states no result of its own. The scanned
+  // project controls this text, so a high-confidence claim must never promote an
+  // unrecognized status to Covered.
+  if (status.length === 0 && input.evidenceConfidence?.toUpperCase() === "HIGH") {
     return "Covered";
   }
 

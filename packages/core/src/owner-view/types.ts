@@ -1,7 +1,7 @@
 import type { IndexSourceClassification, IndexSourceReference } from "../project-index/types";
 
 export type OwnerViewState = "ready" | "missingTarget" | "directOpen";
-export type OwnerRiskBadge = "Covered" | "Partial" | "Gap" | "Blocked" | "Missing" | "Unknown";
+export type OwnerRiskBadge = "Covered" | "Partial" | "Gap" | "Missing" | "Unknown";
 
 export interface OwnerTargetSummary {
   readonly targetId: string;

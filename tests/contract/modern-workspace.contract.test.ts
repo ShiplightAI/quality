@@ -73,7 +73,7 @@ function targetSummary(overrides: Partial<TargetSummary> & Pick<TargetSummary, "
     evidenceCount: 0,
     expectationCount: 0,
     diagnosticCounts: { error: 0, warning: 0, info: 0 },
-    releaseRiskCounts: { blockers: 0, accepted: 0, deferred: 0 },
+    releaseRiskCounts: { accepted: 0, deferred: 0 },
     riskIndicators: [],
     sourceRefs: [],
     ...overrides
@@ -661,7 +661,7 @@ describe("modern quality workspace", () => {
           evidenceCount: 0,
           expectationCount: 0,
           diagnosticCounts: { error: 0, warning: 0, info: 0 },
-          releaseRiskCounts: { blockers: 0, accepted: 0, deferred: 0 },
+          releaseRiskCounts: { accepted: 0, deferred: 0 },
           riskIndicators: [],
           sourceRefs: [
             { label: "Project map", path: ".quality/project-map.yaml" },
@@ -682,7 +682,7 @@ describe("modern quality workspace", () => {
           evidenceCount: 0,
           expectationCount: 0,
           diagnosticCounts: { error: 0, warning: 0, info: 0 },
-          releaseRiskCounts: { blockers: 0, accepted: 0, deferred: 0 },
+          releaseRiskCounts: { accepted: 0, deferred: 0 },
           riskIndicators: [],
           sourceRefs: [
             { label: "Feature spec", path: "specs/030-agent-monitoring-runtime/spec.md" }

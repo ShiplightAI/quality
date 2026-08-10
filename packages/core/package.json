@@ -1,6 +1,6 @@
 {
   "name": "@shiplightai/quality-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Deterministic analysis engine for evidence-backed software quality maps.",
   "license": "MIT",

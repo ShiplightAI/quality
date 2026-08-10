@@ -87,7 +87,7 @@ aggregate score.
 
 Open gaps use these categories:
 
-`missing`, `blocked`, `stale`, `deferred`, `manual-only`, `weak`, `failing`, and
+`missing`, `stale`, `deferred`, `manual-only`, `weak`, `failing`, and
 `unavailable`.
 
 The distinction matters:

@@ -53,7 +53,6 @@ function riskCountsForTarget(result: ScanResult | undefined, targetId: string): 
   const analytics = buildAnalyticsView({ result, targetId });
 
   return {
-    blockers: analytics.riskSummary.blockers.length,
     accepted: analytics.riskSummary.acceptedRisks.length,
     deferred: analytics.riskSummary.deferredRisks.length
   };
@@ -74,7 +73,6 @@ function openRiskCount(gaps: Partial<Record<GapCategory, number>>): number {
   return (
     (gaps.failing ?? 0) +
     (gaps.missing ?? 0) +
-    (gaps.blocked ?? 0) +
     (gaps.unavailable ?? 0) +
     (gaps.weak ?? 0) +
     (gaps["manual-only"] ?? 0) +
@@ -145,10 +143,6 @@ function riskIndicatorsFor(input: {
     indicators.push(`${input.gapCounts.missing} missing`);
   }
 
-  if ((input.gapCounts.blocked ?? 0) > 0 || input.releaseRiskCounts.blockers > 0) {
-    indicators.push(`${(input.gapCounts.blocked ?? 0) + input.releaseRiskCounts.blockers} blockers`);
-  }
-
   if ((input.gapCounts.weak ?? 0) > 0) {
     indicators.push(`${input.gapCounts.weak} weak`);
   }
@@ -166,7 +160,7 @@ function riskIndicatorsFor(input: {
   }
 
   if (indicators.length === 0) {
-    indicators.push(input.status === "completed" && input.evidenceConfidence !== "LOW" ? "No immediate blockers" : "Review");
+    indicators.push(input.status === "completed" && input.evidenceConfidence !== "LOW" ? "No open gaps" : "Review");
   }
 
   return indicators;
@@ -241,7 +235,6 @@ function attentionCountsFor(targets: readonly TargetSummary[]): WorkspaceAttenti
       (gaps.stale ?? 0) +
       (gaps.deferred ?? 0),
     atRisk: openRiskCount(gaps),
-    blocked: gaps.blocked ?? 0,
     missing: gaps.missing ?? 0,
     weak: gaps.weak ?? 0,
     manualOnly: gaps["manual-only"] ?? 0,
@@ -260,12 +253,10 @@ export function buildWorkspaceSummary(
   const attentionCounts = attentionCountsFor(targets);
   const releaseRiskCounts = targets.reduce<WorkspaceReleaseRiskCounts>(
     (counts, target) => ({
-      blockers: counts.blockers + target.releaseRiskCounts.blockers,
       accepted: counts.accepted + target.releaseRiskCounts.accepted,
       deferred: counts.deferred + target.releaseRiskCounts.deferred
     }),
     {
-      blockers: 0,
       accepted: 0,
       deferred: 0
     }
@@ -292,13 +283,6 @@ function rollupStatusFor(input: {
 }): string | undefined {
   if (input.includedMapCount === 0 && input.canonicalGapWeight === 0) {
     return undefined;
-  }
-
-  const blocked = input.targets.some((target) =>
-    (target.gapCounts.blocked ?? 0) > 0 || target.releaseRiskCounts.blockers > 0
-  );
-  if (blocked) {
-    return "BLOCKED";
   }
 
   const failing = input.targets.some((target) => (target.gapCounts.failing ?? 0) > 0);
@@ -357,7 +341,7 @@ function featureTarget(input: {
 }
 
 function gapSeverity(category: GapCategory): WorkspaceActionItem["severity"] {
-  return category === "missing" || category === "blocked" || category === "failing" || category === "unavailable"
+  return category === "missing" || category === "failing" || category === "unavailable"
     ? "error"
     : "warning";
 }

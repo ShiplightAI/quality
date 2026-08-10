@@ -10,7 +10,6 @@
 // this from gap-triage/types.ts, so existing `.../gap-triage` importers are unaffected.
 export const GAP_CATEGORIES = [
   "missing",
-  "blocked",
   "stale",
   "deferred",
   "manual-only",

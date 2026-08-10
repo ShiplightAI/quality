@@ -53,7 +53,7 @@ function makeTarget(): TargetSummary {
     evidenceConfidence: "MEDIUM",
     expectationCount: 3,
     gapCounts: { weak: 1 },
-    releaseRiskCounts: { blockers: 0 }
+    releaseRiskCounts: { accepted: 0, deferred: 0 }
   } as unknown as TargetSummary;
 }
 

@@ -24,7 +24,6 @@ export interface WorkspaceAttentionCounts {
   readonly covered: number;
   readonly partial: number;
   readonly atRisk: number;
-  readonly blocked: number;
   readonly missing: number;
   readonly weak: number;
   readonly manualOnly: number;
@@ -35,7 +34,6 @@ export interface WorkspaceAttentionCounts {
 }
 
 export interface WorkspaceReleaseRiskCounts {
-  readonly blockers: number;
   readonly accepted: number;
   readonly deferred: number;
 }

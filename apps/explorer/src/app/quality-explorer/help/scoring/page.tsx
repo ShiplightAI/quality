@@ -101,11 +101,6 @@ const gapTerms: readonly GlossaryItem[] = [
       "A gap where some evidence exists, but the proof is not automated enough, not gated, or not complete enough."
   },
   {
-    term: "Release blocker",
-    definition:
-      "A gap serious enough that the current quality model treats it as blocking release readiness."
-  },
-  {
     term: "Copy fix prompt",
     definition:
       "A generated prompt you can hand to another agent to improve proof coverage for that specific gap."

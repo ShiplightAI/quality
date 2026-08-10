@@ -156,16 +156,14 @@ function structuredMetrics(input: {
       availability: highPriorityAvailability,
       guardrail: "Only explicit gate-context evidence is counted as gated."
     }),
-    ...(["stale", "manual-only", "missing", "blocked"] as const).map((category) =>
+    ...(["stale", "manual-only", "missing"] as const).map((category) =>
       metric({
         metricId:
           category === "stale"
             ? "stale-evidence"
             : category === "manual-only"
               ? "manual-only-exposure"
-              : category === "missing"
-                ? "missing-evidence"
-                : "blocked-gaps",
+              : "missing-evidence",
         numerator: gapRecords.filter((record) => record.category === category).length,
         denominator: gapRecords.length,
         records: gapRecords.filter((record) => record.category === category).map((record) =>
@@ -204,7 +202,7 @@ export function buildAnalyticsView(input: BuildAnalyticsInput): AnalyticsView {
       summary: missingSummary(input.targetId),
       filters: input.filters ?? {},
       metrics: [],
-      riskSummary: { blockers: [], acceptedRisks: [], deferredRisks: [] },
+      riskSummary: { acceptedRisks: [], deferredRisks: [] },
       baselineComparison: buildBaselineComparison({ currentSnapshotId: input.targetId, records: [] }),
       guardrails: ["Release analytics require a selected feature."],
       missingSelection: {
@@ -223,7 +221,7 @@ export function buildAnalyticsView(input: BuildAnalyticsInput): AnalyticsView {
       summary: missingSummary(input.targetId),
       filters: input.filters ?? {},
       metrics: [],
-      riskSummary: { blockers: [], acceptedRisks: [], deferredRisks: [] },
+      riskSummary: { acceptedRisks: [], deferredRisks: [] },
       baselineComparison: buildBaselineComparison({ currentSnapshotId: input.targetId, records: [] }),
       guardrails: ["Selected feature is unavailable."],
       missingSelection: {
@@ -282,7 +280,6 @@ export function buildAnalyticsView(input: BuildAnalyticsInput): AnalyticsView {
     metrics,
     filteredMetric,
     riskSummary: {
-      blockers: metrics.find((item) => item.metricId === "blocked-gaps")?.drilldownRecords ?? [],
       acceptedRisks: metrics.find((item) => item.metricId === "accepted-risks")?.drilldownRecords ?? [],
       deferredRisks: metrics.find((item) => item.metricId === "deferred-risks")?.drilldownRecords ?? []
     },

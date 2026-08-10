@@ -64,7 +64,6 @@ export interface MetricResult {
 }
 
 export interface ReleaseRiskSummary {
-  readonly blockers: readonly MetricDrilldownRecord[];
   readonly acceptedRisks: readonly MetricDrilldownRecord[];
   readonly deferredRisks: readonly MetricDrilldownRecord[];
 }

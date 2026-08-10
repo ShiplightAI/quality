@@ -40,7 +40,7 @@ rationale that the file cannot store.
 | Accepted category | Effect |
 | --- | --- |
 | `missing`, `manual-only`, or `weak` | The gap stops counting as open, and its structural coverage/static-quality penalty is removed. |
-| `blocked`, `stale`, `deferred`, `failing`, or `unavailable` | The gap stops counting as open; the scores do not change. |
+| `stale`, `deferred`, `failing`, or `unavailable` | The gap stops counting as open; the scores do not change. |
 
 In every case:
 
@@ -81,5 +81,5 @@ whether proof investment is being postponed indefinitely, or whether accepted
 decisions need an expiry process outside Quality.
 
 **The score did not change.** That is expected for state categories such as
-`blocked` or `failing`. Acceptance changes open-gap reporting, not the observed
+`stale` or `failing`. Acceptance changes open-gap reporting, not the observed
 software result.

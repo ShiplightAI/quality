@@ -213,11 +213,11 @@ confidence, reported beside structure confidence and never substituting for it.)
 ### `accepted_gaps` — accepted risk (human-gated)
 
 A per-check list of gap **categories** a human has reviewed and accepted as tolerated
-risk: a subset of `missing, blocked, stale, deferred, manual-only, weak, failing,
+risk: a subset of `missing, stale, deferred, manual-only, weak, failing,
 unavailable`. An accepted gap stays visible but stops counting as an **open** gap;
 accepting the category that drives the check's status (`missing` / `manual-only` /
 `weak`) also lifts its quality/coverage score, while accepting a state category
-(`blocked`/`stale`/`deferred`/`unavailable`/`failing`) is count-only. It never
+(`stale`/`deferred`/`unavailable`/`failing`) is count-only. It never
 changes evidence confidence. Like the gates, it is **human-gated**: the agent may
 *propose* "accept this as tolerated risk" but must never write `accepted_gaps` for
 the owner. Remove the category to un-accept.
