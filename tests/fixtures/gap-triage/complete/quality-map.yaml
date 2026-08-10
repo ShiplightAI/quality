@@ -14,19 +14,19 @@ expectations:
     proof_gap:
       summary: "No executable proof exists."
       next_step: "Add a contract test."
-  - id: "blocked"
-    title: "Blocked expectation"
+  - id: "command-evidence"
+    title: "Command evidence expectation"
     source_type: "SOURCE"
     category: "billing"
     priority: "P1"
     evidence:
-      - id: "blocked-proof"
+      - id: "command-proof"
         type: "integration"
-        command: "pnpm test -- blocked"
+        command: "pnpm test -- command-evidence"
         contexts:
           - "local"
     proof_gap:
-      summary: "Blocked by unavailable staging credentials."
+      summary: "Staging credentials are unavailable."
       next_step: "Restore staging credentials."
   - id: "stale"
     title: "Stale expectation"
@@ -175,5 +175,5 @@ expectations:
         contexts:
           - "manual-review"
     proof_gap:
-      summary: "Blocked, stale, and deferred context is source-provided."
-      next_step: "Unblock the deferred stale check."
+      summary: "Stale and deferred context is source-provided."
+      next_step: "Refresh the deferred stale check."

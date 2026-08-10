@@ -27,8 +27,8 @@ describe("analytics integration", () => {
 
     try {
       const view = buildAnalyticsView({ result: analyticsStructuredResult(), targetId });
-      expect(view.metrics).toHaveLength(8);
-      expect(view.riskSummary.blockers).toHaveLength(1);
+      expect(view.metrics).toHaveLength(7);
+      expect(view.riskSummary.acceptedRisks).toHaveLength(1);
     } finally {
       globalThis.fetch = originalFetch;
     }

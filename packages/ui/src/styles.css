@@ -233,11 +233,11 @@
 
 .feature-index-row {
   display: grid;
-  grid-template-columns: 18px minmax(160px, 1fr) 96px 88px 104px 52px 44px 68px;
+  grid-template-columns: 18px minmax(160px, 1fr) 96px 88px 104px 52px 44px;
   align-items: center;
   gap: 12px;
   padding: 8px 14px;
-  min-width: 720px;
+  min-width: 640px;
 }
 
 /* Sources table: same headed-table style as the feature index (shares .feature-index-table wrapper,

@@ -26,7 +26,7 @@ describe("gap triage integration", () => {
 
       expect(view.records.length).toBeGreaterThan(10);
       expect(view.records.some((record) => record.nextProof.text === "No source-provided recommended action")).toBe(true);
-      expect(view.records.some((record) => record.residualRisk.includes("Blocked"))).toBe(true);
+      expect(view.records.some((record) => record.residualRisk.includes("Staging credentials"))).toBe(true);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -66,13 +66,13 @@ describe("gap triage integration", () => {
 
   it("keeps diagnostics and existing evidence context visible with gaps", () => {
     const view = buildGapTriage({ result: gapStructuredResult(), targetId });
-    const blocked = view.records.find((record) => record.category === "blocked");
+    const record = view.records.find((entry) => entry.expectationTitle === "Command evidence expectation");
 
     // depth is the type-derived proof tier (integration -> "automated").
-    expect(blocked?.evidence[0]).toMatchObject({
-      label: "blocked-proof",
+    expect(record?.evidence[0]).toMatchObject({
+      label: "command-proof",
       depth: "automated"
     });
-    expect(blocked?.residualRisk).toBe("Blocked by unavailable staging credentials.");
+    expect(record?.residualRisk).toBe("Staging credentials are unavailable.");
   });
 });

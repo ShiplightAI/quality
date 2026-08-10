@@ -22,7 +22,6 @@ describe("gap triage selectors", () => {
     expect(view.groups.map((group) => group.category)).toEqual(
       expect.arrayContaining([
         "missing",
-        "blocked",
         "stale",
         "deferred",
         "manual-only",
@@ -67,10 +66,10 @@ describe("gap triage selectors", () => {
     const records = view.records.filter((record) => record.expectationTitle === "Multi category expectation");
 
     expect(records.map((record) => record.category)).toEqual(
-      expect.arrayContaining(["blocked", "stale", "deferred", "manual-only", "weak"])
+      expect.arrayContaining(["stale", "deferred", "manual-only", "weak"])
     );
     expect(new Set(records.map((record) => record.expectationId)).size).toBe(1);
-    expect(records.every((record) => record.relatedCategoryIds.includes("blocked"))).toBe(true);
+    expect(records.every((record) => record.relatedCategoryIds.includes("stale"))).toBe(true);
   });
 
   it("filters category, priority, source classification, and residual risk", () => {
@@ -117,12 +116,12 @@ describe("gap triage selectors", () => {
 
   it("preserves structured evidence paths and commands for fix prompts", () => {
     const view = buildGapTriage({ result: gapStructuredResult(), targetId });
-    const blocked = view.records.find((record) => record.expectationTitle === "Blocked expectation");
+    const command = view.records.find((record) => record.expectationTitle === "Command evidence expectation");
     const failing = view.records.find((record) => record.expectationTitle === "Failing expectation");
 
-    expect(blocked?.evidence[0]).toMatchObject({
-      command: "pnpm test -- blocked",
-      pathOrUrl: "pnpm test -- blocked"
+    expect(command?.evidence[0]).toMatchObject({
+      command: "pnpm test -- command-evidence",
+      pathOrUrl: "pnpm test -- command-evidence"
     });
     expect(failing?.evidence[0]).toMatchObject({
       path: "tests/contract/failing.test.ts",

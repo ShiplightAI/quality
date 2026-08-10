@@ -219,7 +219,7 @@ export function deriveExpectationAssessment(
   // Only the three EVIDENCE-STRENGTH categories drive `status` (and therefore the
   // score): no evidence → "missing", manual-only → "manual-only", otherwise "weak"
   // (IMPLICIT/PARTIAL). `status` is never a state category, so accepting one of the
-  // state/text categories (blocked/stale/deferred/unavailable, and fallback-only
+  // state/text categories (stale/deferred/unavailable, and fallback-only
   // "failing") is intentionally count-only — those never lower the score, so there
   // is nothing to lift here. This penalty-category mapping mirrors the status ladder
   // above and the categories gap-triage `categoriesFor` emits for the same status.

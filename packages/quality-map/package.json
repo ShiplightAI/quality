@@ -1,6 +1,6 @@
 {
   "name": "@shiplightai/quality-map",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Schema, parser, validation, normalization, and diagnostics for Shiplight quality maps.",
   "license": "MIT",

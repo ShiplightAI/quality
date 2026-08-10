@@ -42,19 +42,19 @@ expectations:
     proof_gap:
       summary: "Manual-only exposure remains."
       next_step: "Add a repeatable automated UX check."
-  - id: "p1-blocked"
-    title: "P1 blocked expectation"
+  - id: "p1-ungated"
+    title: "P1 ungated expectation"
     source_type: "SOURCE"
     category: "payments"
     priority: "P1"
     evidence:
-      - id: "blocked-proof"
+      - id: "ungated-proof"
         type: "integration"
-        command: "pnpm test -- blocked"
+        command: "pnpm test -- ungated"
         contexts:
           - "local"
     proof_gap:
-      summary: "Blocked by external sandbox."
+      summary: "External sandbox access is pending."
       next_step: "Restore sandbox access or replace the dependency."
   - id: "p1-stale"
     title: "P1 stale expectation"

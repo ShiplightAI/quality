@@ -16,8 +16,7 @@ describe("analytics release-confidence selectors", () => {
     expect(view.state).toBe("ready");
     // hasAutomatedEvidence is now "has any automated evidence type" (depth removed).
     // Of the 7 P0/P1 expectations, four carry an automated type: p0-direct-gated
-    // (contract), p1-blocked (integration), p1-stale (e2e), p1-accepted (contract).
-    // p1-blocked previously had depth BLOCKED and was excluded; integration now counts.
+    // (contract), p1-ungated (integration), p1-stale (e2e), p1-accepted (contract).
     expect(direct).toMatchObject({
       numerator: 4,
       denominator: 7,
@@ -31,14 +30,13 @@ describe("analytics release-confidence selectors", () => {
     expect(view.guardrails.join(" ")).toContain("No single readiness score");
   });
 
-  it("counts stale, manual-only, missing, blocked, accepted, and deferred contexts", () => {
+  it("counts stale, manual-only, missing, accepted, and deferred contexts", () => {
     const view = buildAnalyticsView({ result: analyticsStructuredResult(), targetId });
     const byId = new Map(view.metrics.map((metric) => [metric.metricId, metric]));
 
     expect(byId.get("stale-evidence")?.numerator).toBe(1);
     expect(byId.get("manual-only-exposure")?.numerator).toBe(2);
     expect(byId.get("missing-evidence")?.numerator).toBe(1);
-    expect(byId.get("blocked-gaps")?.numerator).toBe(1);
     expect(byId.get("accepted-risks")?.numerator).toBe(1);
     expect(byId.get("deferred-risks")?.numerator).toBeGreaterThanOrEqual(1);
   });

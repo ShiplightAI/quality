@@ -3,7 +3,7 @@
 import { useQcRoute } from "../host";
 
 import Link from "next/link";
-import { AlertTriangle, BarChart3, Boxes, CircleGauge, GitBranch, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BarChart3, Boxes, CircleGauge, ShieldCheck } from "lucide-react";
 import { Alert, Anchor, Box, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import type { SavedQcView } from "@shiplightai/quality-core";
 import type { Workspace } from "@shiplightai/quality-core/workspace";
@@ -167,7 +167,7 @@ export function OwnerDashboard({
         />
       </SimpleGrid>
 
-      <SimpleGrid cols={{ base: 1, sm: 3 }}>
+      <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <Metric
           testid="index-target-count"
           icon={<Boxes aria-hidden size={18} />}
@@ -184,13 +184,6 @@ export function OwnerDashboard({
             ? `${summary.attentionCounts.atRisk} open evidence ${summary.attentionCounts.atRisk === 1 ? "gap" : "gaps"} across the project.`
             : `${summary.attentionCounts.atRisk} open evidence ${summary.attentionCounts.atRisk === 1 ? "gap" : "gaps"} across ${totalCheckCount} quality ${totalCheckCount === 1 ? "check" : "checks"}.`}
           helpText="Gap records identify where quality checks still lack enough proof. One check can have more than one gap, so the gap count and check count measure different things."
-        />
-        <Metric
-          icon={<GitBranch aria-hidden size={18} />}
-          label="Release blockers"
-          value={String(summary.releaseRiskCounts.blockers)}
-          ariaLabel={`${summary.releaseRiskCounts.blockers} release ${summary.releaseRiskCounts.blockers === 1 ? "blocker" : "blockers"} across the project.`}
-          helpText="Evidence gaps marked as release blockers by the underlying quality evidence and analytics model."
         />
       </SimpleGrid>
 

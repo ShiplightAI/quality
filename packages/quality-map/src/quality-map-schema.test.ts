@@ -54,6 +54,22 @@ describe("quality-map JSON Schema (single source)", () => {
     expect(schema.$defs.gapCategory.enum).toEqual([...GAP_CATEGORIES]);
   });
 
+  // GAP_CATEGORIES is published API (re-exported by quality-tools) and the docs and
+  // agent-skill assets hand-list it. The schema assertions above derive from the same
+  // tuple, so they pass for any edit of it; this pins the literal vocabulary so adding
+  // or removing a category has to be a deliberate, reviewed change.
+  it("pins the published gap-category vocabulary", () => {
+    expect([...GAP_CATEGORIES]).toEqual([
+      "missing",
+      "stale",
+      "deferred",
+      "manual-only",
+      "weak",
+      "failing",
+      "unavailable"
+    ]);
+  });
+
   it("reflects the retired require_multi_layer and the live test_case fields", () => {
     const schema = buildQualityMapJsonSchema() as {
       $defs: { policyOverride: { properties: Record<string, unknown> }; evidence: { properties: Record<string, unknown> } };

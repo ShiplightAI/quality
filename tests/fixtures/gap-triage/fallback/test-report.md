@@ -8,4 +8,4 @@ Fallback gap target is partial.
 
 | Testing What | Evidence | Result | Confidence | Residual Risk |
 | --- | --- | --- | --- | --- |
-| Fallback gap expectation | docs/manual-gap.md | BLOCKED | LOW | Blocked fallback source |
+| Fallback gap expectation | docs/manual-gap.md | NOT RUN | LOW | Unverified fallback source |
