@@ -3,11 +3,11 @@
 Tools for producing canonical workflow observations, assessing repository
 quality graphs, and generating fix prompts.
 
-These examples require `@shiplightai/quality-tools` 0.3.0. Pin the interface so
-an unpublished or stale `latest` tag cannot silently run 0.2.x:
+These examples require `@shiplightai/quality-tools` 0.3.2. Pin the interface so
+an older release cannot silently provide a different command contract:
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations --help
+npx --yes @shiplightai/quality-tools@^0.3.2 observations --help
 ```
 
 Inside this source checkout, use
@@ -21,12 +21,12 @@ A workflow may publish several selected artifacts, all using this same
 contract. Convert a native test report at the producer boundary:
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations from-junit reports/junit.xml \
+npx --yes @shiplightai/quality-tools@^0.3.2 observations from-junit reports/junit.xml \
   --output quality-observations.json
 ```
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations from-playwright reports/playwright.json \
+npx --yes @shiplightai/quality-tools@^0.3.2 observations from-playwright reports/playwright.json \
   --output quality-observations.json
 ```
 
@@ -34,7 +34,7 @@ npx --yes @shiplightai/quality-tools@^0.3.0 observations from-playwright reports
 automatically. For a smoke or release gate:
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations record \
+npx --yes @shiplightai/quality-tools@^0.3.2 observations record \
   --path .github/workflows/publish.yml \
   --test-case tarball-size \
   --status pass \
@@ -44,15 +44,15 @@ npx --yes @shiplightai/quality-tools@^0.3.0 observations record \
 Merge independently produced shards and validate before upload:
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations merge shard-*.json \
+npx --yes @shiplightai/quality-tools@^0.3.2 observations merge shard-*.json \
   --output quality-observations.json
-npx --yes @shiplightai/quality-tools@^0.3.0 observations validate quality-observations.json
+npx --yes @shiplightai/quality-tools@^0.3.2 observations validate quality-observations.json
 ```
 
 Print the canonical schema with:
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 observations schema
+npx --yes @shiplightai/quality-tools@^0.3.2 observations schema
 ```
 
 Observation sources only locate this canonical file. They do not select report
@@ -61,7 +61,7 @@ parsers.
 ## Analyze runtime quality
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 analyze \
+npx --yes @shiplightai/quality-tools@^0.3.2 analyze \
   --project-path . \
   --observation-set release-workflows-runtime-review \
   --view web
@@ -71,23 +71,20 @@ The command scans the target repository, executes the selected observation set,
 applies the optional saved view, and writes recommendation JSON under
 `.quality/generated/recommendations/`.
 
-The repository-local CLI makes `--observation-set` optional. Run its static-only
-form with:
+For an assessment without runtime observations, omit `--observation-set`:
 
 ```bash
-pnpm exec tsx packages/quality-tools/src/cli.ts analyze --project-path .
+npx --yes @shiplightai/quality-tools@^0.3.2 analyze --project-path .
 ```
 
 It loads no runtime results and writes `static--<scope>.json` carrying coverage,
-evidence confidence, and structure confidence. Before omitting the flag from an
-installed package, inspect `analyze --help`; older published 0.3.x versions
-still require it. The Quality score needs runtime observations, and
-`quality_score_availability` explains when it is absent.
+evidence confidence, and structure confidence. The Quality score needs runtime
+observations, and `quality_score_availability` explains when it is absent.
 
 ## Generate fix prompts
 
 ```bash
-npx --yes @shiplightai/quality-tools@^0.3.0 fix-prompts \
+npx --yes @shiplightai/quality-tools@^0.3.2 fix-prompts \
   --project-path . \
   --output .quality/fix-prompts.md
 ```

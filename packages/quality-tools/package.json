@@ -1,6 +1,6 @@
 {
   "name": "@shiplightai/quality-tools",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
   "description": "Quality graph analysis and canonical workflow-observation tools.",
   "license": "MIT",
