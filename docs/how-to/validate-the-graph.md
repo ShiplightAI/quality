@@ -81,7 +81,8 @@ that field.
 ## Verify the result
 
 - The feature is no longer marked as a candidate if you confirmed it.
-- The validated quality map records that the complete list of checks was reviewed.
+- The validated quality map records that the complete list of checks was reviewed
+  (the `checks_reviewed` field).
 - The original check provenance is unchanged.
 - Structure confidence reaches full credit for that feature only when feature
   confirmation and validation of the complete list are both present.
