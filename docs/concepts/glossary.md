@@ -23,15 +23,39 @@ descriptions help people understand the graph but do not change scoring.
 never charged twice for one order.” Quality map files call checks
 *expectations*.
 
-**Proof** — An artifact that can support a check: a test, workflow gate,
-monitoring signal, static check, or manual procedure. Quality map files call
-proof *evidence*.
+**Validation** — Comparing proposed features and checks with product intent to
+confirm that they describe the right requirements and expected behaviors.
 
-**Observation** — A recorded outcome from one piece of proof: passed, failed,
-errored, or skipped.
+**Verification** — Evaluating whether the implementation or observed behavior
+satisfies a quality check. Verification may be reasoning-based or empirical.
 
-**Proof gap** — A recorded explanation that proof is missing, incomplete, or
-not yet available, often with a suggested next step.
+**Verification method** — A method or artifact used to evaluate a check, such
+as a test, formal analysis, workflow gate, monitoring signal, static check, or
+manual procedure. Quality map files store these mappings under `evidence`.
+
+**Evidence** — Information that supports or challenges a check. Evidence may
+come from reasoning or from an observation evaluated against an expected
+outcome.
+
+**Observation** — A recorded fact or outcome. An observation becomes
+verification evidence only when it is connected to a check and evaluated
+against the expected outcome.
+
+**Empirical observation** — A recorded fact about executed or production
+behavior that empirical verification compares with a quality check.
+
+**Runtime observation** — Quality's standardized record that an executable
+verification method passed, failed, errored, or was skipped at a particular
+revision and time. It may transport the outcome of either an empirical method
+or an executable reasoning tool.
+
+**Evidence gap** — A recorded explanation that evidence is missing, incomplete,
+or not yet available, often with a suggested next step. The current quality-map
+field is named `proof_gap` for compatibility.
+
+**Proof** — A deductive argument that establishes a proposition under stated
+assumptions, including a machine-checked formal proof. Quality does not use
+*proof* as a general synonym for tests or evidence.
 
 ## Scope and timing
 
@@ -52,36 +76,40 @@ by an assessment.
 
 ## Trust and decisions
 
-**Approve or ratify** — For a person to confirm an agent proposal. Human review
-can lift structure confidence when the feature is confirmed and its complete
-list of checks is approved.
+**Validate intent** — For a person to confirm that proposed features and checks
+accurately represent the product intent. Human validation can lift structure
+confidence when the feature and its complete list of checks are confirmed.
 
 **Provenance** — The recorded origin of a list of checks or an individual check: a
 specification, a person, an agent draft, an inference from existing code, or no
 declared source. Provenance affects structure confidence and is not overwritten
-when someone later approves the checks.
+when someone later validates the checks.
 
-**Proof policy** — A requirement that one check needs particular proof, a
-specific runtime context, or a delivery gate. An unmet policy can lower coverage,
-evidence confidence, and the static quality readout; it does not rewrite a
-runtime result that already occurred.
+**Verification policy** — A requirement that one check needs a particular
+verification method, runtime context, or delivery gate. An unmet policy can
+lower coverage, evidence confidence, and the static quality readout; it does not
+rewrite a runtime result that already occurred.
 
 **Accepted risk** — A gap category that a person has explicitly chosen to
 tolerate. The gap remains visible but no longer counts as open. Accepting a
 `missing`, `manual-only`, or `weak` gap also removes that structural scoring
 penalty. Other accepted categories change gap reporting only.
 
-## Kinds of proof
+## Kinds of verification method
 
-Quality recognizes these proof types:
+The current quality-map schema recognizes these `evidence.type` values:
 
 `unit`, `contract`, `integration`, `e2e`, `agent`, `manual`, `telemetry`,
 `static`, `smoke`, `script`, and `other`.
 
-The type describes what the artifact actually is. The engine uses that fact,
-along with runtime context and declared proof requirements, to derive evidence
-confidence. Priority—not proof type—determines how heavily a check counts in an
-aggregate score.
+The type describes what the mapped method or artifact actually is. The engine
+uses that fact, along with runtime context and declared verification
+requirements, to derive evidence confidence. Priority—not method type—determines
+how heavily a check counts in an aggregate score.
+
+These values are a compatibility vocabulary rather than a complete taxonomy of
+correctness methods. See [Correctness terminology](terminology.md) for the
+reasoning and empirical branches.
 
 ## Kinds of gap
 
@@ -92,9 +120,9 @@ Open gaps use these categories:
 
 The distinction matters:
 
-- **Missing** means no proof is mapped.
-- **Unavailable** means proof is described but does not provide a usable path,
-  URL, or command. A mapped proof item with no matching runtime result is
+- **Missing** means no verification method is mapped.
+- **Unavailable** means a method is described but does not provide a usable
+  path, URL, or command. A mapped method with no matching runtime result is
   **unobserved**, which is a runtime state rather than a gap category.
 - **Failing** means the available result reported a failure.
 

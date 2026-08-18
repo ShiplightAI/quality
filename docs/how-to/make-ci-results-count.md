@@ -26,7 +26,7 @@ Without that permission, the agent should propose the workflow change and stop.
 
 ## What the agent does
 
-1. Finds the job that already runs the relevant proof.
+1. Finds the job that already runs the relevant verification method.
 2. Converts JUnit or Playwright output—or records an existing gate outcome—into
    the standard `quality-observations.json` format.
 3. Includes the commit and run metadata.
@@ -51,13 +51,14 @@ Check all three stages; success at one stage does not guarantee the next.
 Confirm that `quality-observations.json` is present on both successful and failed
 runs. Publishing only green runs creates a biased quality score.
 
-### 2. Results match mapped proof
+### 2. Results match mapped verification methods
 
 Ask:
 
 ```text
-Assess the project. Report how many observations matched proof, how many were
-unmatched, and how many were ambiguous. Show the resolution audit.
+Assess the project. Report how many observations matched mapped verification
+methods, how many were unmatched, and how many were ambiguous. Show the
+resolution audit.
 ```
 
 Matching uses the evidence path and optional test-case name. Results arriving in

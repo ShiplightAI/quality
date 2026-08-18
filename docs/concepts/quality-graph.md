@@ -10,9 +10,10 @@ you whether an important expected behavior has no test, whether a result failed
 to reach the reporting system, or whether the team agrees that the right things
 are being tested.
 
-Quality starts with expected behaviors. It then connects each behavior to proof
-and, when available, to a runtime result. Missing links stay visible as gaps
-even when every existing test is green.
+Quality starts by mapping product intent into features and expected behaviors
+that a person can validate. It then connects each behavior to verification
+methods and, when available, to observations or other results. Missing links
+stay visible as evidence gaps even when every existing test is green.
 
 ## The five layers
 
@@ -20,8 +21,8 @@ even when every existing test is green.
 project          what you are assessing
   └── features         the capabilities it provides
         └── checks           the expected behaviors each capability must keep
-              └── proof            tests and other artifacts that can support a behavior
-                    └── results          what happened when that proof ran
+              └── verification methods  how each behavior is evaluated
+                    └── runtime observations  what executable methods reported
 ```
 
 Read the graph from top to bottom:
@@ -32,14 +33,22 @@ Read the graph from top to bottom:
    project? “Checkout” is a feature; the `checkout/` folder is not.
 3. **Check:** What must remain true about that feature? For example, “A customer
    is never charged twice for one order.”
-4. **Proof:** What could demonstrate that the check holds? This may be a unit
-   test, browser test, release gate, monitoring signal, or manual procedure.
-5. **Result:** What did the selected run report for that proof?
+4. **Verification method:** How can we evaluate whether the check holds? This
+   may be reasoning-based, such as static analysis, or empirical, such as a unit
+   test, browser test, monitoring signal, or manual runtime procedure.
+5. **Runtime observation:** What did an executable method report? This
+   standardized result record can carry an empirical observation or the status
+   of an executable reasoning tool.
 
-Each layer can have a different problem. A check may have no proof. Proof may
-exist but have no matching result. A passing result may support a list of checks
-that nobody has reviewed. Keeping those cases separate makes the next action
-clearer.
+Each layer can have a different problem. A check may have no verification
+method. A method may exist but have no matching evidence or result. A passing
+observation may support a list of checks that nobody has validated against
+product intent. Keeping those cases separate makes the next action clearer.
+
+Validation and verification answer different questions. Validation connects
+product intent to the feature and check structure. Verification connects a
+check to the implementation or observed behavior. See
+[Correctness terminology](terminology.md) for the complete distinction.
 
 ## Where the graph is stored
 
@@ -49,14 +58,16 @@ reviewed and versioned with the rest of the project.
 | Information | Location |
 | --- | --- |
 | Project and feature list | `.quality/project-map.yaml` |
-| Checks and proof for one feature | `.quality/evidence/<feature>/quality-map.yaml` |
+| Checks and verification methods for one feature | `.quality/evidence/<feature>/quality-map.yaml` |
 | Saved scopes, result sources, and source lists | `.quality/config/` |
 
-Tests, reports, workflows, and other proof stay in their existing locations.
-The quality maps point to them; Quality does not move or rewrite them.
+Tests, analyses, reports, workflows, and other verification artifacts stay in
+their existing locations. The quality maps point to them; Quality does not move
+or rewrite them.
 
 You do not need to create these files by hand. A coding agent can prepare them,
-but you remain responsible for reviewing product decisions and approvals.
+but you remain responsible for validating product intent and approving decisions
+such as accepted risk.
 
 ## Why features are not folders
 
@@ -65,7 +76,8 @@ A feature is a capability that can be understood and assessed on its own.
 
 This distinction matters because the graph is meant to support a release
 decision. A list of folders says little about user impact. A list of capabilities
-with their expected behaviors, proof, and gaps shows where the risk is.
+with their expected behaviors, mapped methods, evidence, and gaps shows where
+the risk is.
 
 A useful test is: **if this failed, can I explain what would be broken for a user
 or operator?** If not, it may not be a feature.
@@ -87,8 +99,9 @@ views. A view selects features; it does not copy or change them.
 ## What the graph is not
 
 The graph is not a test report. A report says what ran; the graph says what
-matters and how the available proof relates to it.
+matters and how the available evidence relates to it.
 
 The graph is also not a score. The [four scores](the-four-scores.md) are readouts
-calculated from the graph and, for runtime quality, from observations. You improve
-the underlying checks, proof, software, or review—not the number directly.
+calculated from the graph and, for runtime quality, from observations. You
+improve the underlying intent, checks, verification methods, software, evidence,
+or validation—not the number directly.

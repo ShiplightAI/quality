@@ -14,12 +14,12 @@ same outcome in your own words.
 | `/quality start` | Set up the smallest useful quality graph | [Set up Quality](how-to/set-up-quality.md) |
 | `/quality status` | Describe the current graph and saved results without changing anything | — |
 | `/quality map-project` | Create or update the project and feature list | — |
-| `/quality map-feature <id>` | Define one feature's checks and connect existing proof | [Map a feature](how-to/map-a-feature.md) |
+| `/quality map-feature <id>` | Define one feature's checks and connect existing verification methods | [Map a feature](how-to/map-a-feature.md) |
 | `/quality assess` | Refresh the available scores and explain them | [The four scores](concepts/the-four-scores.md) |
 | `/quality improve` | Diagnose a weak score or gap and address its cause | [Act on a low score](how-to/act-on-a-weak-score.md) |
 | `/quality help` | Explain a Quality request without running it | — |
 
-There is no shortcut that approves a proposal or accepts risk. State those
+There is no shortcut that validates a proposal or accepts risk. State those
 decisions in your own words so the agent can record exactly what you decided.
 See [Who decides what](concepts/who-decides-what.md).
 
@@ -38,7 +38,7 @@ command to see all options.
 | --- | --- |
 | `validate` | Validates one feature quality map and exits with an error code when the map is invalid |
 | `analyze` | Calculates the available scores, optionally loads a saved observation set, and writes the result and any ranked recommendations to JSON |
-| `fix-prompts` | Turns structural proof gaps into instructions for a coding agent |
+| `fix-prompts` | Turns structural evidence gaps into instructions for a coding agent |
 | `observations` | Converts JUnit or Playwright reports, records individual outcomes, merges files, validates them, or prints their schema |
 | `schema` | Prints the quality-map JSON Schema |
 
@@ -46,8 +46,8 @@ command to see all options.
 
 **`validate` checks the map contract, not the whole repository.** It checks YAML,
 required and unknown fields, identifiers, references, and canonical evidence
-paths. It does not check whether a referenced proof file currently exists. A
-full project scan reports missing evidence files separately.
+paths. It does not check whether a referenced verification artifact currently
+exists. A full project scan reports missing evidence files separately.
 
 **`analyze` needs an observation-set identifier only for the Quality score.** It
 scans the repository, optionally applies a saved view, and writes a file under

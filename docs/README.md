@@ -1,8 +1,9 @@
 # Shiplight Quality guide
 
-Shiplight Quality connects the expected behaviors your product requires to the proof that
-supports them. It shows what is covered, what is uncertain, what happened in the
-latest test runs, and which decisions still need a person.
+Shiplight Quality helps people validate that expected behaviors represent
+product intent, then connects those behaviors to verification methods and the
+evidence those methods produce. It shows what is covered, what is uncertain,
+what happened in the latest runs, and which decisions still need a person.
 
 You do not need to understand the YAML files or scoring formulas to use this
 guide. Most tasks can be requested from a coding agent in plain language. The
@@ -18,9 +19,10 @@ It explains the model in a few minutes. Then follow
 
 | Page | What you will learn |
 | --- | --- |
-| [The quality graph](concepts/quality-graph.md) | How expected behaviors connect to proof and test results |
+| [Correctness terminology](concepts/terminology.md) | How validation, verification, evidence, observations, and proof differ |
+| [The quality graph](concepts/quality-graph.md) | How expected behaviors connect to verification methods and results |
 | [The four scores](concepts/the-four-scores.md) | What each score means and why the scores stay separate |
-| [How Quality earns your trust](concepts/trust-boundaries.md) | The boundaries that keep proof, scores, and human decisions independent |
+| [How Quality earns your trust](concepts/trust-boundaries.md) | The boundaries that keep evidence, scores, and human decisions independent |
 | [Who decides what](concepts/who-decides-what.md) | Which work an agent can prepare and which decisions require you |
 | [Glossary](concepts/glossary.md) | The terms used throughout Quality |
 
@@ -31,9 +33,9 @@ It explains the model in a few minutes. Then follow
 | Start using Quality in a repository | [Set up Quality](how-to/set-up-quality.md) |
 | Use requirements from Jira, Linear, or an external document | [Add product sources](how-to/add-product-sources.md) |
 | Define what one feature must guarantee | [Map a feature](how-to/map-a-feature.md) |
-| Review and approve an agent's proposal | [Review and approve the graph](how-to/review-and-ratify.md) |
+| Validate an agent's proposal against product intent | [Validate the graph](how-to/validate-the-graph.md) |
 | Connect CI test results | [Make CI results count](how-to/make-ci-results-count.md) |
-| Require stronger proof for an important expected behavior | [Require stronger proof](how-to/require-stronger-proof.md) |
+| Require stronger evidence for an important expected behavior | [Set verification requirements](how-to/set-verification-requirements.md) |
 | Record a risk we have chosen to accept | [Accept a known gap](how-to/accept-a-known-gap.md) |
 | Assess only the features in one release | [Scope an assessment](how-to/scope-an-assessment.md) |
 | Understand and improve a low score | [Act on a low score](how-to/act-on-a-weak-score.md) |
@@ -53,7 +55,7 @@ the prompts to your project; they are examples, not special syntax.
 Changes to `.quality/` are normal repository changes. Review them in a pull
 request just as you would review product requirements or CI configuration. An
 agent may propose a feature, priority, check, or accepted risk, but it must not
-record your approval unless you explicitly give it.
+record your validation or approval unless you explicitly give it.
 
 ## For contributors
 
