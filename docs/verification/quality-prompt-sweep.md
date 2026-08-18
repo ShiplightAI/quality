@@ -99,7 +99,7 @@ CLI examples are outside this Quality-prompt sweep.
 2. **Generated evidence did not join real Vitest output.** Local JUnit conversion
    showed 57 of 57 pinned rows unmatched because the maps stored bare test labels
    while Vitest emits the full nested name. Three rows also cited the wrong test
-   file. Mechanical repairs raised a local runtime score from 31 to 77, proving
+   file. Mechanical repairs raised a local runtime score from 31 to 77, showing
    that the join keys—not the test results—caused most of the loss.
 3. **Pinned and unpinned rows can become ambiguous.** After repairing the exact
    pins, 46 observations matched both a pinned row and an unpinned row for the
@@ -135,7 +135,7 @@ CLI examples are outside this Quality-prompt sweep.
    tells readers to substitute an id from `.quality/project-map.yaml`.
 5. **Session semantics should be stated in testing guidance.** Follow-up prompts
    should use an explicit `--resume <session-id>`; independent documentation
-   prompts should run in a fresh session so they prove persisted files, not
+   prompts should run in a fresh session so they evaluate persisted files, not
    conversational memory.
 
 ## Verification boundary

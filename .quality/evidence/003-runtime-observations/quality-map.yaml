@@ -13,7 +13,7 @@ target:
     - path: "AGENTS.md"
       label: "Independence: producers write facts, Quality reads and evaluates them"
     - path: "docs/concepts/trust-boundaries.md"
-      label: "Proof remains independent and scores are deterministic"
+      label: "Evidence remains independent and scores are deterministic"
     - path: "packages/core/src/observations/quality-observations.schema.json"
       label: "Canonical observation manifest schema"
 
@@ -371,7 +371,7 @@ expectations:
       - path: "AGENTS.md"
         anchor: "Independence"
       - path: "docs/concepts/trust-boundaries.md"
-        anchor: "Proof remains independent"
+        anchor: "Evidence remains independent"
     category: "security"
     priority: "UNKNOWN"
     evidence:
@@ -540,7 +540,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "AGENTS.md"
-        anchor: "Agents must not set human ratification fields or accept risk for a human"
+        anchor: "Agents must not set human validation fields or accept risk for a human"
     category: "compliance"
     priority: "UNKNOWN"
     evidence:

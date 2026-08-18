@@ -71,8 +71,8 @@ for the right reason, so you know it covers what you think it covers.
 
 **Test the silence, not just the success.** The worst failures in this tool are
 quiet ones — a result that fails to connect, a value that is dropped rather than
-rejected. A test proving something works often will not catch those. A test
-proving the tool *complains* when something is wrong usually will.
+rejected. A test showing that something works often will not catch those. A test
+showing that the tool *complains* when something is wrong usually will.
 
 ## Releasing
 

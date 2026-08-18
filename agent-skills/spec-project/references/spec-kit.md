@@ -57,7 +57,7 @@ integration instead of assuming one spelling.
 
 After planning is accepted, return to the main lifecycle for the
 regression-first `/shiplight cover` handoff, implementation, verification, and
-final proof run.
+final verification run.
 
 ## Pointers and Branches
 

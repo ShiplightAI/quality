@@ -67,7 +67,7 @@ repository enforces them:
   injected by `apps/explorer`, which exposes only the operations the application
   needs. Authoring operations remain explicit engine capabilities and are not
   available to the Explorer interface.
-- Human ratification fields are contract inputs. Agent workflows may propose
+- Human validation fields are contract inputs. Agent workflows may propose
   changes but must not promote those fields.
 - Local and remote filesystem access stays behind data-source adapters. The
   adapters discover and normalize inputs; scoring operates on the normalized

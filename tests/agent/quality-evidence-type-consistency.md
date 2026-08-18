@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Verify that `/quality map-feature` classifies proof by its execution boundary
+Verify that `/quality map-feature` classifies verification methods by their execution boundary
 and remains consistent with other feature maps without assuming every test in
 one file has the same type.
 
@@ -26,4 +26,4 @@ The resulting proposal must:
 3. Allow pinned cases to differ even though they share a path.
 4. Detect and report the conflict for an identical path and case instead of
    silently preserving both classifications.
-5. Leave tests, reports, and human-owned ratification fields unchanged.
+5. Leave tests, reports, and human-owned validation fields unchanged.

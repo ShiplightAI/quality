@@ -7,7 +7,7 @@ description: Drive specification-led project development from product intent thr
 
 Drive project work from accepted product intent to implementation and durable
 testing evidence. Treat the artifacts as interfaces that keep intent,
-implementation, and proof aligned; do not treat document production itself as
+implementation, and evidence aligned; do not treat document production itself as
 the outcome.
 
 ## Delegation Contract
@@ -22,7 +22,7 @@ ownership of artifacts produced by a lower-level workflow.
 | `specs/NNN-feature-name/spec.md` | Spec Kit in Spec Kit mode; portable coding agent otherwise: accepted product behavior |
 | `specs/NNN-feature-name/plan.md` | Spec Kit in Spec Kit mode; portable coding agent otherwise: implementation approach |
 | `specs/NNN-feature-name/tasks.md` | Spec Kit in Spec Kit mode; portable coding agent otherwise: executable work |
-| `specs/NNN-feature-name/test-spec.md` | `/shiplight cover`: what must be proved and at what declared priority |
+| `specs/NNN-feature-name/test-spec.md` | `/shiplight cover`: what must be verified and at what declared priority |
 | `specs/NNN-feature-name/test-report.md` | `/shiplight cover`: tests, commands, and observed results |
 | Tests and verification artifacts | `/shiplight cover` and its producers |
 
@@ -34,7 +34,7 @@ artifacts.
 
 - Treat `spec.md` as the product-behavior authority in both operating modes.
 - Treat code as an implementation of the product spec.
-- Treat `test-spec.md`, tests, reports, verification, and reviews as proof
+- Treat `test-spec.md`, tests, reports, verification, and reviews as evidence
   artifacts, not substitutes for product intent.
 - Keep every `spec.md` as the latest accepted product snapshot, never a
   chronological change log. A reader must be able to determine all current
@@ -51,7 +51,7 @@ When behavior changes, have the active feature-spec writer reconcile the whole
 `spec.md` into that current snapshot and obtain acceptance before changing the
 implementation. Do not satisfy this gate by appending the change request to the
 old spec. Then delegate implementation through the active mode and ask
-`/shiplight cover` to reconcile its testing contract and proof. If product
+`/shiplight cover` to reconcile its testing contract and evidence. If product
 intent is ambiguous or artifacts conflict materially, stop and ask the owner;
 never silently choose product semantics.
 
@@ -96,7 +96,7 @@ status pass.
 ## Reconcile Before Creating
 
 Treat every incoming product change as an existing-feature change until the
-repository proves otherwise. Before assigning a feature ID, creating a feature
+repository evidence shows otherwise. Before assigning a feature ID, creating a feature
 directory, or invoking a new-feature Spec Kit workflow:
 
 1. Read the PRD and feature breakdown. Inventory every existing
@@ -152,7 +152,7 @@ capability.
 Complete the reconciliation gate, then select an existing feature whenever it
 can own the change. Resolve a new feature ID and target only after reporting why
 the inspected existing features do not apply. In portable mode, let the coding
-agent create the directory only after that proof; do not create or update Spec
+agent create the directory only after that evidence; do not create or update Spec
 Kit pointers. In Spec Kit mode, invoke its new-feature workflow only after the
 same gate, then let Spec Kit create the feature directory and maintain its
 pointers.
@@ -181,7 +181,7 @@ Then run the selected feature through these gates:
 3. **Plan and task:** in Spec Kit mode, delegate `plan.md` and `tasks.md` to its
    plan and tasks workflows. In portable mode, direct the coding agent through
    existing project conventions. Keep tasks traceable to accepted requirements.
-4. **Plan proof:** hand the accepted spec and declared priorities to
+4. **Plan verification:** hand the accepted spec and declared priorities to
    `/shiplight cover`. Ask it to create `test-spec.md` and tests before
    production changes when a regression-first or test-first sequence is
    practical. If it is not practical, record why and invoke it after the
@@ -192,8 +192,8 @@ Then run the selected feature through these gates:
    keep spec, plan, and tasks current as implementation facts emerge; ask the
    owner before changing product semantics.
 6. **Verify:** use `/shiplight verify` for relevant live UI/API behavior.
-7. **Complete proof:** invoke `/shiplight cover` to refresh the testing contract,
-   run the relevant proof, and write `test-report.md`. Optionally invoke
+7. **Complete verification:** invoke `/shiplight cover` to refresh the testing contract,
+   run the relevant verification methods, and write `test-report.md`. Optionally invoke
    `/shiplight review` when the user requests review or the accepted plan calls
    for it.
 8. **Reconcile:** confirm `spec.md` states only the latest accepted behavior and
@@ -219,7 +219,7 @@ Use `batch` only to orchestrate preparation of multiple feature specs and plans
 with the owner available; do not implement multiple features concurrently. Use
 `autonomous` only for accepted specs whose plans and tasks contain no unresolved
 product decisions. Work in dependency order and stop on ambiguity, missing
-prerequisite work, or a proof decision requiring owner judgment.
+prerequisite work, or a verification decision requiring owner judgment.
 
 ## Completion States
 
@@ -231,7 +231,8 @@ Report each state separately:
 - **Implementation complete:** code implements the accepted scope and relevant
   implementation checks pass.
 - **Evidence complete:** `/shiplight cover` produced a reconciled
-  `test-spec.md`, relevant proof passed, and `test-report.md` records the run.
+  `test-spec.md`, relevant verification methods passed, and `test-report.md`
+  records the run.
 
 For a full lifecycle request, do not report the feature done until all three
 states are complete. Report unavailable tooling, blocked checks, and residual

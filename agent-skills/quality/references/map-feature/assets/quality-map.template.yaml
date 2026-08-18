@@ -7,12 +7,12 @@
 # spec/user_authored = trusted (1.0), agent_generated = medium (0.7),
 # inferred_brownfield = low (0.4), unspecified = 0 (counted, earns no trust).
 structure_provenance: "unspecified" # spec | user_authored | agent_generated | inferred_brownfield | unspecified — set honestly; left as the scores-0 default so a copied template never over-claims trust
-# Gate 4 (map-level human review): a human reviewed and approved this whole check
+# Gate 4 (map-level human review): a human reviewed and validated this whole check
 # list. Combined with a confirmed feature (gate 2), it lifts the feature's checks to
 # HIGH structure confidence, overriding the per-check provenance ladder. Orthogonal
 # to structure_provenance (origin), which review never overwrites. HUMAN-GATED: an
 # agent may propose the reviewed list but must never set this on the owner's behalf.
-checks_reviewed: false # Optional; true only when a human has ratified the check list
+checks_reviewed: false # Optional; true only when a human has validated the check list against accepted intent
 target:
   id: "001-example-feature"
   name: "<Display target name>"
@@ -28,7 +28,7 @@ expectations:
     description: "<Short user-facing quality check>"
     source_type: "SOURCE" # SOURCE | IMPLEMENTATION | INFERRED
     # Optional: override the map-level structure_provenance for THIS check only,
-    # e.g. one hand-verified check in an otherwise inferred_brownfield map.
+    # e.g. one human-authored check in an otherwise inferred_brownfield map.
     # structure_provenance: "user_authored"
     source_refs:
       - path: "<path/to/source.md>"
@@ -37,7 +37,7 @@ expectations:
     category: "other" # billing | auth | security | data | ui | api | ops | performance | privacy | compliance | other
     # Declared importance — a FACT read from a dev artifact (PRD,
     # feature-breakdown, spec, or per-behavior in test-spec.md), never invented
-    # here. priority is the proof-effort driver (P0 = strongest posture). Its
+    # here. priority is the verification-effort driver (P0 = strongest posture). Its
     # trust rides on structure_provenance above. Use UNKNOWN only when no
     # artifact declares it; do not guess a level and record it as fact.
     priority: "P1" # P0 | P1 | P2 | P3 | UNKNOWN
@@ -50,10 +50,10 @@ expectations:
     policy_override:
       preferred_modalities: [] # Optional: unit | contract | integration | e2e | agent | manual | telemetry | static | smoke | script | other
       discouraged_modalities: [] # Optional: modalities to avoid unless no better option exists
-      required_modalities: [] # Optional: modalities that must appear in the proof set
+      required_modalities: [] # Optional: modalities that must appear in the mapped method set
       required_contexts: [] # Optional: ["local", "pr-ci", "staging-gate"]
-      require_gate: false # Optional: at least one proof should be suitable for a gate context
-      notes: "<Optional per-check proof-strategy override>"
+      require_gate: false # Optional: at least one method should be suitable for a gate context
+      notes: "<Optional per-check verification-strategy override>"
 
     # Accepted risk (HUMAN-GATED): gap categories a human has reviewed and accepted
     # as tolerated risk for this check. An accepted gap stays visible but stops
@@ -63,7 +63,7 @@ expectations:
     # may PROPOSE an acceptance but must never accept a risk on the owner's behalf.
     accepted_gaps: [] # Optional: subset of [missing, stale, deferred, manual-only, weak, failing, unavailable]
 
-    # A proof definition is just the test TYPE (a fact about the artifact) at a
+    # A verification method is just the test TYPE (a fact about the artifact) at a
     # PATH. Evidence confidence is derived downstream from `type` via a
     # transparent rubric — do not hand-author depth or reliability here.
     # Flakiness, staleness, and pass/fail come from runtime observations joined
@@ -71,15 +71,15 @@ expectations:
     evidence:
       - id: "<stable-evidence-id>"
         type: "integration" # unit | contract | integration | e2e | agent | manual | telemetry | static | smoke | script | other
-        path: "<test-or-proof-path>"
+        path: "<test-or-evidence-path>"
         url: "<optional dashboard, runbook, or external reference>"
-        command: "<command used to author or run this proof>"
-        contexts: ["local"] # Contexts where this proof is intended to run or matter
-        notes: "<Optional structural note about this proof definition>"
+        command: "<command used to author or run this verification method>"
+        contexts: ["local"] # Contexts where this method is intended to run or matter
+        notes: "<Optional structural note about this verification method>"
 
       # Smoke / health check that runs in CI but is not a test file. Point `path`
       # at the workflow file so a reviewer can open it. Add `test_case` only after
-      # a canonical observation proves the emitted identity, or when improve wires
+      # a canonical observation establishes the emitted identity, or when improve wires
       # that identity at the producer boundary in the same change. A visible job,
       # step, or manual-check label is never sufficient by itself; keep that
       # readable pointer in notes or command until canonical emission exists.
@@ -93,5 +93,5 @@ expectations:
         contexts: ["ci"]
 
     proof_gap:
-      summary: "<What proof is still missing, weak, deferred, or intentionally not bought yet>"
-      next_step: "<Highest-value next proof to add, or null if none>"
+      summary: "<What evidence is still missing, weak, deferred, or intentionally not obtained yet>"
+      next_step: "<Highest-value next verification method to add, or null if none>"

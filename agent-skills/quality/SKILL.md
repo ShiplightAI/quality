@@ -1,14 +1,14 @@
 ---
 name: quality
-description: "Construct, assess, and improve a repository's quality project graph and four-score quality index. Use only when the user explicitly invokes /quality or asks for a quality status, score, index, map, graph, or posture—not for a generic request to improve code quality. Guides new-repository setup, project and feature mapping, saved assessment scopes, proof mapping, runtime assessment, and score-directed improvement while preserving independent scoring and human ratification. Commands: start, status, map-project, map-feature, assess, improve, help."
+description: "Construct, assess, and improve a repository's quality project graph and four-score quality index. Use only when the user explicitly invokes /quality or asks for a quality status, score, index, map, graph, or posture—not for a generic request to improve code quality. Guides new-repository setup, project and feature mapping, saved assessment scopes, verification-method mapping, runtime assessment, and score-directed improvement while preserving independent scoring and human validation. Commands: start, status, map-project, map-feature, assess, improve, help."
 ---
 
 # Quality
 
 Quality answers:
 
-> What must this project deliver, what proves each promise, and what does the current
-> proof justify believing?
+> What must this project deliver, which methods verify each promise, and what does
+> the current evidence justify believing?
 
 It maintains a **quality project graph** and asks the deterministic
 `quality-tools` engine to compute a four-score **quality index** from that graph.
@@ -17,7 +17,7 @@ It never invents a score or treats a score as the goal.
 **Before any command, read
 [independence](references/_shared/independence.md).** A system cannot establish
 trust by grading its own claims. This principle governs every workflow,
-especially evidence classification and human ratification.
+especially evidence classification and human validation.
 
 ## Use one formal vocabulary
 
@@ -33,9 +33,19 @@ Use these terms consistently:
 | Assessment | Project + whole-project or view scope + optional observation set + observed revision/run, producing one quality index; without an observation set the index carries the three static scores and no Quality score |
 | Release candidate | A concrete build, version, commit, or artifact covered by an assessment; not a persistent graph grouping |
 | Product | Optional descriptive language for what the project delivers; it has no graph or scoring semantics |
+| Intent validation | Human confirmation that features, priorities, and checks represent accepted product intent |
+| Verification method | A repeatable or inspectable way to evaluate whether implementation or observed behavior satisfies a check |
+| Reasoning-based verification | Evaluation by reasoning about an implementation or model, including review, static analysis, model checking, and formal verification |
+| Empirical verification | Evaluation by executing or monitoring a system, recording an observation, and comparing it with a check |
+| Evidence | Information from reasoning or evaluated observations that supports or challenges a check |
+| Empirical observation | A recorded fact about executed or production behavior |
+| Runtime observation | Quality's standardized result record; it can carry an executable reasoning tool's outcome without making the underlying method empirical |
+| Proof | A deductive argument under stated assumptions; reserve this term for formal or deductive proof |
 
 Do not introduce a second grouping such as `release area`. Use a view when a
 reusable subset of features must be assessed together.
+Use **evidence gap** in prose; `proof_gap` is only the legacy literal field name
+in the current quality-map contract.
 
 ## The quality project graph
 
@@ -46,24 +56,24 @@ repository (storage)
 └── quality project
     └── features
         └── quality checks: what must hold
-            └── proof definitions: what could prove each check
-                └── runtime observations: did that proof pass?
+            └── verification methods: how each check is evaluated
+                └── runtime observations: what happened when executable methods ran?
 
 view ─────────────── selects project features
 observation set ──── selects runtime-result sources
 ```
 
-The graph is represented by checked-in files and the proof artifacts they
+The graph is represented by checked-in files and the evidence artifacts they
 reference:
 
 | Graph layer | Artifact | Meaning |
 | --- | --- | --- |
 | Project → features | `.quality/project-map.yaml` | Project identity, feature boundaries, priorities, status, and dependencies |
-| Feature → checks → proof | `.quality/evidence/<feature>/quality-map.yaml` | What must hold for one feature and which tests, workflows, telemetry, static checks, or manual records prove it |
-| Proof → runtime sources | `.quality/config/observation-sources.yaml` | Where canonical observation files come from |
+| Feature → checks → verification methods | `.quality/evidence/<feature>/quality-map.yaml` | What must hold for one feature and which tests, workflows, telemetry, static checks, or manual records evaluate it |
+| Executable methods → runtime sources | `.quality/config/observation-sources.yaml` | Where canonical observation files come from |
 | Runtime source bundles | `.quality/config/observation-sets.yaml` | Which runtime sources are assessed together |
 | Saved assessment scopes | `.quality/config/views.yaml` | Which project-map features are included together |
-| Actual proof | Files referenced by `evidence.path` | Tests, workflows, reports, runbooks, telemetry, or other auditable proof |
+| Evidence artifacts | Files referenced by `evidence.path` | Tests, workflows, reports, runbooks, telemetry, or other auditable evidence |
 
 IDs, paths, and optional test-case names are the graph's edges. Generated
 recommendations and `fix-prompts.md` are engine output, not graph source.
@@ -101,15 +111,16 @@ artifact names:
    brownfield, or already partially mapped.
 2. **Map the project.** Construct project → feature structure and choose the
    highest-priority feature.
-3. **Map each feature.** Define its quality checks and connect existing proof.
-4. **Connect runtime.** Arrange for proof producers to publish canonical
+3. **Map each feature.** Define its quality checks and connect existing
+   verification methods.
+4. **Connect runtime.** Arrange for evidence producers to publish canonical
    `quality-observations.json`, within the producer edit boundary below, then
    configure transport-only sources and sets that locate those files.
 5. **Assess.** Run `quality-tools` and explain the scores together. Coverage,
    evidence confidence, and structure confidence are available from step 3
    onward; Quality also needs step 4.
 6. **Improve.** Diagnose the weak score, improve the underlying structure,
-   proof, implementation, or runtime wiring, then assess again.
+   evidence, implementation, or runtime wiring, then assess again.
 7. **Repeat.** Expand feature by feature, highest priority and risk first.
 
 `/quality start` orchestrates steps 1–5 for a new or unmapped repository. The
@@ -171,10 +182,10 @@ repository's priorities. A saved assessment scope is a separate named view in
 | Command | Outcome | Reference |
 | --- | --- | --- |
 | `start [scope]` | Bootstrap the graph in a new, brownfield, or partially mapped repository | [start](references/start.md) |
-| `status [scope]` | Read existing artifacts and recent results; do not run proof/scoring commands or edit files | [status](references/status.md) |
+| `status [scope]` | Read existing artifacts and recent results; do not run verification/scoring commands or edit files | [status](references/status.md) |
 | `map-project [scope]` | Construct or reconcile project → feature structure | [map-project](references/map-project/index.md) |
-| `map-feature <target>` | Construct or improve one feature's checks and proof mappings | [map-feature](references/map-feature/index.md) |
-| `assess [scope]` | Refresh and explain the four scores without changing graph source or proof | [assess](references/assess.md) |
+| `map-feature <target>` | Construct or improve one feature's checks and verification-method mappings | [map-feature](references/map-feature/index.md) |
+| `assess [scope]` | Refresh and explain the four scores without changing graph source or evidence artifacts | [assess](references/assess.md) |
 | `improve [scope]` | Diagnose weak scores, improve the underlying system, and reassess | [improve](references/improve/index.md) |
 | `help [command]` | Explain commands without executing them | [help](references/help.md) |
 
@@ -199,7 +210,7 @@ only when `start` or `map-project` requires it.
    - use `improve` when the user asks to raise quality posture or close gaps.
 5. State what will be read, generated, or edited before acting.
 6. Stop at human gates. An agent may propose structure, priorities, reviewed
-   checks, or accepted risk, but must never ratify for the owner.
+   checks, or accepted risk, but must never validate intent for the owner.
 
 ## The four scores and the honest improvement lever
 
@@ -208,10 +219,10 @@ verdict.
 
 | Score | Question | Improve the underlying condition by |
 | --- | --- | --- |
-| Coverage | Does every declared check have proof? | Create or map missing proof |
-| Evidence confidence | Is the mapped proof strong enough? | Use a stronger appropriate modality or add a meaningful gate |
-| Quality | Is current proving evidence passing? | Fix the implementation/proof, stale results, or runtime wiring and rerun it |
-| Structure confidence | Are these the right features, checks, and priorities? | Ask a human to correct or ratify proposed structure |
+| Coverage | Does every declared check have a mapped verification method? | Create or map a missing method |
+| Evidence confidence | Are the mapped methods strong enough? | Use a stronger appropriate modality or add a meaningful gate |
+| Quality | Are current observed results passing? | Fix the implementation or method, refresh stale results, or repair runtime wiring and rerun it |
+| Structure confidence | Are these the right features, checks, and priorities? | Ask a human to correct or validate proposed structure |
 
 Quality is the only one of the four that needs runtime observations. When no
 observation set is configured or its results cannot be acquired, report the other
@@ -227,7 +238,7 @@ rise.
   output. When no structured total exists, enumerate first and calculate the
   count mechanically; verify that headings, totals, and lists agree.
 - Group every cause under the score it actually affects. Missing or
-  policy-insufficient proof affects coverage; proof type and gate strength
+  policy-insufficient verification methods affect coverage; method type and gate strength
   affect evidence confidence; runtime outcomes/acquisition/resolution affect
   Quality; feature/check/priority provenance and review affect structure
   confidence. Do not cite a structure gate as an evidence-confidence cause.
@@ -240,11 +251,11 @@ rise.
   or an authoritative artifact already contains it. Never infer attribution
   from Git config, environment metadata, or the operating-system account.
 
-## Relationship to proof producers
+## Relationship to evidence producers
 
-Quality maps and judges existing proof. It may hand a concrete proof gap to a
+Quality maps and judges existing evidence. It may hand a concrete evidence gap to a
 producer such as `/shiplight cover`, `/shiplight create-yaml-tests`, or
 `/shiplight create-agent-verification`. Producers create or run tests and other
-proof; Quality confirms the resulting artifact, connects it to the graph, and
+verification methods; Quality confirms the resulting artifact, connects it to the graph, and
 remeasures. The only producer-side exception is the explicitly authorized
 mechanical workflow glue defined above.

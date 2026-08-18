@@ -1,7 +1,8 @@
 # status — Read the current quality posture
 
 `status` is read-only. It may use repository-inspection tools, but it does not
-edit files, run proof, invoke `quality-tools`, or refresh generated results.
+edit files, execute verification methods, invoke `quality-tools`, or refresh
+generated results.
 
 ## Read first
 
@@ -18,7 +19,7 @@ edit files, run proof, invoke `quality-tools`, or refresh generated results.
    - referenced recent test reports when needed to explain staleness
 2. Describe the graph in user-facing project language:
    - features represented and missing
-   - checks and proof connected for the requested scope
+   - checks and verification methods connected for the requested scope
    - views available and the feature ids each selects
    - observation sources and sets available
    - unresolved graph edges, drift, or human gates
@@ -28,7 +29,8 @@ edit files, run proof, invoke `quality-tools`, or refresh generated results.
 4. Recommend exactly one next command:
    - `start` when no usable graph exists
    - `map-project` when project/feature structure is missing or stale
-   - `map-feature <target>` when one feature lacks trustworthy checks or proof
+   - `map-feature <target>` when one feature lacks trustworthy checks or
+     verification methods
    - `assess` when the graph is ready but scores need refreshing
    - `improve` when a current assessment identifies actionable gaps
 5. Present the command menu.

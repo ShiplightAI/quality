@@ -7,7 +7,7 @@ project → features → dependencies
 ```
 
 It writes `.quality/project-map.yaml`. It does not define a feature's quality
-checks or proof; that is `map-feature`.
+checks or verification methods; that is `map-feature`.
 
 ## Contents
 
@@ -33,7 +33,7 @@ Produce a user-facing map that lets a reader answer:
 - Which reusable features make up that project?
 - Which features and priorities are accepted intent versus agent
   proposals?
-- Where are each feature's spec, implementation, proof report, and quality map?
+- Where are each feature's spec, implementation, evidence report, and quality map?
 
 Use `assets/project-map.template.yaml` as the source of truth for shape.
 Define reusable feature subsets in `.quality/config/views.yaml`, not in a
@@ -46,11 +46,12 @@ parallel project-map grouping.
 - write a PRD, feature spec, plan, or tasks
 - drive development or switch branches
 - create tests or choose testing strategy
-- construct per-feature checks/proof
+- construct per-feature checks or verification methods
 - connect runtime observations or compute scores
 
-Use the relevant development workflow for intent/spec work, a proof producer
-for test creation, `map-feature` for one feature's checks/proof, and `assess` for
+Use the relevant development workflow for intent/spec work, an evidence producer
+for test creation, `map-feature` for one feature's checks and verification
+methods, and `assess` for
 scores.
 
 ## Choose the construction source
@@ -85,7 +86,7 @@ intended project behavior:
 Reconcile rather than rebuild:
 
 - preserve stable ids
-- preserve human-set priority and ratification fields
+- preserve human-set priority and validation fields
 - add missing intent links
 - surface conflicts and drift
 - never replace accepted structure with a fresh inference pass
@@ -112,7 +113,7 @@ Reconcile rather than rebuild:
    - Define features as independently checkable capabilities, not filesystem
      directories, packages, or temporary changes.
    - Give each feature a stable id, promise, lifecycle status, priority,
-     dependencies, source type, artifact paths, code refs, proof refs, open
+     dependencies, source type, artifact paths, code refs, evidence refs, open
      questions, and residual risks.
    - Record cross-feature concerns explicitly.
 
@@ -149,7 +150,7 @@ Reconcile rather than rebuild:
      such as `planned`, `specified`, or `implemented`.
    - Set `priority_provenance: human` only when a human set or confirmed the
      priority.
-   - Never ratify on the owner's behalf.
+   - Never validate intent on the owner's behalf.
 
 8. **Choose the next feature**
    - Recommend `map-feature <target>` for the highest-priority accepted or
@@ -173,7 +174,7 @@ truth.
 - accepted specs without implementation
 - implementation behavior absent from accepted specs
 - tests asserting behavior absent from accepted specs
-- features with no quality map or proof
+- features with no quality map or mapped verification methods
 - stale reports
 - unresolved cross-feature concerns
 
@@ -184,7 +185,7 @@ resolves intent and implementation drift.
 
 `map-project` owns:
 
-- feature `status`: `candidate` remains unratified
+- feature `status`: `candidate` remains unvalidated
 - `priority_provenance`: `human` only after a human priority decision
 
 `map-feature` owns `structure_provenance` and `checks_reviewed`. The engine joins
@@ -207,7 +208,7 @@ Report:
 ## When another command is better
 
 - No graph exists and the user wants guided setup: `start`
-- One feature needs checks/proof mapped: `map-feature`
+- One feature needs checks or verification methods mapped: `map-feature`
 - Existing graph needs scores refreshed: `assess`
 - Current scores/gaps should be acted on: `improve`
 - User only wants current state: `status`

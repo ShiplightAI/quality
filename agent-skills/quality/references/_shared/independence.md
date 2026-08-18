@@ -9,7 +9,7 @@ software do what it should, and is it correct, with justified confidence?
 
 Quality answers that only if its judgment is independent of whatever produced the
 code and the tests. That independence is engineered, not assumed, and it is the
-reason Quality is a **separate skill at a higher altitude** than the proof
+reason Quality is a **separate skill at a higher altitude** than the evidence
 producers—never one of their commands.
 
 ## The four enforcement mechanisms (never weaken these)
@@ -24,32 +24,32 @@ producers—never one of their commands.
    `.quality/`.
 2. **The engine scores, never the LLM.** The four scores are computed by the
    deterministic `quality-tools` engine from declared facts + runtime observations
-   + human ratification — never an agent's opinion. Never blend, optimize, or
+   + human validation — never an agent's opinion. Never blend, optimize, or
    reverse-engineer a score. A measure of quality must never become the target it
    describes, or it stops describing anything (Goodhart).
 3. **The judge re-confirms, never copies the claim.** When a producer records an
    evidence `type`, Quality confirms it against the artifact at `evidence.path`
    rather than trusting the report's self-claim — the judge does not copy the
    generator's label.
-4. **Human ratification gate.** Structure confidence is the only human-gated
-   axis, ratified through four gates (see below). An agent may **construct at the
+4. **Human validation gate.** Structure confidence is the only human-gated
+   axis, validated through four gates (see below). An agent may **construct at the
    untrusted default and propose** checks/priorities/structure, but must **never
-   self-advance a gate** or ratify on the owner's behalf. Self-verification of
+   self-advance a gate** or validate intent on the owner's behalf. Self-validation of
    structure is disallowed by design.
 
-## Structure confidence: the ratification gates
+## Structure confidence: the validation gates
 
-Mechanism 4 is enforced through **four ratification gates** — each a separate
+Mechanism 4 is enforced through **four validation gates** — each a separate
 field the deterministic `quality-tools` engine reads, never an agent's edit. The
 engine composes them into the structure-confidence score; the numbers below are
 the current rubric, not a target to optimize toward or reverse-engineer.
 
-| Gate | Field | Artifact / owner | What it ratifies |
+| Gate | Field | Artifact / owner | What it validates |
 | --- | --- | --- | --- |
 | 1 | `structure_provenance` | `quality-map.yaml` / `map-feature` | the check list *and its priorities* **originated** from a trusted source — `spec`/`user_authored` = 1.0, `agent_generated` = 0.7, `inferred_brownfield` = 0.4, `unspecified` = 0 (counted, earns no trust). This is *origin*, not review — review is gate 4 and never overwrites it |
-| 2 | feature `status` | `project-map.yaml` / `map-project` | the feature is accepted project structure—a `candidate` (agent-proposed, unratified) feature soft-caps its checks' structure confidence at 0.7 until a human ratifies it by assigning the accurate lifecycle status, such as `planned`, `specified`, or `implemented` |
+| 2 | feature `status` | `project-map.yaml` / `map-project` | the feature is accepted project structure—a `candidate` (agent-proposed, unvalidated) feature soft-caps its checks' structure confidence at 0.7 until a human validates it by assigning the accurate lifecycle status, such as `planned`, `specified`, or `implemented` |
 | 3 | `priority_provenance` | `project-map.yaml` / `map-project` | the declared priority is human-set (`human`) rather than agent-guessed (`agent`); the agent must not overwrite a human-set priority on rebuild |
-| 4 | `checks_reviewed` | `quality-map.yaml` / `map-feature` | a human reviewed and **approved the whole check list**. Combined with a confirmed feature (gate 2), it lifts that feature's checks to HIGH structure confidence (1.0), overriding the gate-1 provenance ladder. Orthogonal to `structure_provenance` (origin) — `agent_generated` means "an agent produced the checks," *not* "a human reviewed them"; that is what this gate records |
+| 4 | `checks_reviewed` | `quality-map.yaml` / `map-feature` | a human reviewed and **validated the whole check list against accepted intent**. Combined with a confirmed feature (gate 2), it lifts that feature's checks to HIGH structure confidence (1.0), overriding the gate-1 provenance ladder. Orthogonal to `structure_provenance` (origin) — `agent_generated` means "an agent produced the checks," *not* "a human reviewed them"; that is what this gate records |
 
 `map-feature` owns gates 1 and 4; `map-project` owns gates 2–3. When either
 command says it "owns structure confidence," it means *its* gates—the score is
@@ -67,7 +67,7 @@ metadata, or the operating-system account for one.
 ## The two human decisions that are *not* gates
 
 Two other fields record a human decision and move a score. Neither touches
-structure confidence, so **neither is a ratification gate and neither carries a
+structure confidence, so **neither is a validation gate and neither carries a
 gate number** — the four above are the whole list. They are mirror images:
 
 | Field | The human… | Effect |
@@ -77,7 +77,7 @@ gate number** — the four above are the whole list. They are mirror images:
 
 Both feed the gap reasons in `quality-structure/assessment.ts` and never the
 structure-confidence axis. Reporting them beside each other is the point: one
-says "this needs more proof than the default", the other says "we know, and we
+says "this needs stronger verification than the default", the other says "we know, and we
 accept it".
 
 The direction decides what an agent may do. An agent may **propose** either, and
@@ -89,7 +89,7 @@ decision exactly as self-advancing a gate would.
 
 ## Layering rule
 
-Quality may know about and drive the producers (top knows bottom — it can hand a
-proof gap to `/shiplight cover` or a producer). The producers must **not** know
+Quality may know about and drive the producers (top knows bottom — it can hand an
+evidence gap to `/shiplight cover` or a producer). The producers must **not** know
 about Quality. Keep the dependency one-directional and the file interface the only
 coupling.

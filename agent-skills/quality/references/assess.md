@@ -2,7 +2,7 @@
 
 `assess` runs the deterministic engine against the existing graph. It may write
 engine-generated recommendation output, but it does not edit graph source,
-proof artifacts, tests, workflows, or reports.
+evidence artifacts, tests, workflows, or reports.
 
 ## Read first
 
@@ -74,8 +74,9 @@ Then separate acquisition from graph resolution. The `runtime_review` block is
 absent when no observation set was selected:
 
 - `runtime_review.execution_status` and `profiles[]`: whether result sources
-  were acquired and validated
-- `runtime_review.resolution_status`: whether observations joined to mapped proof
+  were acquired and their canonical files passed schema validation
+- `runtime_review.resolution_status`: whether observations joined to mapped
+  verification methods
 - `execution_diagnostics`: source, credential, artifact, or canonical-format
   problems
 - `resolution_diagnostics` and `resolution_audit`: unmatched or ambiguous graph
@@ -85,12 +86,12 @@ absent when no observation set was selected:
 
 Report the four scores side by side:
 
-- **Coverage:** checks with mapped proof
-- **Evidence confidence:** strength of mapped proof
-- **Quality:** current runtime result of that proof
+- **Coverage:** checks with mapped verification methods
+- **Evidence confidence:** strength of mapped methods
+- **Quality:** current observed results for executable methods
 - **Structure confidence:** trust in features, checks, and priorities
 
-Never blend them. A high runtime score on an unratified check list is not a
+Never blend them. A high runtime score on an unvalidated check list is not a
 high-confidence project judgment. When Quality is unavailable, report the other
 three as measured and state the reason from `quality_score_availability` — never
 mark all four unavailable because runtime data is missing.
