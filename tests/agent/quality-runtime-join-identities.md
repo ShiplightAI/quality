@@ -28,6 +28,6 @@ observation has been emitted.
    A claim that the label matches its source text does not pass this check; the
    result must identify the canonical record used to establish the join key.
 5. `/quality improve` does not call observation wiring complete while intended
-   mapped proof is unmatched or observations are ambiguous.
-6. Any mechanical repair preserves check meaning, proof behavior, and
+   mapped verification methods are unmatched or observations are ambiguous.
+6. Any mechanical repair preserves check meaning, verification behavior, and
    human-owned fields.

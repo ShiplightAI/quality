@@ -84,3 +84,8 @@ repeating an exception on every check.
 **Runtime quality stayed the same.** That is expected. A verification policy
 changes the structural assessment; it does not rewrite an observation that
 already happened.
+
+## Next steps
+
+- [Validate the graph](validate-the-graph.md)
+- [Act on a weak score](act-on-a-weak-score.md)

@@ -1,13 +1,13 @@
 # Shared: The `.quality/` layout & ownership
 
 All quality-graph **source** artifacts live under `.quality/` at the repo root.
-The tests, reports, workflows, telemetry, and other proof they reference remain
+The tests, reports, workflows, telemetry, and other evidence they reference remain
 in their owning locations. Per-artifact ownership and the edit contract:
 
 ```text
 .quality/
 ├── project-map.yaml                         owned by `map-project` (project and features)
-├── evidence/<target-slug>/quality-map.yaml  owned by `map-feature` (per-feature checks and proof)
+├── evidence/<target-slug>/quality-map.yaml  owned by `map-feature` (per-feature checks and verification methods)
 ├── config/
 │   ├── sources.yaml                         AUTHOR INPUT — owned by the author and their coding agent; `map-project` reads it
 │   ├── observation-sources.yaml             owned by `improve`
@@ -39,7 +39,7 @@ Rules:
   No Quality command authors this file on the author's behalf.
 - `fix-prompts.md` and `generated/*` are written by `quality-tools` only — treat
   them as read-only.
-- Quality reads, but does not author, the **producer proof** it indexes:
+- Quality reads, but does not author, the **producer evidence** it indexes:
   `specs/<feature>/test-spec.md`, `specs/<feature>/test-report.md`, `TESTING.md`,
   and the test files themselves. The narrow exception is explicitly authorized
   workflow glue that serializes an already-determined result into canonical

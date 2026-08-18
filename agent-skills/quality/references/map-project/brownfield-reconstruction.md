@@ -13,20 +13,20 @@ Use this workflow when accepted intent or feature history is incomplete.
 ## Principle
 
 Existing code is observed behavior, not automatically intended behavior. The goal is
-to build a provisional project graph, then ask the user to ratify it before
+to build a provisional project graph, then ask the user to validate it before
 turning observations into authoritative specs.
 
 If the repo already has specs but code changed outside the spec process, treat
 that as drift, not as automatic truth. Identify the conflict and ask the user to
-ratify whether the code behavior should update the spec or be changed back to
-the spec.
+validate which behavior represents product intent: update the spec to match the
+code or change the code back to the spec.
 
 ## Operating Posture
 
 Brownfield works best as a collaboration, not autonomous reconstruction:
 
 - **User drives**: supplies intent sources (PRD/design-doc paths, tracker
-  queries), sets scope and priority (where to start), and ratifies candidates.
+  queries), sets scope and priority (where to start), and validates candidates.
 - **Agent ingests**: reads docs, code, tests, and trackers; proposes candidate
   features; maps evidence; surfaces conflicts and open questions.
 
@@ -75,7 +75,7 @@ Prefer `rg` and targeted file reads. Avoid broad context dumps.
 3. **Assign provisional IDs**
    - Use existing numeric specs if present.
    - Otherwise assign stable `001-*`, `002-*` IDs in dependency order.
-   - Mark status `candidate` until ratified.
+   - Mark status `candidate` until validated.
 
 4. **Record source types**
    - `SOURCE` for endorsed intent from PRDs, design docs, or accepted tracker
@@ -91,7 +91,7 @@ Prefer `rg` and targeted file reads. Avoid broad context dumps.
    - Include a user-facing project boundary and feature summaries plus intent
      docs, code refs, test refs, open questions, and orphan areas.
 
-6. **Ask for ratification**
+6. **Ask for validation**
    - Present the feature list with source type and open questions.
    - Ask the user to accept, split, merge, rename, defer, or reject features.
 
@@ -126,9 +126,9 @@ For each candidate, capture:
 - source type
 - whether behavior seems current, legacy, or deprecated
 
-## User Ratification Prompt Shape
+## User Validation Prompt Shape
 
-When asking the user to ratify, keep it concrete:
+When asking the user to validate intent, keep it concrete:
 
 ```text
 I found these candidate features:

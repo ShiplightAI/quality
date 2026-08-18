@@ -3,7 +3,7 @@ project:
   id: "<project-slug>"
   name: "<Project Name>"
   summary: "<User-facing project purpose and assessment boundary>"
-  # Reference to the dev-owned proof-strategy artifact, when one exists.
+  # Reference to the dev-owned verification-strategy artifact, when one exists.
   quality_policy_path: "TESTING.md"
   source_refs:
     - path: "README.md"
@@ -40,7 +40,7 @@ features:
   - id: "001-example-feature"
     name: "Example Feature"
     description: "<User-facing feature promise or workflow>"
-    status: "candidate" # gate 2: keep candidate while agent-proposed. After human ratification, use the accurate lifecycle status, such as planned, specified, or implemented.
+    status: "candidate" # gate 2: keep candidate while agent-proposed. After human validation, use the accurate lifecycle status, such as planned, specified, or implemented.
     priority: "P1"
     priority_provenance: "agent" # gate 3: agent | human. Set to human once a person sets/adjusts priority; the agent must not overwrite a human-set priority on rebuild.
     source_type: "INFERRED"

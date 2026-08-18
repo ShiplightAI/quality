@@ -10,7 +10,7 @@ target:
   aliases: []
   source_refs:
     - path: "AGENTS.md"
-      label: "Agents must not set human ratification fields or accept risk for a human"
+      label: "Agents must not set human validation fields or accept risk for a human"
     - path: "agent-skills/quality/references/_shared/layout.md"
       label: "Graph artifact layout and per-command edit ownership"
 
@@ -171,7 +171,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "AGENTS.md"
-        anchor: "Agents must not set human ratification fields or accept risk for a human"
+        anchor: "Agents must not set human validation fields or accept risk for a human"
     category: "compliance"
     priority: "UNKNOWN"
     evidence:

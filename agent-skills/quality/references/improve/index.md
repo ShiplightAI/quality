@@ -2,7 +2,7 @@
 
 `improve` starts from an engine-produced assessment, diagnoses which underlying
 condition is weak, changes that condition honestly, and runs `assess` again.
-The objective is better project behavior and proof—not a larger number.
+The objective is better project behavior and evidence—not a larger number.
 
 ## Contents
 
@@ -29,7 +29,7 @@ The quality graph joins structural declarations to current observations:
         ↓ feature id / quality_map_path
 .quality/evidence/<target>/quality-map.yaml
         ↓ evidence.path + optional evidence.test_case
-proof producer / workflow
+evidence producer / workflow
         ↓ quality-observations.json (one canonical format)
 .quality/config/observation-sources.yaml
         ↓ transport locates the canonical file
@@ -44,10 +44,10 @@ The engine reports four separate scores:
 
 | Score | Diagnose | Honest improvement |
 | --- | --- | --- |
-| Coverage | A declared check has no mapped proof | Create appropriate proof through a producer, then map it |
-| Evidence confidence | Proof exists but its modality or gate is too weak for the check | Strengthen proof at the system boundary that matters |
-| Quality | Proof is failing, stale, unavailable, or unobserved | Fix the implementation/proof or repair acquisition and graph joins, then rerun |
-| Structure confidence | Features, checks, or priorities are inferred or unreviewed | Ask a human to correct or ratify them through `map-project` or `map-feature` |
+| Coverage | A declared check has no mapped verification method | Create an appropriate method through a producer, then map it |
+| Evidence confidence | A method exists but its modality or gate is too weak for the check | Strengthen verification at the system boundary that matters |
+| Quality | Evidence is failing, stale, unavailable, or unobserved | Fix the implementation or method, or repair acquisition and graph joins, then rerun |
+| Structure confidence | Features, checks, or priorities are inferred or unreviewed | Ask a human to correct or validate them through `map-project` or `map-feature` |
 
 No command may directly author a score. Never improve a number by removing
 scope, weakening checks, relabeling evidence, accepting risk, or changing
@@ -82,7 +82,7 @@ Follow `assess` and retain:
 - recommendations in priority order
 
 Do not change anything until the low score or recommendation has been traced to
-a concrete graph node, graph edge, proof artifact, or implemented behavior.
+a concrete graph node, graph edge, evidence artifact, or implemented behavior.
 
 ### 2. Classify the root cause
 
@@ -90,8 +90,8 @@ Classify each gap before editing:
 
 1. **Structure:** wrong/missing feature, check, priority, provenance, or human
    review.
-2. **Coverage:** no proof is mapped for a valid check.
-3. **Evidence strength:** mapped proof cannot establish the full claim or lacks
+2. **Coverage:** no verification method is mapped for a valid check.
+3. **Evidence strength:** a mapped method cannot establish the full claim or lacks
    the required execution context/gate.
 4. **Source acquisition:** credentials, repository/workflow selection, artifact
    names, or local-folder path prevent results from loading.
@@ -101,7 +101,7 @@ Classify each gap before editing:
    status, timestamp, revision, or duplicate observation identity.
 7. **Graph join:** results load but `path`/`test_case` do not match
    `evidence.path`/`evidence.test_case`, or the match is ambiguous.
-8. **Real failure:** current proof joins correctly and reports a failing/error
+8. **Real failure:** current evidence joins correctly and reports a failing/error
    state.
 9. **Scope:** the observation set contains the wrong profiles or the saved view
    contains the wrong features.
@@ -116,23 +116,23 @@ acquisition and resolution have been ruled out.
 #### Structure confidence
 
 - Follow `map-project` for feature boundaries, status, and priority provenance.
-- Follow `map-feature` for the check list, proof definitions, origin provenance,
+- Follow `map-feature` for the check list, verification methods, origin provenance,
   and whole-list review.
 - Propose corrections highest priority first.
 - Never flip a human gate or write `accepted_gaps` for the owner.
 
 #### Coverage
 
-- Confirm the check is valid before buying proof for it.
-- Use existing proof when it genuinely establishes the check and map it through
+- Confirm the check is valid before commissioning a verification method for it.
+- Use existing evidence when it genuinely supports the check and map its method through
   `map-feature`.
-- Otherwise hand a precise proof gap to an appropriate producer. Quality does
+- Otherwise hand a precise evidence gap to an appropriate producer. Quality does
   not author the test.
 - Confirm the resulting artifact and type before adding it to the graph.
 
 #### Evidence confidence
 
-- Match proof strength to the claim. Unit proof may fully establish a small,
+- Match method strength to the claim. Unit evidence may fully establish a small,
   deterministic code contract; it does not establish a cross-boundary user
   workflow by itself.
 - Add a meaningful integration, browser, smoke, telemetry, or release-gate
@@ -149,18 +149,18 @@ acquisition and resolution have been ruled out.
   observations`; do not add a parser choice to source configuration.
 - For join problems, align emitted `path`/`test_case` with
   `evidence.path`/`evidence.test_case`. There is no second mapping table.
-- For a real failure, fix the implementation or proof through its owning workflow and
+- For a real failure, fix the implementation or verification method through its owning workflow and
   rerun it.
-- For stale/unavailable proof, refresh it or report the external blocker.
+- For stale/unavailable evidence, refresh it or report the external blocker.
 
 #### Scope
 
 - Fix observation-set profile membership or saved-view feature membership.
 - Never remove a valid high-risk feature merely to improve the result.
 
-### 4. Validate the changed layer
+### 4. Check the changed layer
 
-- Feature map:
+- Schema-validate a feature map:
 
   ```bash
   npx --yes @shiplightai/quality-tools@^0.3.0 validate <quality-map-path>
@@ -172,7 +172,7 @@ acquisition and resolution have been ruled out.
   npx --yes @shiplightai/quality-tools@^0.3.0 schema
   ```
 
-- Canonical observations:
+- Schema-validate canonical observations:
 
   ```bash
   npx --yes @shiplightai/quality-tools@^0.3.0 observations validate \
@@ -182,7 +182,7 @@ acquisition and resolution have been ruled out.
 - Observation config: compare with the configuration schemas in `assets/`, then
   run the relevant assessment. Engine diagnostics verify acquisition and graph
   joins.
-- Implementation/proof changes: run their owning verification command before
+- Implementation or verification-method changes: run their owning verification command before
   reassessment.
 
 Never report a fix as verified without command output or an auditable
@@ -196,7 +196,7 @@ Run the same observation set and scope through `assess`. Compare like with like:
 - each available score before and after; a score that was unavailable in the
   baseline stays reported as unavailable, never as zero
 - recommendations closed, changed, or still open
-- new evidence and the command that proved it
+- new evidence and the command that produced it
 
 Repeat until remaining work is low-return, deferred, blocked by external state,
 or requires a human decision.
@@ -252,13 +252,13 @@ the observed revision/run identifies a concrete release candidate.
 
 ## Runtime Join Contract
 
-- `evidence.path` is the canonical repo-relative proof identity.
+- `evidence.path` is the canonical repo-relative evidence identity.
 - `evidence.test_case` optionally pins one case within the path; matching is
   trimmed and case-insensitive.
 - Use the exact `test_case` emitted after native-report conversion. Never derive
   it from a shortened source-code label when the reporter emits a nested or
   otherwise transformed identity.
-- Apply the same rule to manual, smoke, and agent proof: a checklist heading,
+- Apply the same rule to manual, smoke, and agent evidence: a checklist heading,
   workflow label, or scenario title becomes a pin only when the canonical
   producer emits that exact identity. Before then it belongs in `notes` or
   `command`, not `test_case`.
@@ -269,7 +269,7 @@ the observed revision/run identifies a concrete release candidate.
   matches `evidence.path`; `test_case` matches `evidence.test_case`.
 
 If one observation matches both a file-level and pinned row, remove the overlap
-across all feature maps: keep the proof file-level or pin every distinct row.
+across all feature maps: keep the verification method file-level or pin every distinct row.
 
 ## Connect an observation source
 
@@ -329,16 +329,16 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    GitHub Actions metadata comes from `GITHUB_SHA`, `GITHUB_REF_NAME`, and
    `GITHUB_RUN_ID`. Outside GitHub Actions, supply `--commit`; `--branch`,
    `--run-id`, `--run-url`, and `--observed-at` are optional.
-4. **Validate before upload.**
+4. **Schema-validate before upload.**
 
    ```bash
    npx --yes @shiplightai/quality-tools@^0.3.0 observations validate \
      quality-observations.json
    ```
    Compare the canonical observations with every mapped identity they are meant
-   to satisfy. Count exact matches, unmatched mapped proof, unmatched
+   to satisfy. Count exact matches, unmatched mapped methods, unmatched
    observations, and ambiguous observations from parsed output—not prose
-   estimates. Do not call the connection complete while intended proof is
+   estimates. Do not call the connection complete while an intended method is
    unmatched or ambiguous.
 
 5. **Publish canonical files.** Upload one `quality-observations.json` per
@@ -381,12 +381,12 @@ unobserved; never manufacture a missing record.
 
 For a CI smoke or health gate, map the workflow file as `evidence.path`, use the
 step/check name as `evidence.test_case`, and emit those values through
-`observations record`. Without the canonical file, record a proof gap rather
+`observations record`. Without the canonical file, record an evidence gap rather
 than pretending the workflow is observed.
 
 ## Generate fix prompts
 
-For agent-ready proof-gap prompts:
+For agent-ready evidence-gap prompts:
 
 ```bash
 npx --yes @shiplightai/quality-tools@^0.3.0 fix-prompts \
@@ -421,7 +421,7 @@ It must not:
 - write run outcomes into quality maps
 - hand-edit generated recommendations or fix prompts
 - mint a feature slug for project-wide work
-- self-ratify structure or accept risk
+- self-validate structure or accept risk
 - include secrets or private customer data in artifacts
 
 ## Report
@@ -430,7 +430,7 @@ Report:
 
 - baseline and final feature scope, observation set, and observed revision/run
 - root-cause class for each addressed recommendation
-- graph, proof, implementation, or wiring changes made
+- graph, evidence, implementation, or wiring changes made
 - verification commands and auditable outcomes
 - every available score before and after, with the reason for any unavailable one
 - remaining work split into agent-actionable, external blocker, deferred, and

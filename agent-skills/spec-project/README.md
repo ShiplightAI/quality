@@ -31,7 +31,7 @@ PRD -> feature breakdown -> accepted feature spec -> plan and tasks
 ```
 
 The feature spec is the authority for product behavior. Code implements that
-behavior; tests, verification, and reports prove it. When those artifacts
+behavior; tests, verification, and reports provide evidence for it. When those artifacts
 disagree, `spec-project` reconciles the drift instead of treating the newest
 artifact as automatically correct.
 
@@ -95,7 +95,7 @@ maintenance:
 
 The skill first identifies every affected existing feature, updates the
 accepted product behavior, and then coordinates the smallest implementation
-and proof changes.
+and evidence changes.
 
 To inspect a project without changing it, invoke the skill with no operation:
 
@@ -166,7 +166,7 @@ handoff.
 - **Implementation complete:** the code implements that accepted scope and the
   relevant implementation checks pass.
 - **Evidence complete:** `/shiplight cover` has reconciled `test-spec.md`, run
-  the relevant proof, and recorded it in `test-report.md`.
+  the relevant verification methods, and recorded them in `test-report.md`.
 
 For a full lifecycle request, the feature is not done until all three states
 are complete. Missing tools, blocked checks, and remaining risks are reported

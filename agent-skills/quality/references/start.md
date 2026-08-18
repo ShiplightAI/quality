@@ -26,7 +26,7 @@ plus an initial assessment when runtime observations are available.
 Before discussing YAML, explain:
 
 ```text
-project → features → quality checks → proof definitions → runtime observations
+project → features → quality checks → verification methods → runtime observations
 ```
 
 Then show which existing repository artifacts can supply each layer. Do not ask
@@ -39,7 +39,7 @@ config before explaining their roles.
   accepted requirements as project intent; do not infer them again from code.
 - **Brownfield:** current code/tests/docs exist without accepted feature
   structure. Reconstruct candidates from implementation and ask the user to
-  ratify them.
+  validate them against product intent.
 - **Partial graph:** some `.quality/` artifacts exist. Preserve stable ids and
   human-owned fields, repair only the missing or stale layers, and never replace
   the graph wholesale.
@@ -55,14 +55,14 @@ start. Do not autonomously map an entire brownfield repository.
 ## Bootstrap workflow
 
 1. **Inventory without mutation**
-   - Read accepted intent/spec documents, `.quality/**`, proof policy such as
+   - Read accepted intent/spec documents, `.quality/**`, verification policy such as
      `TESTING.md`, relevant code/test areas, CI workflows, and recent reports.
    - Report which graph layers exist, are missing, or conflict.
 
 2. **Choose the first feature scope**
    - Prefer the user-named area.
    - Otherwise use the highest declared feature priority or project risk.
-   - Keep the initial slice small enough to review and ratify.
+   - Keep the initial slice small enough to review and validate.
 
 3. **Map the project**
    - Follow `map-project`.
@@ -86,8 +86,10 @@ start. Do not autonomously map an entire brownfield repository.
    - Follow `map-feature <target>`.
    - Construct checks from accepted requirements when they exist; otherwise
      reconstruct them from implementation with honest provenance.
-   - Connect existing proof by canonical path and optional test-case name.
-   - Record missing or weak proof as `proof_gap`; do not create tests here.
+   - Connect existing verification methods by canonical path and optional
+     test-case name.
+   - Record missing or weak evidence in the literal `proof_gap` field; do not
+     create tests here.
    - Set `structure_provenance: spec` when the check list and priorities trace
      to accepted requirements. Agent authorship of the YAML does not make that
      list `agent_generated`; use per-check provenance for genuine exceptions.
@@ -128,8 +130,8 @@ Report:
 
 - starting-state classification and scope
 - graph layers created, preserved, or still missing
-- proposed versus human-ratified structure
-- first feature mapped and proof gaps found
+- proposed versus human-validated structure
+- first feature mapped and evidence gaps found
 - saved assessment scopes created, when any
 - whether runtime assessment was possible
 - all four engine-produced scores, when available

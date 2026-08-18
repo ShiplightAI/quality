@@ -14,7 +14,7 @@
 - Replaced behavior is removed from active specs after the replacement is
   accepted.
 - Treat each change as an existing-feature retrofit until the existing roadmap
-  and feature specs prove it introduces an independent product capability.
+  and feature specs show it introduces an independent product capability.
 - Do not add a feature entry merely because a requirement is new, a change is
   large, or a ticket calls it a feature.
 - Before adding a feature entry, record which existing features were checked and

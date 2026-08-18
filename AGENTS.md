@@ -8,7 +8,7 @@ Quality evaluates evidence independently of the systems that produce it.
 - Quality reads and evaluates evidence; it does not create tests or modify
   producer artifacts.
 - Scores are computed by the deterministic engine, never by an agent or UI.
-- Agents must not set human ratification fields or accept risk for a human.
+- Agents must not set human validation fields or accept risk for a human.
 
 ## Dependency direction
 

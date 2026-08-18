@@ -1,7 +1,7 @@
 # Project Map Reference
 
 Use the project map as the root of one quality project. It connects accepted
-intent, reusable features, implementation artifacts, and proof references. It is
+intent, reusable features, implementation artifacts, and evidence references. It is
 an index and traceability graph, not a replacement for PRDs, specs, policies,
 tasks, code, feature quality maps, or saved assessment scopes.
 
@@ -40,11 +40,11 @@ Maintain this authority model:
 ```text
 accepted PRD / roadmap / user decision: project intent
 .quality/project-map.yaml: project and feature graph
-TESTING.md: proof-strategy guidance (development-owned)
+TESTING.md: verification-strategy guidance (development-owned)
 spec.md: accepted feature behavior
 plan.md / tasks.md: execution contract
 code: implementation artifact
-tests / reports / reviews: proof
+tests / reports / reviews: evidence
 ```
 
 Specs are current snapshots of accepted behavior, not changelogs. Git records
@@ -73,7 +73,7 @@ project-specific fields only when they have a clear consumer.
 Important fields:
 
 - `project`: identity, user-facing purpose, assessment boundary, source refs,
-  and proof-policy path
+  and verification-policy path
 - `product_docs`: accepted requirements, feature catalogs, architecture docs,
   roadmaps, and other intent sources
 - `feature_order`: top-level display order for the project index; ordering only,
@@ -126,7 +126,7 @@ Include:
 - `dependencies`
 - links to accepted intent, spec, plan, tasks, and checklists
 - code references owned or primarily touched by the feature
-- quality-map and proof-report paths
+- quality-map and evidence-report paths
 - open questions and residual risks
 
 A feature should be independently specifiable and checkable. Do not create one
@@ -145,14 +145,14 @@ performed the mapping.
 
 Recommended feature statuses:
 
-- `candidate`: proposed but not human-ratified
+- `candidate`: proposed but not human-validated
 - `planned`: accepted future capability
 - `specified`: accepted spec exists and requirements are mostly clear
 - `designed`: plan/contracts/data model exist
 - `tasked`: implementation tasks exist
 - `implementing`: code work in progress
 - `implemented`: code complete for accepted scope
-- `verified`: relevant proof has passed
+- `verified`: relevant verification methods have passing results
 - `reviewed`: code review completed without blocking findings
 - `done`: feature accepted for the current project scope
 - `blocked`: cannot progress without user or external state
@@ -192,8 +192,8 @@ Surface:
 - accepted specs with no implementation
 - implementation behavior missing from accepted specs
 - tests asserting behavior absent from accepted specs
-- features with no quality map or proof
-- stale proof reports
+- features with no quality map or mapped verification methods
+- stale evidence reports
 - changed code without updated specs
 - unresolved cross-feature concerns
 

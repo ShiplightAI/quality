@@ -80,7 +80,7 @@ expectations:
     source_type: "SOURCE"
     source_refs:
       - path: "AGENTS.md"
-        anchor: "Agents must not set human ratification fields or accept risk for a human"
+        anchor: "Agents must not set human validation fields or accept risk for a human"
       - path: "README.md"
         anchor: "It will pause when a human needs to confirm feature boundaries, priorities, or quality checks"
     category: "compliance"
