@@ -1,17 +1,17 @@
 # How Quality earns your trust
 
-Quality is trustworthy only when the system evaluating proof cannot quietly
-change the proof, the score, or a decision that belongs to you.
+Quality is trustworthy only when the system evaluating evidence cannot quietly
+change the evidence, the score, or a decision that belongs to you.
 
 ## The guarantees
 
-### Proof remains independent
+### Evidence remains independent
 
 Systems that build and test software produce facts and artifacts. Quality reads
 and evaluates them; it does not create the tests it assesses or change reported
 results. A result source may retrieve an existing observation file, but cannot
-reinterpret it or decide whether proof passed. New runner formats must be
-normalized before evaluation.
+reinterpret it or decide whether a verification method passed. New runner
+formats must be normalized before evaluation.
 
 ### Scores are deterministic
 
@@ -40,9 +40,9 @@ for review.
 ### Human decisions stay human
 
 Agents may propose features, checks, priorities, or accepted risks. They cannot
-approve their own proposals, mark a person's review complete, or accept risk on
-that person's behalf; passing tests are not human approval. Structure confidence
-reaches full trust only when a person confirms the feature and reviews its
+validate their own proposals, mark a person's validation complete, or accept
+risk on that person's behalf; passing tests are not human validation. Structure
+confidence reaches full trust only when a person validates the feature and its
 complete set of checks.
 
 ## Implementation

@@ -23,9 +23,9 @@ Then open Claude Code in that repository and give it this prompt:
 ```
 
 The agent will inventory the repository, propose a small quality graph for the
-highest-priority feature, connect the proof that already exists, and run an
-initial assessment when runtime results are available. It will pause when a
-human needs to confirm feature boundaries, priorities, or quality checks.
+highest-priority feature, connect the verification methods that already exist,
+and run an initial assessment when runtime results are available. It will pause
+when a human needs to confirm feature boundaries, priorities, or quality checks.
 
 After the first pass, inspect the proposed files under `.quality/` and answer
 the agent's review questions. Then continue with the next command it recommends,
@@ -38,7 +38,7 @@ Want to control the first slice? Include it in the prompt:
 ```
 
 The skill evaluates existing specifications, tests, workflows, reports, and
-other evidence; it does not create tests or approve its own proposals. See the
+other evidence; it does not create tests or validate its own proposals. See the
 [`quality` skill](agent-skills/quality/SKILL.md) for all commands and workflow
 details.
 
@@ -49,35 +49,39 @@ observation set fetched from a CI workflow run.](docs/assets/quality-explorer-ov
 
 ## What Quality does
 
-Quality connects product intent to independent, repeatable proof:
+Quality connects product intent to independently produced evidence:
 
 ```text
 requirements (PRDs)
-        ↓
+        ↓ intent validation
 features (specs)
         ↓
 quality checks
-        ↓
-proof definitions (tests and other evidence)
-        ↓
-runtime observations (did the proof pass?)
+        ↓ verification
+        ├── reasoning-based verification → analysis results ─┐
+        └── empirical verification → empirical observations ┴→ evidence
 ```
 
-Requirements define desired outcomes, checks state what must hold, and tests,
-workflows, telemetry, or manual records provide proof. Quality maps these
-relationships in `.quality/` and keeps missing or weak links visible. Agents can
-propose maps; people review structure and accepted risk.
+Requirements define desired outcomes, and people validate that features and
+checks represent that intent. Verification methods then evaluate whether the
+implementation or observed behavior satisfies each check. Reasoning-based
+methods produce analysis results; empirical methods produce observations of
+behavior. Both can contribute evidence. Quality maps these relationships in
+`.quality/` and keeps missing or weak links visible. Agents can propose maps;
+people validate intent and decide whether to accept risk.
 
 The engine reports four separate measures:
 
 | Measure | Question it answers |
 | --- | --- |
-| Quality | Is the current proving evidence passing? |
-| Coverage | Does every declared check have proof? |
-| Evidence confidence | Is the mapped proof strong enough? |
+| Quality | What do the current observed results report? |
+| Coverage | Does every declared check have a mapped verification method? |
+| Evidence confidence | Are the mapped methods strong enough for the claim? |
 | Structure confidence | Are these the right features, checks, and priorities? |
 
-See [the concepts guide](docs/README.md) for the model and trust boundaries.
+See the [terminology guide](docs/concepts/terminology.md) for the distinction
+between validation, verification, evidence, and observation, and the
+[concepts guide](docs/README.md) for the full model and trust boundaries.
 
 ## Optional: Use `spec-project` for spec-driven testing
 

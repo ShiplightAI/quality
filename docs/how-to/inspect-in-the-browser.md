@@ -1,7 +1,7 @@
 # Use Quality Explorer
 
-**Outcome:** A local web view of the project's features, checks, proof, results,
-and gaps.
+**Outcome:** A local web view of the project's features, checks, verification
+methods, evidence, results, and gaps.
 
 **Use this when:** You want to understand the project without reading YAML, walk
 through risk in a review meeting, or inspect why a result did not connect to a
@@ -29,7 +29,7 @@ graph and all four score workflows require the `.quality/` setup described in
 
 Quality Explorer can:
 
-- Scan the selected project and show its feature and proof graph.
+- Scan the selected project and show its feature and evidence graph.
 - Display available structural scores and runtime quality.
 - Show checks, gaps, source files, and evidence relationships.
 - Load configured observation sources or sets.
@@ -52,7 +52,7 @@ still make an outbound request and may require a token; “read-only” does not
 
 ## Decisions that remain yours
 
-The interface can show an unconfirmed feature, unreviewed list of checks, proposed
+The interface can show an unvalidated feature or list of checks, proposed
 policy, or accepted-risk option. It cannot make those decisions for you. See
 [Who decides what](../concepts/who-decides-what.md).
 

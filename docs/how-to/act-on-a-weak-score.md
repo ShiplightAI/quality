@@ -23,29 +23,30 @@ Why is evidence confidence low for the payments feature?
 
 | Score | What a low value can mean | What usually helps |
 | --- | --- | --- |
-| **Quality** | Checks failed, errored, were skipped, have mixed results, or have no matching observation | Fix the behavior or proof pipeline, then rerun it |
-| **Coverage** | Proof is missing, manual, indirect, incomplete, or below a declared policy | Connect or add the appropriate proof and resolve the recorded gap |
-| **Evidence confidence** | Proof is absent, non-automated, single-layer, ungated, or constrained by an unmet policy | Use an appropriate automated method, meaningful second method, or delivery gate |
-| **Structure confidence** | Check origin is weak or undeclared, or the complete list has not been approved for a confirmed feature | Correct the recorded origin and ask a person to review the list |
+| **Quality** | Checks failed, errored, were skipped, have mixed results, or have no matching observation | Fix the behavior or result pipeline, then rerun it |
+| **Coverage** | A verification method is missing, manual, indirect, incomplete, or below a declared policy | Connect or add the appropriate method and resolve the recorded evidence gap |
+| **Evidence confidence** | Methods are absent, non-automated, single-layer, ungated, or constrained by an unmet policy | Use an appropriate automated method, meaningful second method, or delivery gate |
+| **Structure confidence** | Check origin is weak or undeclared, or the complete list has not been validated for a confirmed feature | Correct the recorded origin and ask a person to validate the list |
 
 Do not average these explanations. A passing runtime result does not repair a
-coverage gap, and stronger proof does not approve the product's expected behaviors.
+coverage gap, and stronger evidence does not validate the product's expected
+behaviors.
 
-## Separate missing proof from missing results
+## Separate missing methods from missing observations
 
 Two problems can both produce an unobserved runtime check:
 
-- **No proof is mapped.** Coverage is also weak. The fix is to identify or create
-  appropriate proof and connect it to the check.
-- **Proof is mapped but no result matched it.** Coverage may look healthy, while
-  runtime quality is weak. The fix is the result pipeline or the path/test-case
-  join—not another test.
+- **No verification method is mapped.** Coverage is also weak. The fix is to
+  identify or create an appropriate method and connect it to the check.
+- **A method is mapped but no observation matched it.** Coverage may look
+  healthy, while runtime quality is weak. The fix is the result pipeline or the
+  path/test-case join—not another test.
 
-Ask for the resolution audit before creating new proof:
+Ask for the resolution audit before creating a new method:
 
 ```text
-For each unobserved check, tell me whether proof is missing or whether a result
-failed to match. Show the resolution audit.
+For each unobserved check, tell me whether a verification method is missing or
+whether an observation failed to match. Show the resolution audit.
 ```
 
 See [Make CI results count](make-ci-results-count.md) when results are not
@@ -54,12 +55,12 @@ reaching the graph.
 ## Decisions that remain yours
 
 - Whether an expected behavior belongs in the graph at all.
-- Whether a proof policy reflects the risk correctly.
-- Whether the list of checks is complete and approved.
+- Whether a verification policy reflects the risk correctly.
+- Whether the list of checks is complete and validated against product intent.
 - Whether a known gap is acceptable.
 
-Removing a real expected behavior or narrowing a release view solely to raise a score
-hides risk rather than resolving it.
+Removing a real expected behavior or narrowing a release view solely to raise a
+score hides risk rather than resolving it.
 
 ## Verify the improvement
 
@@ -72,14 +73,14 @@ hides risk rather than resolving it.
 ## Troubleshooting
 
 **The number rose but the underlying condition did not improve.** Check whether
-scope was removed, proof was mislabeled, a policy was weakened, or risk was
-accepted only to clear a warning. Restore the honest input and treat unexpected
-score movement as a defect.
+scope was removed, a verification method was mislabeled, a policy was weakened,
+or risk was accepted only to clear a warning. Restore the honest input and treat
+unexpected score movement as a defect.
 
 **More tests did not help.** Confirm that their paths and optional test-case
 names match the quality map and that the selected observation set actually loads
 their results.
 
 **Structure confidence remains low.** Recording a truthful origin can help, but
-an agent cannot provide human approval. Review the feature and its complete
-list of checks yourself.
+an agent cannot provide human validation. Compare the feature and its complete
+list of checks with the accepted product intent yourself.

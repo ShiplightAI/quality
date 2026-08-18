@@ -1,7 +1,8 @@
 # Map a feature
 
 **Outcome:** One capability gets a readable list of the expected behaviors it
-must keep, the existing proof for each behavior, and the gaps that remain.
+must keep, the mapped verification methods for each behavior, and the evidence
+gaps that remain.
 
 **Use this when:** After initial setup, when adding the next important feature,
 or when a feature's responsibilities have changed.
@@ -21,7 +22,7 @@ Or describe the feature:
 
 ```text
 Map the feature responsible for recording uploads. Show what must remain true,
-what proof already exists, and what is still missing.
+which verification methods already exist, and what evidence is still missing.
 ```
 
 ## What the agent does
@@ -29,17 +30,18 @@ what proof already exists, and what is still missing.
 - Reads accepted specifications when available, then relevant code, tests, and
   CI configuration.
 - Drafts checks in product language.
-- Connects existing tests, workflows, and other proof.
+- Connects existing tests, analyses, workflows, and other verification methods.
 - Records the source of the checks honestly.
-- Records missing or inadequate proof instead of omitting the expected behavior.
+- Records missing or inadequate evidence instead of omitting the expected
+  behavior.
 
-The agent does not write tests during feature mapping. Creating missing proof is
-a separate implementation task.
+The agent does not write tests during feature mapping. Creating a missing
+verification method is a separate implementation task.
 
 ## Decisions that remain yours
 
 **Whether the checks are right.** The first list is a proposal. Review it using
-[Review and approve the graph](review-and-ratify.md).
+[Validate the graph](validate-the-graph.md).
 
 **How important each check is.** When accepted source material provides a
 priority, the map can use it. Otherwise the check should remain `UNKNOWN` until
@@ -62,24 +64,25 @@ Also check:
 
 - Are important failure modes represented?
 - Does the list include lessons from past incidents or contractual commitments?
-- Is every proof path real and repository-relative?
+- Is every verification artifact path real and repository-relative?
 - Where a check names a specific test case, does that name match what the test
   reporter emits?
 - Are gaps visible rather than hidden by a short list?
 
-Checks participate in scoring before human approval; approval changes how much
-structure confidence the list receives. Do not approve merely to make the graph
-“start counting.”
+Checks participate in scoring before human validation; validation changes how
+much structure confidence the list receives. Do not mark a list reviewed merely
+to make the graph “start counting.”
 
 ## How runtime results connect
 
-Quality joins a result to proof primarily through its file path and, when
+Quality joins an observation to a mapped verification method primarily through
+its file path and, when
 present, an optional test-case name. Test-case matching ignores case and
 surrounding whitespace; file paths may match as repository-relative suffixes.
 
-Renaming a proof file can produce a missing-file scan warning. Renaming a pinned
-test case can leave observations unmatched. Use the resolution audit when a
-previously observed check becomes unobserved.
+Renaming a verification artifact can produce a missing-file scan warning.
+Renaming a pinned test case can leave observations unmatched. Use the resolution
+audit when a previously observed check becomes unobserved.
 
 ## Troubleshooting
 
@@ -95,5 +98,5 @@ instead of accepted intent. Explain the user or operational outcome, or
 
 ## Next steps
 
-- [Review and approve the list of checks](review-and-ratify.md).
+- [Validate the list of checks](validate-the-graph.md).
 - [Act on the highest-value gap](act-on-a-weak-score.md).

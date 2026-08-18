@@ -73,19 +73,19 @@ language used the same Claude session; persisted-state checks used fresh ones.
 | Scoped bootstrap | **Pass with inconsistent provenance.** `/quality start, focus on the highest-risk user-facing workflow first` selected 001 with a defensible risk explanation and completed in about 11.5 minutes. Unlike the first bootstrap, it marked spec-backed features `candidate` and the map `agent_generated`; that conflicts with the spec-driven rules and the earlier run's `implemented`/`spec` result. |
 | Exact and natural feature mapping | **Pass.** Both `/quality map-feature 002-recorder-session-upload` and the natural-language recorder-upload example routed correctly, validated the map, and exposed real gaps. |
 | Help, status, and project mapping | **Pass.** `/quality help`, `/quality status`, and `/quality map-project` honored their read/write boundaries and reported persisted state. |
-| Stronger proof policy | **Pass with an interpretation defect.** A real check accepted an e2e modality requirement, then a release-CI context requirement. The follow-up correctly found both unmet, but incorrectly said `require_gate` was also unmet: the engine treats existing `pr-ci` evidence as a gate, while `required_contexts: ["release-ci"]` expresses the narrower release requirement. |
-| Accept and withdraw a gap | **Pass.** Explicit owner language added `missing` to `accepted_gaps`; the follow-up removed it without changing proof or test results. |
-| Review and ratification | **Pass with response defects.** The review prompt prioritized pending human decisions. Explicit approval changed only `priority_provenance` and `checks_reviewed`, but the response said “three checks” and listed seven, and it added a reviewer email not supplied in the prompt. |
+| Stronger verification policy | **Pass with an interpretation defect.** A real check accepted an e2e modality requirement, then a release-CI context requirement. The follow-up correctly found both unmet, but incorrectly said `require_gate` was also unmet: the engine treats existing `pr-ci` evidence as a gate, while `required_contexts: ["release-ci"]` expresses the narrower release requirement. |
+| Accept and withdraw a gap | **Pass.** Explicit owner language added `missing` to `accepted_gaps`; the follow-up removed it without changing mapped methods or test results. |
+| Intent validation | **Pass with response defects.** The review prompt prioritized pending human decisions. Explicit validation changed only `priority_provenance` and `checks_reviewed`, but the response said “three checks” and listed seven, and it added a reviewer email not supplied in the prompt. |
 | Diagnose weak scores | **Routes correctly, explanation needs correction.** Coverage diagnosis chose the unmapped shipped P1 feature as the smallest honest improvement. Evidence-confidence diagnosis mixed structure review into the evidence axis and used incorrect check totals. |
-| Resolution audit without observations | **Pass with incorrect totals.** It correctly explained that no resolution audit exists before runtime acquisition and separated missing proof from join failure, but its category counts did not match its own lists. |
+| Resolution audit without observations | **Pass with incorrect totals.** It correctly explained that no resolution audit exists before runtime acquisition and separated a missing verification method from join failure, but its category counts did not match its own lists. |
 | Saved view | **Pass.** The agent created a two-feature view with exact ids. Assessment then hit the known published-CLI requirement for an observation set; the static-assessment fix is tracked separately. |
 | CI observation connection | **Pass after real prerequisite repair.** The skill stopped at the producer boundary, required explicit CI authorization, preserved test semantics, emitted canonical observations, and created the smallest source/set. Local JUnit verification exposed broken graph join keys before configuration was written. |
 | Assessment before the new CI artifact exists | **Pass.** GitHub acquisition found the latest real run, reported the missing artifact, returned `0` matched/unmatched/ambiguous observations, preserved the three static scores, and left Quality unavailable. |
 | External product sources | **Pass.** Linear and Jira sources were recorded as human-selected but reported unavailable without inventing content. A GitHub URL resolving to the already-indexed local PRD was not duplicated. The follow-up accurately reported which sources were used and what changed. |
 
-The disagreement example in `review-and-ratify.md` was not executed literally:
+The disagreement example in `validate-the-graph.md` was not executed literally:
 it asserts that feature 002 is a folder and should merge into 001, which is
-false for this repository. Its underlying correction/ratification path was
+false for this repository. Its underlying correction/validation path was
 covered by the other human-decision scenarios. `spec-project` prompts and shell
 CLI examples are outside this Quality-prompt sweep.
 
@@ -141,7 +141,8 @@ CLI examples are outside this Quality-prompt sweep.
 ## Verification boundary
 
 This sweep verified Quality prompt routing, scoped noninteractive permissions,
-session persistence, bootstrap, mapping, human gates, proof policy, saved views,
-CI wiring, runtime acquisition failure, resolution reporting, and external
-source handling. It did not verify `spec-project`, development commands, or
-external tracker retrieval because no Linear/Jira connector was available.
+session persistence, bootstrap, mapping, human gates, verification policy,
+saved views, CI wiring, runtime acquisition failure, resolution reporting, and
+external source handling. It did not verify `spec-project`, development
+commands, or external tracker retrieval because no Linear/Jira connector was
+available.
