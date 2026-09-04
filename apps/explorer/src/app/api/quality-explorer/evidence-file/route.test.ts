@@ -125,6 +125,12 @@ describe("evidence-file route", () => {
     expect((await get("playwright-report", "absent.html")).status).toBe(404);
   });
 
+  it("refuses a request that resolves to the project root itself", async () => {
+    // `path.relative(root, root)` is "", which must be treated as an escape by
+    // the containment check rather than by the type and isFile guards after it.
+    expect((await get(".")).status).toBe(403);
+  });
+
   it("refuses a directory", async () => {
     mkdirSync(path.join(root, "playwright-report"), { recursive: true });
 

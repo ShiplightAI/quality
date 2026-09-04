@@ -118,7 +118,16 @@ const SCRIPTABLE_TYPES = new Set([".html", ".htm", ".svg"]);
 // reject a contained directory literally named `..cache`, whose relative path
 // starts with two dots but never leaves the root.
 function escapesRoot(relative: string): boolean {
-  return relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+  // `""` means the request resolved to the project root itself. Downstream the
+  // extension lookup and the isFile() check both refuse it, but containment
+  // should not depend on guards that follow it — reorder those and the hole
+  // opens silently.
+  return (
+    relative === "" ||
+    relative === ".." ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  );
 }
 
 export async function GET(
