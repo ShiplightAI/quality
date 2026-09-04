@@ -180,7 +180,7 @@ acquisition and resolution have been ruled out.
     <quality-observations.json>
   ```
 
-- Observation config: compare with the schemas the engine emits (see above), then
+- Observation config: assess the project and read its `INVALID_*` diagnostics, then
   run the relevant assessment. Engine diagnostics verify acquisition and graph
   joins.
 - Implementation or verification-method changes: run their owning verification command before
@@ -210,18 +210,18 @@ or requires a human decision.
 - `.quality/config/observation-sets.yaml`
 - `.quality/config/views.yaml`
 
-Use the configuration templates under `assets/`. Obtain the current schemas
-from the engine rather than a bundled copy, which cannot be checked against the
-contract and drifts the moment it moves:
+Use the configuration templates under `assets/`. Never vendor a copy of a
+schema: a copy cannot be checked against the contract and drifts the moment the
+contract moves.
 
-- observation manifest: `quality-tools observations schema`
-- observation sources: `quality-tools sources schema`
-- observation sets: `quality-tools sets schema`
-- saved views: `quality-tools views schema`
+For the observation manifest, obtain the current schema from
+`quality-tools observations schema`.
 
-The three config-schema commands require a `quality-tools` newer than 0.3.2;
-the published version answers `Unknown command`. Until it ships, read the
-schemas from the engine source rather than vendoring a copy.
+Configuration files — sources, sets, views — are validated by the engine itself
+when you assess the project: an invalid profile, set, or view reports an
+`INVALID_*` diagnostic naming the exact `yamlPath`. That is the authority, since
+it is the parser that actually runs. Read the diagnostics rather than
+pre-validating against a schema.
 
 Use `quality-observations.template.json` as the canonical output example.
 

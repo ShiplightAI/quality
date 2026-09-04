@@ -19,7 +19,11 @@ export const runtime = "nodejs";
 //
 // Trust boundary: this serves files from the local project the user themselves
 // opened, on a loopback-bound single-user dev server, and only the extensions
-// below. It is not a general static file server — an unlisted extension is
+// below. `requireQcSession` is a no-op in Quality Explorer, so LOOPBACK IS THE
+// ONLY BOUNDARY: served behind `--hostname 0.0.0.0`, or port-forwarded out of a
+// container, this becomes a read-the-project endpoint for anyone who can reach
+// it. A host that binds anywhere else must put real authentication in front of
+// this route. It is not a general static file server — an unlisted extension is
 // refused rather than guessed at, which is what keeps a checked-in `.command`
 // or `.sh` in a scanned repo from ever being handed to a browser.
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -86,6 +90,10 @@ const DOCUMENT_CSP = [
   "media-src 'self' data: blob:",
   "font-src 'self' data:",
   "connect-src 'self'",
+  // Covered by default-src's fallback already; stated outright so the intent of
+  // the two directives that matter most here is not left to be inferred.
+  "frame-src 'none'",
+  "worker-src 'self'",
   "form-action 'none'",
   "frame-ancestors 'none'",
   "base-uri 'none'",
