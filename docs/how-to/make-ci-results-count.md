@@ -38,9 +38,6 @@ command, retry behavior, gate, or status.
 
 ## Link the run evidence (optional)
 
-Requires a `quality-tools` newer than 0.3.2. Until that ships, the published
-validator rejects the field.
-
 A result can carry a pointer to what the run left behind, so a reviewer opening
 a check can see what the test actually did rather than only whether it passed:
 
