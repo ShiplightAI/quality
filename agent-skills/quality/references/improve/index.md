@@ -351,37 +351,6 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    `GITHUB_RUN_ID`. Outside GitHub Actions, supply `--commit`; `--branch`,
    `--run-id`, `--run-url`, and `--observed-at` are optional.
 
-   **Run evidence** (requires a `quality-tools` newer than 0.3.2; the published
-   validator rejects the field until then). A record may carry pointers to what
-   the run left behind, so a reviewer opening a check can see what the test did:
-
-   ```json
-   {
-     "path": "tests/e2e/checkout.test.yaml",
-     "test_case": "guest can pay",
-     "status": "pass",
-     "artifacts": [
-       { "ref": "https://app.example.test/runs/8412?test=99231",
-         "label": "Run 8412" }
-     ]
-   }
-   ```
-
-   Not to be confused with a workflow's uploaded artifacts, which are how the
-   canonical file travels. These are pointers INSIDE it.
-
-   - `ref` is opaque. Quality records and displays it; it never parses,
-     resolves, or validates it. An absolute `http(s)` ref is linked as it
-     stands; anything else is a path into the project, which only a reader that
-     has the project can open.
-   - Point at the report a person already knows how to read — the run page, the
-     HTML report — not at each video and screenshot. Quality is an index from
-     checks to evidence, not a viewer.
-   - Optional and additive. A record without it still counts exactly the same;
-     only the link to look at the result is missing.
-   - A malformed entry is reported and dropped without costing the record its
-     observed status. The status is the measurement; the ref is only how a
-     reviewer looks at it.
 4. **Schema-validate before upload.**
 
    ```bash

@@ -189,7 +189,7 @@ function hasUsableRuntimeProofStatus(input: {
   return input.executionStatus !== "invalid" && input.resolutionStatus !== "invalid" && input.observationCount > 0;
 }
 
-// KNOWN, PRE-EXISTING: this is not injective. `my view` and `my-view` both
+// KNOWN, PRE-EXISTING, tracked as issue #16: this is not injective. `my view` and `my-view` both
 // reduce to `my-view`, so two saved views with those ids write the same export
 // and one silently overwrites the other. Making the segment unique renames the
 // file for every id that needs sanitizing, which breaks anything addressing an
