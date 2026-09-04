@@ -1,3 +1,5 @@
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -411,6 +413,46 @@ describe("local-reports host transport", () => {
       ).toBe(true);
     } finally {
       await project.cleanup();
+    }
+  });
+
+  it("refuses a symlink inside the project that resolves outside it", async () => {
+    // The lexical check structurally cannot see this: `path.resolve` never
+    // follows links, so a committed symlink is textually contained and would be
+    // read straight through. Same containment model as the evidence-file route.
+    const outside = mkdtempSync(path.join(tmpdir(), "local-reports-outside-"));
+    writeFileSync(path.join(outside, "report.json"), playwrightReport(), "utf8");
+
+    const project = await createFixtureProject("local-reports-symlink-escape", [
+      { relativePath: ".quality/evidence/checkout/quality-map.yaml", contents: QUALITY_MAP },
+      {
+        relativePath: ".quality/config/observation-sources.yaml",
+        contents: `profiles:
+  - id: "local-playwright"
+    name: "Local Playwright run"
+    transport: "host"
+    host:
+      provider: "local-reports"
+      options:
+        path: "escape/report.json"
+`
+      }
+    ]);
+    symlinkSync(outside, path.join(project.root, "escape"));
+
+    try {
+      const execution = await executeObservationSourceProfile({
+        profile: profileFrom(project.root),
+        projectRoot: project.root,
+        hostTransports
+      });
+
+      expect(execution.observations).toEqual([]);
+      expect(execution.diagnostics[0]?.severity).toBe("error");
+      expect(execution.diagnostics[0]?.message).toContain("outside the project root");
+    } finally {
+      await project.cleanup();
+      rmSync(outside, { force: true, recursive: true });
     }
   });
 

@@ -2,6 +2,7 @@
 
 import { useQcApi, useQcHost, useQcRoute } from "../host";
 import { useQcScanCache } from "./scan-cache";
+import { evidenceRefHref } from "../lib/evidence-ref";
 
 import { Breadcrumb } from "./Breadcrumb";
 import { MarkdownOverlay } from "./MarkdownOverlay";
@@ -127,28 +128,6 @@ type QualityCheck = QualityGraph["expectations"][number];
 // risk), and the recommended next step. Empty-string gap/next-step don't count (matches render).
 function checkEvidence(graph: QualityGraph, expectation: QualityCheck): QualityGraph["evidence"] {
   return graph.evidence.filter((entry) => expectation.linkedEvidenceIds.includes(entry.normalizedId));
-}
-
-// Same rule the audit panel applies: an absolute url is linked as it stands, a
-// project path is served by the host when it can, and anything else stays text
-// because resolving it needs a host that can and guessing would invent a
-// destination.
-function evidenceRefHref(
-  ref: string,
-  qcApi: (path: string) => string,
-  servesEvidenceFiles: boolean
-): string | undefined {
-  if (/^https?:\/\//i.test(ref)) {
-    return ref;
-  }
-  if (!servesEvidenceFiles) {
-    return undefined;
-  }
-  const segments = ref
-    .split("/")
-    .filter((segment) => segment.length > 0)
-    .map((segment) => encodeURIComponent(segment));
-  return segments.length === 0 ? undefined : qcApi(`/evidence-file/${segments.join("/")}`);
 }
 
 function observedStateColor(state: string): string {

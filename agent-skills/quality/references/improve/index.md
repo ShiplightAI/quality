@@ -219,6 +219,10 @@ contract and drifts the moment it moves:
 - observation sets: `quality-tools sets schema`
 - saved views: `quality-tools views schema`
 
+The three config-schema commands require a `quality-tools` newer than 0.3.2;
+the published version answers `Unknown command`. Until it ships, read the
+schemas from the engine source rather than vendoring a copy.
+
 Use `quality-observations.template.json` as the canonical output example.
 
 ### Sources
