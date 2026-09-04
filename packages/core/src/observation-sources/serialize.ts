@@ -20,7 +20,7 @@ export function serializeObservationSources(profiles: readonly ObservationSource
           ? {}
           : { description: profile.description }),
         transport: profile.transport,
-        observation_path: profile.observationPath,
+        ...(profile.observationPath === undefined ? {} : { observation_path: profile.observationPath }),
         ...(requiredEnv.length > 0 ? { auth: { required_env: requiredEnv } } : {}),
         ...(sourceRefs.length > 0 ? { source_refs: sourceRefs } : {}),
         ...(profile.github === undefined
@@ -33,7 +33,17 @@ export function serializeObservationSources(profiles: readonly ObservationSource
                 ...(profile.github.branch === undefined ? {} : { branch: profile.github.branch })
               }
             }),
-        ...(profile.localFolder === undefined ? {} : { local_folder: { path: profile.localFolder.path } })
+        ...(profile.localFolder === undefined ? {} : { local_folder: { path: profile.localFolder.path } }),
+        ...(profile.host === undefined
+          ? {}
+          : {
+              host: {
+                provider: profile.host.provider,
+                ...(Object.keys(profile.host.options).length === 0
+                  ? {}
+                  : { options: { ...profile.host.options } })
+              }
+            })
       };
     })
   });

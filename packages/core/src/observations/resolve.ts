@@ -219,7 +219,8 @@ function auditRowBase(record: NormalizedObservationRecord): Omit<
     sourceKind: record.source.kind,
     sourceLabel: record.source.label,
     runId: record.source.runId,
-    runUrl: record.source.runUrl
+    runUrl: record.source.runUrl,
+    evidenceRefs: record.evidenceRefs
   };
 }
 
@@ -383,7 +384,7 @@ export function resolveObservations(
   });
 
   return {
-    status: statusFor(resolved, diagnostics.length),
+    status: statusFor(resolved, diagnostics.filter((entry) => entry.severity !== "info").length),
     observations: resolved,
     auditRows,
     diagnostics

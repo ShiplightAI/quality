@@ -12,6 +12,7 @@ import {
   type ObservationSetExecutionSelection
 } from "../observation-sets";
 import { findSavedQcView } from "../views/filter";
+import type { HostObservationTransportRegistry } from "../observation-sources";
 import { resolveObservations } from "../observations/resolve";
 import { scanProject } from "../discovery/scan-project";
 import type { ScanDiagnostic } from "../diagnostics/diagnostic";
@@ -169,6 +170,8 @@ export interface BuildRecommendationExportInput {
   readonly limit?: number;
   readonly selection?: ObservationSetExecutionSelection;
   readonly env?: NodeJS.ProcessEnv;
+  /** Host transports for `transport: host` profiles, keyed by `host.provider`. */
+  readonly hostTransports?: HostObservationTransportRegistry;
   readonly fixPromptRecords?: readonly RecommendationFixPromptRecord[];
   readonly generatedAt?: Date;
 }
@@ -552,7 +555,8 @@ export async function buildRecommendationExport(
           observationSourceProfiles: scan.observationSourceProfiles.primary?.document?.profiles ?? [],
           projectRoot: scan.target.resolvedPath,
           env: input.env,
-          selection: input.selection
+          selection: input.selection,
+          hostTransports: input.hostTransports
         });
   const resolution = execution === undefined ? undefined : resolveObservations(scan, execution);
   const effectiveResult = applySavedQcView(scan, input.viewId) ?? scan;

@@ -3,13 +3,69 @@
 import { ExternalLink, X } from "lucide-react";
 import { ActionIcon, Anchor, Badge, Code, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useMemo, useState } from "react";
-import type { ObservationResolutionAuditRow } from "@shiplightai/quality-core";
+import { useQcApi, useQcHost } from "../host";
+import type { NormalizedEvidenceRef, ObservationResolutionAuditRow } from "@shiplightai/quality-core";
 
 type MatchFilter = "all" | ObservationResolutionAuditRow["matchStatus"];
 
 interface ObservationAuditPanelProps {
   readonly rows: readonly ObservationResolutionAuditRow[];
   onClose(): void;
+}
+
+function isAbsoluteUrl(ref: string): boolean {
+  return /^https?:\/\//i.test(ref);
+}
+
+// The single place the UI looks at a ref at all, and it looks only at whether
+// the producer already gave us something a browser can open, or whether the
+// host can turn a project path into something it can.
+//
+// A path is passed through as PATH SEGMENTS rather than a query parameter. The
+// reports these refs point at fetch their own assets with relative urls, so the
+// served page has to sit at the same shape of address as the folder it came
+// from or its video and trace links resolve to nothing.
+//
+// Anything else stays text: resolving it needs a host that can, and guessing a
+// URL for it would invent a destination.
+function evidenceHref(
+  ref: string,
+  qcApi: (path: string) => string,
+  servesEvidenceFiles: boolean
+): string | undefined {
+  if (isAbsoluteUrl(ref)) {
+    return ref;
+  }
+
+  if (!servesEvidenceFiles) {
+    return undefined;
+  }
+
+  const segments = ref
+    .split("/")
+    .filter((segment) => segment.length > 0)
+    .map((segment) => encodeURIComponent(segment));
+  return segments.length === 0 ? undefined : qcApi(`/evidence-file/${segments.join("/")}`);
+}
+
+// Refs are written by evidence producers, so the destination is shown rather
+// than hidden behind a label the producer also chose. A project-relative ref
+// shows its path instead: the host it would resolve to is this application,
+// which tells the reader nothing.
+function evidenceDestination(ref: string): string {
+  if (!isAbsoluteUrl(ref)) {
+    return ref;
+  }
+
+  try {
+    return new URL(ref).host;
+  } catch {
+    return ref;
+  }
+}
+
+function evidenceLabel(entry: NormalizedEvidenceRef): string {
+  return entry.label ?? "Run evidence";
 }
 
 function sourceLabel(row: ObservationResolutionAuditRow): string {
@@ -53,6 +109,8 @@ export function ObservationAuditPanel({
   rows,
   onClose
 }: ObservationAuditPanelProps): React.ReactElement {
+  const qcApi = useQcApi();
+  const { servesEvidenceFiles = false } = useQcHost();
   const [filter, setFilter] = useState<MatchFilter>("all");
   const filteredRows = useMemo(
     () => rows.filter((row) => filter === "all" || row.matchStatus === filter),
@@ -127,6 +185,35 @@ export function ObservationAuditPanel({
                 <Anchor href={row.runUrl} target="_blank" rel="noopener noreferrer" mt="xs">
                   Open workflow result <ExternalLink aria-hidden size={14} />
                 </Anchor>
+              ) : null}
+
+              {row.evidenceRefs.length > 0 ? (
+                <Stack gap={2} mt="xs" aria-label="Run evidence">
+                  <Text size="xs" fw={600} tt="uppercase" c="dimmed">Run evidence</Text>
+                  {row.evidenceRefs.map((entry) => {
+                    const href = evidenceHref(entry.ref, qcApi, servesEvidenceFiles);
+                    const destination = evidenceDestination(entry.ref);
+                    return href === undefined ? (
+                      <Text
+                        key={entry.ref}
+                        size="xs"
+                        c="dimmed"
+                        style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}
+                      >
+                        {evidenceLabel(entry)}: {entry.ref}
+                      </Text>
+                    ) : (
+                      <Group key={entry.ref} gap={6} wrap="nowrap">
+                        <Anchor href={href} target="_blank" rel="noopener noreferrer" size="sm">
+                          {evidenceLabel(entry)} <ExternalLink aria-hidden size={14} />
+                        </Anchor>
+                        <Text size="xs" c="dimmed" style={{ wordBreak: "break-all" }}>
+                          {destination}
+                        </Text>
+                      </Group>
+                    );
+                  })}
+                </Stack>
               ) : null}
             </Paper>
           ))}

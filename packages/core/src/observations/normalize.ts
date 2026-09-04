@@ -1,12 +1,14 @@
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 import type {
+  NormalizedEvidenceRef,
   NormalizedObservationArtifact,
   NormalizedObservationRecord,
   NormalizedObservationRevision,
   NormalizedObservationSource,
   ObservationArtifactInput,
   ObservationBatchInput,
+  ObservationEvidenceRefInput,
   ObservationIngestionResult,
   ObservationRecordInput,
   ObservationRecordStatus,
@@ -74,6 +76,28 @@ function normalizeArtifacts(value: readonly ObservationArtifactInput[] | undefin
     url: stringValue(artifact.url),
     label: stringValue(artifact.label)
   }));
+}
+
+// An entry with no usable ref points at nothing, so it is dropped rather than
+// carried as an empty link the UI would have to special-case. The ref itself is
+// only trimmed — never rewritten, resolved, or validated for shape, because
+// only the integration that produced it knows what a valid one looks like.
+function normalizeEvidenceRefs(
+  value: readonly ObservationEvidenceRefInput[] | undefined
+): readonly NormalizedEvidenceRef[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((entry) => {
+    const ref = stringValue(entry.ref);
+    if (ref === undefined) {
+      return [];
+    }
+
+    const label = stringValue(entry.label);
+    return [{ ref, ...(label === undefined ? {} : { label }) }];
+  });
 }
 
 function normalizeStatus(value: unknown): ObservationRecordStatus | undefined {
@@ -212,7 +236,8 @@ export function normalizeObservationBatches(
         revision,
         source,
         note: stringValue(record.note),
-        artifacts: normalizeArtifacts(record.artifacts)
+        artifacts: normalizeArtifacts(record.artifacts),
+        evidenceRefs: normalizeEvidenceRefs(record.evidence_refs)
       });
     });
   });

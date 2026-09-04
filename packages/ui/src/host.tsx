@@ -41,6 +41,16 @@ export interface QcUiHost {
   readonly setProject: (
     project: QcProjectSelection,
   ) => Promise<{ readonly ok: true } | { readonly error: string }>;
+  /**
+   * Whether this host serves run-evidence files out of the opened project at
+   * `{apiBase}/evidence-file/<path>`.
+   *
+   * A run-evidence ref that is not already a URL is a path into the project, and
+   * only a host reading that project can turn it into something openable.
+   * Quality Explorer can; a hosted reader with no local checkout cannot, and
+   * without this flag it would render a link that 404s. Absent means no.
+   */
+  readonly servesEvidenceFiles?: boolean;
 }
 
 const QcUiHostContext = createContext<QcUiHost | null>(null);
@@ -56,7 +66,7 @@ export function QcUiHostProvider({
   // invalidate every consumer. `setProject` is a stable Server Action reference in both hosts.
   const value = useMemo(
     () => host,
-    [host.routeBase, host.apiBase, host.setProject],
+    [host.routeBase, host.apiBase, host.setProject, host.servesEvidenceFiles],
   );
   return <QcUiHostContext.Provider value={value}>{children}</QcUiHostContext.Provider>;
 }

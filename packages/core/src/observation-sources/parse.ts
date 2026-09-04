@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
+import { OBSERVATION_SOURCE_TRANSPORTS } from "./types";
 import type {
   GitHubActionsObservationSourceConfig,
+  HostObservationSourceConfig,
   LocalFolderObservationSourceConfig,
   ObservationSourceProfile,
+  ObservationSourceTransport,
   ObservationSourceProfileDiagnostic,
   ObservationSourceProfileParseBatch,
   ObservationSourceProfileSource,
@@ -21,8 +24,11 @@ const PROFILE_KEYS = new Set([
   "source_refs",
   "auth",
   "github",
-  "local_folder"
+  "local_folder",
+  "host"
 ]);
+
+const TRANSPORTS = new Set<ObservationSourceTransport>(OBSERVATION_SOURCE_TRANSPORTS);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -107,6 +113,41 @@ function localFolderConfig(value: unknown): LocalFolderObservationSourceConfig |
   return folderPath === undefined ? undefined : { path: folderPath };
 }
 
+// `options` is passed to the host handler untouched. Values are restricted to
+// strings so config stays a flat, reviewable block in the repo rather than a
+// place to smuggle arbitrary structure past a reader.
+//
+// A non-string value is REPORTED, not quietly dropped. YAML turns an unquoted
+// `commit: 1234567` into a number, and dropping it silently leaves a source
+// that reads fine and produces observations a commit-scoped evaluation then
+// ignores — a wrong answer with nothing on screen to explain it.
+function hostConfig(
+  value: unknown,
+  onInvalidOption: (key: string) => void
+): HostObservationSourceConfig | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const provider = stringValue(value.provider);
+  if (provider === undefined) {
+    return undefined;
+  }
+
+  const rawOptions = isRecord(value.options) ? value.options : {};
+  const options: Record<string, string> = {};
+  for (const [key, optionValue] of Object.entries(rawOptions)) {
+    const normalized = stringValue(optionValue);
+    if (normalized === undefined) {
+      onInvalidOption(key);
+      continue;
+    }
+    options[key] = normalized;
+  }
+
+  return { provider, options };
+}
+
 function validateProfile(
   profile: ObservationSourceProfile,
   source: ObservationSourceProfileSource,
@@ -131,6 +172,30 @@ function validateProfile(
         code: "INVALID_OBSERVATION_SOURCE_PROFILE",
         message: `Profile ${profile.id} requires a local_folder block for transport local-folder.`,
         yamlPath: `${yamlPath}.local_folder`
+      })
+    );
+  }
+
+  if (profile.transport === "host" && profile.host === undefined) {
+    diagnostics.push(
+      diagnostic(source, {
+        severity: "error",
+        code: "INVALID_OBSERVATION_SOURCE_PROFILE",
+        message: `Profile ${profile.id} requires a host block with a provider for transport host.`,
+        yamlPath: `${yamlPath}.host`
+      })
+    );
+  }
+
+  // Only the file-based transports address a file. Requiring observation_path
+  // of a host transport would force config to name a path that is never read.
+  if (profile.transport !== "host" && profile.observationPath === undefined) {
+    diagnostics.push(
+      diagnostic(source, {
+        severity: "error",
+        code: "INVALID_OBSERVATION_SOURCE_PROFILE",
+        message: `Profile ${profile.id} must define observation_path for its canonical quality-observations JSON file.`,
+        yamlPath: `${yamlPath}.observation_path`
       })
     );
   }
@@ -171,7 +236,7 @@ function profileFrom(
     );
   }
 
-  if (id === undefined || name === undefined || (transport !== "github-actions" && transport !== "local-folder")) {
+  if (id === undefined || name === undefined || !TRANSPORTS.has(transport as ObservationSourceTransport)) {
     diagnostics.push(
       diagnostic(source, {
         severity: "error",
@@ -182,28 +247,27 @@ function profileFrom(
     );
     return undefined;
   }
-  if (observationPath === undefined) {
-    diagnostics.push(
-      diagnostic(source, {
-        severity: "error",
-        code: "INVALID_OBSERVATION_SOURCE_PROFILE",
-        message: `Profile ${id} must define observation_path for its canonical quality-observations JSON file.`,
-        yamlPath: `$.profiles[${index}].observation_path`
-      })
-    );
-    return undefined;
-  }
 
   const profile: ObservationSourceProfile = {
     id,
     name,
     description: stringValue(value.description),
-    transport,
+    transport: transport as ObservationSourceTransport,
     observationPath,
     requiredEnv: stringArray(isRecord(value.auth) ? value.auth.required_env : undefined),
     sourceRefs: sourceRefs(value.source_refs),
     github: githubConfig(value.github),
-    localFolder: localFolderConfig(value.local_folder)
+    localFolder: localFolderConfig(value.local_folder),
+    host: hostConfig(value.host, (key) => {
+      diagnostics.push(
+        diagnostic(source, {
+          severity: "error",
+          code: "INVALID_OBSERVATION_SOURCE_PROFILE",
+          message: `Profile entry ${index} host.options.${key} must be a non-empty string. Quote a value YAML would otherwise read as a number or boolean.`,
+          yamlPath: `$.profiles[${index}].host.options.${key}`
+        })
+      );
+    })
   };
 
   validateProfile(profile, source, `$.profiles[${index}]`, diagnostics);

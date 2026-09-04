@@ -25,6 +25,26 @@ export interface ObservationArtifactInput {
   readonly [key: string]: unknown;
 }
 
+// A pointer to the run evidence a producer kept for one observation: the video,
+// the screenshot gallery, the trace, the HTML report — whatever lets a reviewer
+// see what the test actually did.
+//
+// `ref` is OPAQUE. Quality records it and hands it back; it never parses it for
+// meaning, and no engine behaviour may branch on its contents. Interpretation
+// belongs to whoever configured the producer: a Shiplight run URL, a local
+// report path, and a CI artifact address are all the same thing here. The one
+// exception lives in the presentation layer, which links an absolute http(s)
+// ref directly rather than asking a host to resolve it.
+//
+// Deliberately distinct from ObservationArtifactInput above, which records
+// where the observation MANIFEST came from. Conflating the two would show the
+// manifest file itself as run evidence.
+export interface ObservationEvidenceRefInput {
+  readonly ref?: string;
+  readonly label?: string;
+  readonly [key: string]: unknown;
+}
+
 export interface ObservationSourceInput {
   readonly id?: string;
   readonly kind?: string;
@@ -53,6 +73,7 @@ export interface ObservationRecordInput {
   readonly revision?: ObservationRevisionInput;
   readonly note?: string;
   readonly artifacts?: readonly ObservationArtifactInput[];
+  readonly evidence_refs?: readonly ObservationEvidenceRefInput[];
   readonly [key: string]: unknown;
 }
 
@@ -99,12 +120,20 @@ export interface QualityObservationManifestRun {
   readonly url?: string;
 }
 
+// The public spelling of ObservationEvidenceRefInput inside the canonical
+// manifest. `ref` is required here: an entry with no pointer is not evidence.
+export interface QualityObservationManifestArtifact {
+  readonly ref: string;
+  readonly label?: string;
+}
+
 export interface QualityObservationManifestRecord {
   readonly path: string;
   readonly test_case?: string;
   readonly status: ObservationRecordStatus;
   readonly observed_at?: string;
   readonly note?: string;
+  readonly artifacts?: readonly QualityObservationManifestArtifact[];
 }
 
 export interface QualityObservationManifest {
@@ -125,6 +154,11 @@ export interface NormalizedObservationArtifact {
   readonly kind?: string;
   readonly path?: string;
   readonly url?: string;
+  readonly label?: string;
+}
+
+export interface NormalizedEvidenceRef {
+  readonly ref: string;
   readonly label?: string;
 }
 
@@ -155,6 +189,7 @@ export interface NormalizedObservationRecord {
   readonly source: NormalizedObservationSource;
   readonly note?: string;
   readonly artifacts: readonly NormalizedObservationArtifact[];
+  readonly evidenceRefs: readonly NormalizedEvidenceRef[];
 }
 
 export interface ObservationIngestionResult {
@@ -195,6 +230,7 @@ export interface ObservationResolutionAuditRow {
   readonly evidenceId?: string;
   readonly evidenceLocalId?: string;
   readonly evidencePath?: string;
+  readonly evidenceRefs: readonly NormalizedEvidenceRef[];
 }
 
 export interface ObservationResolutionResult {
@@ -217,6 +253,7 @@ export interface EvaluatedEvidenceObservation {
   readonly observedAt?: string;
   readonly commit?: string;
   readonly runUrl?: string;
+  readonly evidenceRefs: readonly NormalizedEvidenceRef[];
 }
 
 export interface EvaluatedExpectationSnapshot {

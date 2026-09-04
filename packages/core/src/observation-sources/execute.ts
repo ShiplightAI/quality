@@ -4,8 +4,10 @@ import AdmZip from "adm-zip";
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 import {
+  INTERNAL_OBSERVATION_CONTEXT,
   ingestObservationManifest,
   mergeObservationIngestionResults,
+  normalizeObservationBatches,
   qualityObservationIdentity,
   type ObservationIngestionResult
 } from "../observations";
@@ -13,6 +15,7 @@ import { evaluateObservationSourceProfileEnv } from "./env";
 import type {
   ExecutedObservationSourceArtifact,
   ExecutedObservationSourceRun,
+  HostObservationTransportRegistry,
   ObservationSourceExecutionResult,
   ObservationSourceExecutionSelection,
   ObservationSourceProfile,
@@ -25,6 +28,7 @@ interface ExecuteObservationSourceProfileInput {
   readonly env?: NodeJS.ProcessEnv;
   readonly selection?: ObservationSourceExecutionSelection;
   readonly fetchImpl?: typeof fetch;
+  readonly hostTransports?: HostObservationTransportRegistry;
 }
 
 interface DownloadedArtifactEntry {
@@ -65,6 +69,14 @@ interface GitHubArtifactResponse {
 
 interface GitHubArtifactsResponse {
   readonly artifacts?: readonly GitHubArtifactResponse[];
+}
+
+// Counts only diagnostics that describe something going wrong. An `info`
+// note — "this report records no commit", say — is context for the reader, not
+// a degraded read, and reporting it as `partial` would say a run half-failed
+// when every record arrived intact.
+function countProblems(diagnostics: readonly ScanDiagnostic[]): number {
+  return diagnostics.filter((entry) => entry.severity !== "info").length;
 }
 
 function statusFor(observationCount: number, diagnosticsCount: number): ObservationIngestionResult["status"] {
@@ -128,13 +140,92 @@ function finalizeExecution(input: {
     profileId: input.profile.id,
     profileName: input.profile.name,
     transport: input.profile.transport,
-    status: statusFor(merged.observations.length, diagnostics.length),
+    status: statusFor(merged.observations.length, countProblems(diagnostics)),
     envStatus: input.envStatus,
     observations: merged.observations,
     diagnostics,
     artifacts: input.artifacts ?? [],
     selectedRun: input.selectedRun
   };
+}
+
+async function executeHostProfile(
+  input: ExecuteObservationSourceProfileInput,
+  envStatus: ReturnType<typeof evaluateObservationSourceProfileEnv>
+): Promise<ObservationSourceExecutionResult> {
+  const provider = input.profile.host?.provider;
+  if (provider === undefined) {
+    return finalizeExecution({
+      profile: input.profile,
+      envStatus,
+      diagnostics: [
+        createDiagnostic({
+          severity: "error",
+          code: "INVALID_OBSERVATION_SOURCE",
+          message: `Observation source profile ${input.profile.id} uses transport host but declares no host.provider.`
+        })
+      ]
+    });
+  }
+
+  const transport = input.hostTransports?.[provider];
+  if (transport === undefined) {
+    // A repo can legitimately declare a provider this reader cannot serve — the
+    // OSS CLI reading a config written for the hosted app, say. Say which
+    // providers ARE registered so the reader can tell "wrong host" from "typo".
+    const registered = Object.keys(input.hostTransports ?? {});
+    return finalizeExecution({
+      profile: input.profile,
+      envStatus,
+      diagnostics: [
+        createDiagnostic({
+          severity: "error",
+          code: "INVALID_OBSERVATION_SOURCE",
+          message: `Observation source profile ${input.profile.id} needs host provider ${provider}, which this application does not register. Registered providers: ${joinedList(registered)}.`
+        })
+      ]
+    });
+  }
+
+  let result: Awaited<ReturnType<typeof transport>>;
+  try {
+    result = await transport({
+      profile: input.profile,
+      selection: input.selection,
+      projectRoot: input.projectRoot,
+      env: input.env
+    });
+  } catch (error) {
+    return finalizeExecution({
+      profile: input.profile,
+      envStatus,
+      diagnostics: [
+        createDiagnostic({
+          severity: "error",
+          code: "INVALID_OBSERVATION_SOURCE",
+          message: `Observation source profile ${input.profile.id} host provider ${provider} failed: ${error instanceof Error ? error.message : String(error)}`
+        })
+      ]
+    });
+  }
+
+  // The host handed us raw records; from here the engine owns everything. It
+  // normalizes and diagnoses them exactly as it would a parsed manifest, so a
+  // host transport cannot get a record past a check a file-based one must pass.
+  const ingestion = normalizeObservationBatches(
+    result.batches.map((batch) => ({
+      ...batch,
+      context: batch.context ?? INTERNAL_OBSERVATION_CONTEXT
+    }))
+  );
+
+  return finalizeExecution({
+    profile: input.profile,
+    envStatus,
+    ingestionResults: [ingestion],
+    diagnostics: result.diagnostics ?? [],
+    selectedRun: result.selectedRun
+  });
 }
 
 function missingEnvDiagnostics(profile: ObservationSourceProfile, env: NodeJS.ProcessEnv): readonly ScanDiagnostic[] {
@@ -205,7 +296,8 @@ function joinedList(values: readonly string[]): string {
 
 async function executeLocalFolderProfile(
   input: ExecuteObservationSourceProfileInput,
-  envStatus: ReturnType<typeof evaluateObservationSourceProfileEnv>
+  envStatus: ReturnType<typeof evaluateObservationSourceProfileEnv>,
+  observationPath: string
 ): Promise<ObservationSourceExecutionResult> {
   const diagnostics: ScanDiagnostic[] = [];
   const ingestionResults: ObservationIngestionResult[] = [];
@@ -226,7 +318,7 @@ async function executeLocalFolderProfile(
     });
   }
 
-  const resolvedPath = path.resolve(folderRoot, input.profile.observationPath);
+  const resolvedPath = path.resolve(folderRoot, observationPath);
   let rawText: string;
   try {
     rawText = await readFile(resolvedPath, "utf8");
@@ -235,7 +327,7 @@ async function executeLocalFolderProfile(
       createDiagnostic({
         severity: "warning",
         code: "MISSING_OBSERVATION_ARTIFACT_MATCH",
-        message: `Observation source profile ${input.profile.id} could not read canonical observation file ${input.profile.observationPath} under ${folderRoot}: ${error instanceof Error ? error.message : String(error)}`
+        message: `Observation source profile ${input.profile.id} could not read canonical observation file ${observationPath} under ${folderRoot}: ${error instanceof Error ? error.message : String(error)}`
       })
     );
 
@@ -249,7 +341,7 @@ async function executeLocalFolderProfile(
   }
 
   artifacts.push({
-    declaredObservationPath: input.profile.observationPath,
+    declaredObservationPath: observationPath,
     sourcePath: resolvedPath
   });
   ingestionResults.push(
@@ -531,7 +623,8 @@ function duplicateObservationIdentityDetails(
 
 async function executeGitHubActionsProfile(
   input: ExecuteObservationSourceProfileInput,
-  envStatus: ReturnType<typeof evaluateObservationSourceProfileEnv>
+  envStatus: ReturnType<typeof evaluateObservationSourceProfileEnv>,
+  observationPath: string
 ): Promise<ObservationSourceExecutionResult> {
   const diagnostics: ScanDiagnostic[] = [];
   const artifacts: ExecutedObservationSourceArtifact[] = [];
@@ -562,7 +655,7 @@ async function executeGitHubActionsProfile(
     }
 
     const downloads = await downloadGitHubArtifacts(input.profile, runId, fetchImpl, token);
-    const matches = matchingDownloadedEntries(downloads, input.profile.observationPath);
+    const matches = matchingDownloadedEntries(downloads, observationPath);
     const ambiguityDetails = ambiguousDownloadedMatchDetails(
       matches,
       input.profile.github?.artifactNames ?? []
@@ -573,7 +666,7 @@ async function executeGitHubActionsProfile(
           severity: "warning",
           code: "MISSING_OBSERVATION_ARTIFACT_MATCH",
           message: [
-            `Observation source profile ${input.profile.id} selected GitHub Actions run ${runId} for workflow ${input.profile.github?.workflow ?? "(unknown workflow)"}, but could not find canonical observation path ${input.profile.observationPath}.`,
+            `Observation source profile ${input.profile.id} selected GitHub Actions run ${runId} for workflow ${input.profile.github?.workflow ?? "(unknown workflow)"}, but could not find canonical observation path ${observationPath}.`,
             `Configured artifact_names: ${joinedList(input.profile.github?.artifactNames ?? [])}.`,
             `Downloaded matching artifacts: ${joinedList(downloads.map((download) => download.name))}.`,
             `Downloaded artifact entries: ${joinedList(downloads.flatMap((download) => download.entries.map((entry) => `${download.name}/${entry.path}`)))}.`
@@ -585,7 +678,7 @@ async function executeGitHubActionsProfile(
         createDiagnostic({
           severity: "warning",
           code: "AMBIGUOUS_OBSERVATION_ARTIFACT_MATCH",
-          message: `Observation source profile ${input.profile.id} matched canonical observation path ${input.profile.observationPath} ambiguously: ${ambiguityDetails.join("; ")}.`
+          message: `Observation source profile ${input.profile.id} matched canonical observation path ${observationPath} ambiguously: ${ambiguityDetails.join("; ")}.`
         })
       );
     } else {
@@ -610,7 +703,7 @@ async function executeGitHubActionsProfile(
 
       for (const match of matches) {
         artifacts.push({
-          declaredObservationPath: input.profile.observationPath,
+          declaredObservationPath: observationPath,
           matchedArtifactName: match.artifact.name,
           matchedObservationPath: match.entry.path
         });
@@ -702,9 +795,27 @@ export async function executeObservationSourceProfile(
     });
   }
 
-  if (input.profile.transport === "local-folder") {
-    return executeLocalFolderProfile(input, envStatus);
+  if (input.profile.transport === "host") {
+    return executeHostProfile(input, envStatus);
   }
 
-  return executeGitHubActionsProfile(input, envStatus);
+  if (input.profile.observationPath === undefined) {
+    return finalizeExecution({
+      profile: input.profile,
+      envStatus,
+      diagnostics: [
+        createDiagnostic({
+          severity: "error",
+          code: "INVALID_OBSERVATION_SOURCE",
+          message: `Observation source profile ${input.profile.id} has no observation_path, which transport ${input.profile.transport} requires.`
+        })
+      ]
+    });
+  }
+
+  if (input.profile.transport === "local-folder") {
+    return executeLocalFolderProfile(input, envStatus, input.profile.observationPath);
+  }
+
+  return executeGitHubActionsProfile(input, envStatus, input.profile.observationPath);
 }

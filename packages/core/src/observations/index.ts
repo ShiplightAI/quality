@@ -8,4 +8,5 @@ export * from "./recommend";
 export * from "./github-actions";
 export * from "./junit";
 export * from "./playwright-json";
+export * from "./shiplight-report";
 export * from "./manifest";

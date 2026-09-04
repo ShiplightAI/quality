@@ -1,3 +1,8 @@
+// The id `static` names the assessment that ran with no runtime observations,
+// so no saved set may claim it. Shared with the JSON Schema so the parser and
+// the published contract reserve exactly the same name.
+export const RESERVED_OBSERVATION_SET_ID = "static";
+
 export type ObservationSetDiagnosticSeverity = "error" | "warning" | "info";
 
 export type ObservationSetParseStatus = "parsed" | "invalid";

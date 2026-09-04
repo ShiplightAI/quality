@@ -28,6 +28,8 @@ interface ProducerOptions {
   readonly testCase?: string;
   readonly status?: string;
   readonly note?: string;
+  readonly artifactRef?: string;
+  readonly artifactLabel?: string;
   readonly help: boolean;
 }
 
@@ -50,6 +52,12 @@ Producer metadata:
   --run-id <id>           Optional run identity. Defaults to GITHUB_RUN_ID.
   --run-url <url>         Optional run URL. Derived from GitHub environment when available.
 
+Run evidence (record only):
+  --artifact-ref <ref>    Opaque pointer to this result's run evidence — a report
+                          URL, a run page, a local path. Recorded verbatim and
+                          never interpreted.
+  --artifact-label <text> Optional human-readable label for that pointer.
+
 Canonical statuses: pass, fail, error, skipped.
 `);
 }
@@ -67,6 +75,8 @@ function parseOptions(argv: readonly string[]): ProducerOptions {
     testCase?: string;
     status?: string;
     note?: string;
+    artifactRef?: string;
+    artifactLabel?: string;
     dirty: boolean;
     help: boolean;
   } = {
@@ -95,7 +105,9 @@ function parseOptions(argv: readonly string[]): ProducerOptions {
       "--path": "path",
       "--test-case": "testCase",
       "--status": "status",
-      "--note": "note"
+      "--note": "note",
+      "--artifact-ref": "artifactRef",
+      "--artifact-label": "artifactLabel"
     };
     const key = keys[arg];
     if (key !== undefined) {
@@ -201,7 +213,11 @@ function canonicalRecord(
     ...(testCase === undefined ? {} : { test_case: testCase }),
     status: observation.status,
     ...(observation.observedAt === envelopeObservedAt ? {} : { observed_at: observation.observedAt }),
-    ...(observation.note === undefined ? {} : { note: observation.note })
+    ...(observation.note === undefined ? {} : { note: observation.note }),
+    // Adapters that carry run evidence must not lose it at serialization. The
+    // bundled junit/playwright adapters emit none today, so this is a no-op for
+    // them — it is here so adding one later needs no change in this file.
+    ...(observation.evidenceRefs.length === 0 ? {} : { artifacts: observation.evidenceRefs })
   };
 }
 
@@ -252,6 +268,9 @@ function convertNativeReport(kind: "junit" | "playwright", sourcePath: string, o
 }
 
 function recordObservation(options: ProducerOptions): void {
+  if (options.artifactRef === undefined && options.artifactLabel !== undefined) {
+    throw new Error("--artifact-label requires --artifact-ref.");
+  }
   const status = options.status as ObservationRecordStatus | undefined;
   if (status === undefined || !new Set<ObservationRecordStatus>(["pass", "fail", "error", "skipped"]).has(status)) {
     throw new Error("--status must be one of: pass, fail, error, skipped.");
@@ -264,7 +283,21 @@ function recordObservation(options: ProducerOptions): void {
         path: nonEmpty(options.path, "--path"),
         ...(options.testCase === undefined ? {} : { test_case: nonEmpty(options.testCase, "--test-case") }),
         status,
-        ...(options.note === undefined ? {} : { note: nonEmpty(options.note, "--note") })
+        ...(options.note === undefined ? {} : { note: nonEmpty(options.note, "--note") }),
+        // A label with no ref points at nothing. Silently dropping it would let a
+        // CI step believe it published run evidence when it published none.
+        ...(options.artifactRef === undefined
+          ? {}
+          : {
+              artifacts: [
+                {
+                  ref: nonEmpty(options.artifactRef, "--artifact-ref"),
+                  ...(options.artifactLabel === undefined
+                    ? {}
+                    : { label: nonEmpty(options.artifactLabel, "--artifact-label") })
+                }
+              ]
+            })
       }
     ]
   });

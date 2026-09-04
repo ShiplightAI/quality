@@ -218,7 +218,10 @@ export function buildTargetEvaluation(
         observationId: selected?.observationId,
         observedAt: selected?.observedAt,
         commit: selected?.revision.commit,
-        runUrl: selected?.source.runUrl
+        runUrl: selected?.source.runUrl,
+        // Only the selected observation's refs. An unobserved check has none,
+        // and refs from a run that lost selection describe a different commit.
+        evidenceRefs: selected?.evidenceRefs ?? []
       } satisfies EvaluatedEvidenceObservation;
     });
 

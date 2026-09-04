@@ -22,20 +22,40 @@ profiles:
         - "quality-observations-*"
       # branch: "main"
 
-    # For a local source:
+    # For a local source that reads a canonical file already on disk:
     # - change `transport` above to `"local-folder"`
     # - remove both `auth` and `github`
     # - add this block:
     # local_folder:
     #   path: "artifacts/quality"
 
+    # For results the reading application fetches itself — a local test report,
+    # a platform that already holds the run — use the host transport. The
+    # provider name is resolved by whoever reads this repo, so which providers
+    # exist depends on the application, not on Quality:
+    # - change `transport` above to `"host"`
+    # - remove `observation_path`, `auth`, and `github`
+    # - add this block:
+    # host:
+    #   provider: "local-reports"
+    #   options:
+    #     path: "playwright-report/report.json"
+    #     report: "playwright-report/index.html"
+
 # Authoring rules:
-# - One profile represents one workflow or local folder.
-# - observation_path is relative to the downloaded artifact or local_folder.
+# - One profile represents one workflow, local folder, or host provider.
+# - observation_path is relative to the downloaded artifact or local_folder. A
+#   host profile omits it: it addresses no file.
 # - GitHub artifact_names may select several uploaded archives from one run.
 #   Every matching observation_path uses the same canonical contract; Quality
 #   merges their observations.
 # - A local-folder profile reads exactly one observation_path.
+# - A host profile names `host.provider`. An application that does not register
+#   that provider reports it as a diagnostic rather than reading nothing, so a
+#   profile written for one reader stays legible to another.
+# - `local-reports` is the provider Quality ships: it reads a Playwright JSON
+#   report from the working tree and points each result at the HTML report a
+#   reviewer opens. It records no commit unless `options.commit` pins one.
 # - Raw JUnit, Playwright, telemetry, or custom reports are producer inputs.
 #   Convert them in the workflow with `quality-tools observations`; source
 #   configuration contains no parser or format selection.

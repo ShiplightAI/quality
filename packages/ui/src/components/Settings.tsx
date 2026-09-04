@@ -71,7 +71,8 @@ export function Settings({
                 artifactNames: p.github.artifactNames,
                 branch: p.github.branch
               },
-        localFolder: p.localFolder === undefined ? undefined : { path: p.localFolder.path }
+        localFolder: p.localFolder === undefined ? undefined : { path: p.localFolder.path },
+        host: p.host === undefined ? undefined : { provider: p.host.provider, options: p.host.options }
       })),
     [profiles]
   );
