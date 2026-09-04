@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
 import path, { resolve } from "node:path";
 import { applySavedQcView } from "../views";
@@ -189,8 +190,19 @@ function hasUsableRuntimeProofStatus(input: {
   return input.executionStatus !== "invalid" && input.resolutionStatus !== "invalid" && input.observationCount > 0;
 }
 
+// Sanitizing alone is not injective: `my view` and `my-view` both reduce to
+// `my-view`, so two distinct ids would write the same export and one would
+// silently overwrite the other. When sanitizing actually changed the id, a short
+// digest of the ORIGINAL is appended, which keeps the readable name and makes
+// the segment unique. Ids that need no sanitizing keep their exact filename, so
+// existing exports are unaffected.
 function sanitizeFileSegment(value: string): string {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  const sanitized = value.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  if (sanitized === value) {
+    return sanitized;
+  }
+
+  return `${sanitized}-${createHash("sha256").update(value).digest("hex").slice(0, 8)}`;
 }
 
 // A run without an observation set writes under the reserved "static" prefix, so

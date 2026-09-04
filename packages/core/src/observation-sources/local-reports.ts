@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createDiagnostic } from "../diagnostics/diagnostic";
@@ -90,17 +91,47 @@ function resolveOption(
   // through while refusing `../../etc/hosts` would enforce nothing, since a PR
   // can write either. `path.resolve` returns an absolute declaration unchanged,
   // so both forms reach the same comparison.
+  //
+  // Compared on REAL paths, for the same reason the evidence-file route does:
+  // `path.resolve` is lexical and never follows links, so a symlink committed
+  // inside the project — `playwright-report` pointing at a home directory —
+  // passes a purely textual check and is then read straight through. Both sides
+  // are realpath'd so a symlinked checkout still resolves against its own real
+  // location rather than being refused.
+  const escaped = (root: string, target: string): boolean => {
+    const relative = path.relative(root, target);
+    return relative.startsWith("..") || path.isAbsolute(relative);
+  };
+  const outside = (): { readonly diagnostic: ScanDiagnostic } => ({
+    diagnostic: invalid(
+      `Observation source profile ${profile.id} resolves host.options.${option} ${declared} outside the project root.`
+    )
+  });
+
+  // The lexical check runs ALWAYS, including when the target does not exist —
+  // `realpathSync` throws on a missing path, and treating that as "nothing to
+  // contain" would wave through every escape that merely points at no file.
   const resolved = path.resolve(projectRoot, declared);
-  const relative = path.relative(projectRoot, resolved);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    return {
-      diagnostic: invalid(
-        `Observation source profile ${profile.id} resolves host.options.${option} ${declared} outside the project root.`
-      )
-    };
+  if (escaped(projectRoot, resolved)) {
+    return outside();
   }
 
-  return { resolved };
+  // Then the real-path check, for the case the lexical one structurally cannot
+  // see: a symlink committed inside the project — `playwright-report` pointing
+  // at a home directory — is textually contained and still reads through. Both
+  // sides are realpath'd so a symlinked checkout resolves against its own real
+  // location instead of being refused. Skipped when the target does not exist,
+  // which the lexical check above has already vouched for.
+  try {
+    const realRoot = realpathSync(projectRoot);
+    const realResolved = realpathSync(resolved);
+    if (escaped(realRoot, realResolved)) {
+      return outside();
+    }
+    return { resolved: realResolved };
+  } catch {
+    return { resolved };
+  }
 }
 
 // The one evidence pointer this transport produces: the report a reviewer
