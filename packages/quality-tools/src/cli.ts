@@ -4,6 +4,7 @@ import { runAnalyzeCommand } from "./commands/analyze";
 import { runFixPromptsCommand } from "./commands/fix-prompts";
 import { runObservationsCommand } from "./commands/observations";
 import { runSchemaCommand } from "./commands/schema";
+import { runSetsCommand, runSourcesCommand, runViewsCommand } from "./commands/sources";
 import { runValidateCommand } from "./commands/validate";
 
 function printHelp(): void {
@@ -17,7 +18,10 @@ Commands:
   fix-prompts   Generate structural quality-evidence fix prompts.
   observations  Produce and validate canonical workflow observations.
   schema        Print the canonical quality-map JSON Schema.
+  sets          Print the canonical observation-set JSON Schema.
+  sources       Print the canonical observation-source profile JSON Schema.
   validate      Validate a quality-map YAML file against the engine.
+  views         Print the canonical saved-view JSON Schema.
 
 Run "quality-tools <command> --help" for command options.
 `);
@@ -42,6 +46,15 @@ async function main(argv: readonly string[]): Promise<CommandResult> {
   }
   if (command === "schema") {
     return runSchemaCommand(argv.slice(1));
+  }
+  if (command === "sets") {
+    return runSetsCommand(argv.slice(1));
+  }
+  if (command === "sources") {
+    return runSourcesCommand(argv.slice(1));
+  }
+  if (command === "views") {
+    return runViewsCommand(argv.slice(1));
   }
   if (command === "validate") {
     return runValidateCommand(argv.slice(1));

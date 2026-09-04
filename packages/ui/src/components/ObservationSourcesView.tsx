@@ -9,8 +9,9 @@ export interface ObservationSourceRow {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  readonly transport: "github-actions" | "local-folder";
-  readonly observationPath: string;
+  readonly transport: "github-actions" | "local-folder" | "host";
+  // Absent for a host source, which addresses no file.
+  readonly observationPath?: string;
   readonly github?: {
     readonly repo: string;
     readonly workflow: string;
@@ -18,6 +19,7 @@ export interface ObservationSourceRow {
     readonly branch?: string;
   };
   readonly localFolder?: { readonly path: string };
+  readonly host?: { readonly provider: string; readonly options: Readonly<Record<string, string>> };
 }
 
 // Read-only view of the repo's observation sources (spec 045). Authoring moved to the repo — every
@@ -97,11 +99,20 @@ export function ObservationSourcesView({
                   <Text size="xs" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>
                     folder: {profile.localFolder.path || "—"}
                   </Text>
+                ) : profile.host !== undefined ? (
+                  <Text size="xs" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>
+                    provider: {profile.host.provider}
+                    {Object.entries(profile.host.options)
+                      .map(([key, value]) => ` · ${key}=${value}`)
+                      .join("")}
+                  </Text>
                 ) : null}
 
-                <Text size="xs" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>
-                  observations: {profile.observationPath}
-                </Text>
+                {profile.observationPath === undefined ? null : (
+                  <Text size="xs" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>
+                    observations: {profile.observationPath}
+                  </Text>
+                )}
               </Stack>
             </Card>
           );

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runObservationsCommand } from "./observations";
+import { runSetsCommand, runSourcesCommand, runViewsCommand } from "./sources";
 
 let fixtureRoot: string;
 
@@ -357,6 +358,125 @@ describe("quality-tools observations", () => {
     );
 
     expect(await runObservationsCommand(["validate", source])).toEqual({ exitCode: 0 });
+  });
+
+  it("records a gate with a pointer to its run evidence", async () => {
+    const destination = output("quality-observations.json");
+
+    const result = await runObservationsCommand([
+      "record",
+      "--path",
+      ".github/workflows/publish.yml",
+      "--status",
+      "pass",
+      "--commit",
+      "abc123",
+      "--observed-at",
+      "2026-07-26T18:00:00Z",
+      "--artifact-ref",
+      "https://app.shiplight.ai/runs/8412?test=99231",
+      "--artifact-label",
+      "Shiplight run 8412",
+      "--output",
+      destination
+    ]);
+
+    expect(result).toEqual({ exitCode: 0 });
+    expect(JSON.parse(readFileSync(destination, "utf8")).observations).toEqual([
+      {
+        path: ".github/workflows/publish.yml",
+        status: "pass",
+        artifacts: [
+          { ref: "https://app.shiplight.ai/runs/8412?test=99231", label: "Shiplight run 8412" }
+        ]
+      }
+    ]);
+  });
+
+  it("keeps run evidence when merging manifests from the same run", async () => {
+    // Merge is how a sharded CI job assembles one manifest. Losing the refs here
+    // would silently strip evidence from every sharded suite.
+    const first = output("first.json");
+    const second = output("second.json");
+    const merged = output("merged.json");
+    const envelope = {
+      schema_version: 1,
+      revision: { commit: "abc123" },
+      observed_at: "2026-07-26T18:00:00Z"
+    };
+    writeFileSync(
+      first,
+      JSON.stringify({
+        ...envelope,
+        observations: [
+          {
+            path: "tests/checkout.yaml",
+            status: "pass",
+            artifacts: [{ ref: "https://app.shiplight.ai/runs/8412?test=1" }]
+          }
+        ]
+      })
+    );
+    writeFileSync(
+      second,
+      JSON.stringify({
+        ...envelope,
+        observations: [{ path: "tests/login.yaml", status: "pass" }]
+      })
+    );
+
+    expect(await runObservationsCommand(["merge", first, second, "--output", merged])).toEqual({
+      exitCode: 0
+    });
+    expect(JSON.parse(readFileSync(merged, "utf8")).observations).toEqual([
+      {
+        path: "tests/checkout.yaml",
+        status: "pass",
+        artifacts: [{ ref: "https://app.shiplight.ai/runs/8412?test=1" }]
+      },
+      { path: "tests/login.yaml", status: "pass" }
+    ]);
+  });
+
+  it("prints the checked-in observation-source schema", async () => {
+    // The engine's JSON file and the emitted schema must stay identical, so the
+    // skill can fetch the schema instead of vendoring a copy that silently rots.
+    const write = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const expected = readFileSync(
+      join(process.cwd(), "packages/core/src/observation-sources/observation-sources.schema.json"),
+      "utf8"
+    );
+
+    expect(runSourcesCommand(["schema"])).toEqual({ exitCode: 0 });
+    expect(String(write.mock.calls[0]?.[0])).toEqual(expected);
+  });
+
+  it("prints the checked-in observation-set schema", async () => {
+    const write = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const expected = readFileSync(
+      join(process.cwd(), "packages/core/src/observation-sets/observation-sets.schema.json"),
+      "utf8"
+    );
+
+    expect(runSetsCommand(["schema"])).toEqual({ exitCode: 0 });
+    expect(String(write.mock.calls[0]?.[0])).toEqual(expected);
+  });
+
+  it("prints the checked-in saved-view schema", async () => {
+    const write = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const expected = readFileSync(
+      join(process.cwd(), "packages/core/src/views/views.schema.json"),
+      "utf8"
+    );
+
+    expect(runViewsCommand(["schema"])).toEqual({ exitCode: 0 });
+    expect(String(write.mock.calls[0]?.[0])).toEqual(expected);
+  });
+
+  it("rejects an unknown sources subcommand instead of printing something else", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(runSourcesCommand(["nonsense"])).toEqual({ exitCode: 1 });
   });
 
   it("prints the checked-in canonical schema", async () => {

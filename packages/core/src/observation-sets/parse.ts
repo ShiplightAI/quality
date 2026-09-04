@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { parseDocument } from "yaml";
+import { RESERVED_OBSERVATION_SET_ID } from "./types";
 import type {
   ObservationSet,
   ObservationSetDiagnostic,
@@ -128,12 +129,12 @@ function observationSetFrom(
     return undefined;
   }
 
-  if (id.toLowerCase() === "static") {
+  if (id.toLowerCase() === RESERVED_OBSERVATION_SET_ID) {
     diagnostics.push(
       diagnostic(source, {
         severity: "error",
         code: "RESERVED_OBSERVATION_SET_ID",
-        message: "Observation set id static is reserved for assessments without runtime observations.",
+        message: `Observation set id ${RESERVED_OBSERVATION_SET_ID} is reserved for assessments without runtime observations.`,
         yamlPath: `$.observation_sets[${index}].id`
       })
     );

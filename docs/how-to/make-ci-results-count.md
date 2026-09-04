@@ -36,6 +36,43 @@ Without that permission, the agent should propose the workflow change and stop.
 This work serializes a result that already happened. It must not change the test
 command, retry behavior, gate, or status.
 
+## Link the run evidence (optional)
+
+Requires a `quality-tools` newer than 0.3.2. Until that ships, the published
+validator rejects the field.
+
+A result can carry a pointer to what the run left behind, so a reviewer opening
+a check can see what the test actually did rather than only whether it passed:
+
+```json
+{
+  "path": "tests/e2e/checkout.test.yaml",
+  "test_case": "guest can pay",
+  "status": "pass",
+  "artifacts": [
+    { "ref": "https://app.example.test/runs/8412?test=99231", "label": "Run 8412" }
+  ]
+}
+```
+
+Point at the report a person already knows how to read — the run page, the HTML
+report the runner wrote. Quality links to it and stops there; it is an index
+from checks to evidence, not a viewer, and it will not enumerate videos and
+screenshots for you.
+
+`ref` is opaque: Quality records and displays it, and never parses or resolves
+it. An absolute `http(s)` ref is linked as it stands. Anything else is read as a
+path inside the project, which only a reader holding that project can open — so
+a local report path shows as a link in Quality Explorer and as plain text in a
+hosted reader.
+
+This is additive. A result without it counts exactly the same; only the link is
+missing. And a malformed pointer never costs you the result it was attached to:
+it is reported and dropped, and the observed status stands.
+
+Do not confuse these with the workflow artifacts that carry the canonical file
+itself. These are pointers inside it.
+
 ## Decision that remains yours
 
 You decide whether the workflow may be edited and which result sources belong in

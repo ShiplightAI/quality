@@ -31,5 +31,5 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   onSuccess:
-    "cp src/observation-sets/observation-sets.schema.json dist/observation-sets.schema.json && cp src/observation-sources/observation-sources.schema.json dist/observation-sources.schema.json && cp src/observations/quality-observations.schema.json dist/quality-observations.schema.json"
+    "cp src/observation-sets/observation-sets.schema.json dist/observation-sets.schema.json && cp src/observation-sources/observation-sources.schema.json dist/observation-sources.schema.json && cp src/observations/quality-observations.schema.json dist/quality-observations.schema.json && cp src/views/views.schema.json dist/views.schema.json"
 });

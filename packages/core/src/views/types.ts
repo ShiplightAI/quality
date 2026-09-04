@@ -1,3 +1,8 @@
+// The scope the product shows when no saved view is selected. It is used as an
+// id in its own right (recommendation export paths, the view picker), so a
+// saved view may not claim it.
+export const WHOLE_PROJECT_VIEW_ID = "whole-project";
+
 export type SavedQcViewDiagnosticSeverity = "error" | "warning" | "info";
 
 export type SavedQcViewParseStatus = "parsed" | "invalid";

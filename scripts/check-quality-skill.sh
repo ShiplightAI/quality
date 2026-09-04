@@ -102,6 +102,17 @@ if [[ -e "${skill_root}/references/improve/assets/quality-observations.schema.js
   fail "use the published observations schema instead of a bundled static copy"
 fi
 
+# Same rule for every config schema. A vendored copy cannot be checked against
+# the engine's, so it drifts the moment the contract moves -- which is exactly
+# what happened when the `host` transport landed, and what left the views copy
+# enforcing rules the parser did not. Each is emitted from the engine's own
+# constants by `quality-tools <sources|sets|views> schema`; fetch that instead.
+for vendored in observation-sources observation-sets views; do
+  if [[ -e "${skill_root}/references/improve/assets/${vendored}.schema.json" ]]; then
+    fail "use a quality-tools schema command instead of bundling ${vendored}.schema.json"
+  fi
+done
+
 forbid_regex \
   'machine-readable result|acquisition/parser problems|acquired and parsed' \
   "${skill_root}" \

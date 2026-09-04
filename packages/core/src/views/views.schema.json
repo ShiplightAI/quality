@@ -4,7 +4,9 @@
   "title": "Quality Saved Assessment Scopes",
   "type": "object",
   "additionalProperties": false,
-  "required": ["views"],
+  "required": [
+    "views"
+  ],
   "properties": {
     "views": {
       "type": "array",
@@ -22,22 +24,35 @@
     "viewId": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-      "not": { "const": "whole-project" }
+      "not": {
+        "const": "whole-project"
+      }
     },
     "view": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "feature_ids"],
+      "required": [
+        "id",
+        "name",
+        "feature_ids"
+      ],
       "properties": {
-        "id": { "$ref": "#/definitions/viewId" },
-        "name": { "$ref": "#/definitions/nonEmptyString" },
-        "description": { "$ref": "#/definitions/nonEmptyString" },
+        "id": {
+          "$ref": "#/definitions/viewId"
+        },
+        "name": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
         "feature_ids": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/definitions/nonEmptyString" }
+          "items": {
+            "$ref": "#/definitions/nonEmptyString"
+          }
         }
       }
     }

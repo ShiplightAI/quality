@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { WHOLE_PROJECT_VIEW_ID } from "./types";
 import { parseDocument } from "yaml";
 import type {
   ParsedSavedQcViews,
@@ -92,6 +93,22 @@ function savedViewFrom(
   const id = stringValue(value.id);
   const name = stringValue(value.name);
   const nextFeatureIds = featureIds(value.feature_ids, source, `$.views[${index}].feature_ids`, diagnostics);
+
+  // Enforced here, not only in the published schema: the schema is what an
+  // author validates against, but this parser is what actually runs during a
+  // scan, and a rule only one of them applies is a rule the product does not
+  // really have.
+  if (id !== undefined && id === WHOLE_PROJECT_VIEW_ID) {
+    diagnostics.push(
+      diagnostic(source, {
+        severity: "error",
+        code: "INVALID_SAVED_VIEW",
+        message: `Saved view id ${WHOLE_PROJECT_VIEW_ID} is reserved for the unscoped assessment.`,
+        yamlPath: `$.views[${index}].id`
+      })
+    );
+    return undefined;
+  }
 
   if (id === undefined || name === undefined) {
     diagnostics.push(

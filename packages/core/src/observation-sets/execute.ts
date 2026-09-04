@@ -1,6 +1,7 @@
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import {
   executeObservationSourceProfile,
+  type HostObservationTransportRegistry,
   type ObservationSourceExecutionSelection,
   type ObservationSourceProfile
 } from "../observation-sources";
@@ -21,6 +22,7 @@ interface ExecuteObservationSetInput {
   readonly env?: NodeJS.ProcessEnv;
   readonly selection?: ObservationSetExecutionSelection;
   readonly fetchImpl?: typeof fetch;
+  readonly hostTransports?: HostObservationTransportRegistry;
 }
 
 function statusFor(
@@ -148,6 +150,7 @@ export async function executeObservationSet(
       projectRoot: input.projectRoot,
       env: input.env,
       fetchImpl: input.fetchImpl,
+      hostTransports: input.hostTransports,
       selection: profileSelection({
         globalSelection: input.selection,
         profileOverride: selectionMap.overrides.get(profile.id)
@@ -177,7 +180,12 @@ export async function executeObservationSet(
   return {
     setId: input.observationSet.id,
     setName: input.observationSet.name,
-    status: statusFor(merged.observations.length, allDiagnostics.length),
+    // Same rule as a single source execution: info-severity notes are context,
+    // not a partial read.
+    status: statusFor(
+      merged.observations.length,
+      allDiagnostics.filter((entry) => entry.severity !== "info").length
+    ),
     profiles: profileResults,
     observations: merged.observations,
     diagnostics: allDiagnostics,

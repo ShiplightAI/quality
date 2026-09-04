@@ -15,6 +15,9 @@ const host: QcUiHost = {
   routeBase: "/quality-explorer",
   apiBase: "/api/quality-explorer",
   setProject: setQcProjectAction,
+  // This host reads the project from the local filesystem, so it can serve the
+  // report a run-evidence ref points at. See the evidence-file route.
+  servesEvidenceFiles: true,
 };
 
 export default function QualityExplorerLayout({

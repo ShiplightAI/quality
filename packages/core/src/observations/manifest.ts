@@ -7,6 +7,7 @@ import type {
   ObservationRecordInput,
   ObservationRecordStatus,
   QualityObservationManifest,
+  QualityObservationManifestArtifact,
   QualityObservationManifestParseResult,
   QualityObservationManifestRecord,
   QualityObservationManifestRevision,
@@ -70,7 +71,22 @@ export function buildQualityObservationManifestJsonSchema(): Record<string, unkn
               type: "string",
               format: "date-time"
             },
-            note: nonEmptyString
+            note: nonEmptyString,
+            // Opaque pointers to the run evidence this result produced. Quality
+            // records and displays them; it never parses `ref` for meaning.
+            artifacts: {
+              type: "array",
+              minItems: 1,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["ref"],
+                properties: {
+                  ref: nonEmptyString,
+                  label: nonEmptyString
+                }
+              }
+            }
           }
         }
       }
@@ -85,7 +101,8 @@ export function serializeQualityObservationManifestJsonSchema(): string {
 const MANIFEST_KEYS = new Set(["schema_version", "revision", "run", "observed_at", "observations"]);
 const REVISION_KEYS = new Set(["commit", "branch", "dirty"]);
 const RUN_KEYS = new Set(["id", "url"]);
-const OBSERVATION_KEYS = new Set(["path", "test_case", "status", "observed_at", "note"]);
+const OBSERVATION_KEYS = new Set(["path", "test_case", "status", "observed_at", "note", "artifacts"]);
+const OBSERVATION_ARTIFACT_KEYS = new Set(["ref", "label"]);
 const STATUSES = new Set<ObservationRecordStatus>(["pass", "fail", "error", "skipped"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -203,6 +220,64 @@ function worstStatus(
 
 type ObservationEntryMode = "strict" | "tolerant";
 
+// A malformed evidence pointer must never cost us the result it points at. The
+// pass/fail fact is what scores; the ref is only how a reviewer looks at it. So
+// a bad entry is dropped and reported, and the observation survives without it.
+// `validate` still fails the document, because entryDiagnostic raises these to
+// errors in strict mode — a producer fixing its output wants to hear about it.
+function parseObservationArtifacts(
+  value: unknown,
+  index: number,
+  entryDiagnostic: (message: string) => ScanDiagnostic,
+  diagnostics: ScanDiagnostic[]
+): readonly QualityObservationManifestArtifact[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    diagnostics.push(entryDiagnostic(`Quality observations entry ${index} artifacts must be an array.`));
+    return undefined;
+  }
+
+  const artifacts: QualityObservationManifestArtifact[] = [];
+  value.forEach((entry, artifactIndex) => {
+    const position = `entry ${index} artifact ${artifactIndex}`;
+    if (!isRecord(entry)) {
+      diagnostics.push(entryDiagnostic(`Quality observations ${position} must be an object and was skipped.`));
+      return;
+    }
+
+    const extras = unknownKeys(entry, OBSERVATION_ARTIFACT_KEYS);
+    if (extras.length > 0) {
+      diagnostics.push(
+        entryDiagnostic(
+          `Quality observations ${position} contains unknown fields and was skipped: ${extras.join(", ")}.`
+        )
+      );
+      return;
+    }
+
+    const ref = stringValue(entry.ref);
+    if (ref === undefined) {
+      diagnostics.push(entryDiagnostic(`Quality observations ${position} requires a non-empty ref and was skipped.`));
+      return;
+    }
+
+    const label = stringValue(entry.label);
+    if (entry.label !== undefined && label === undefined) {
+      diagnostics.push(
+        entryDiagnostic(`Quality observations ${position} label must be a non-empty string when provided.`)
+      );
+      return;
+    }
+
+    artifacts.push({ ref, ...(label === undefined ? {} : { label }) });
+  });
+
+  return artifacts.length === 0 ? undefined : artifacts;
+}
+
 function parseObservations(
   value: unknown,
   fallbackObservedAt: string | undefined,
@@ -271,12 +346,15 @@ function parseObservations(
       return;
     }
 
+    const artifacts = parseObservationArtifacts(entry.artifacts, index, entryDiagnostic, diagnostics);
+
     const record: QualityObservationManifestRecord = {
       path,
       ...(testCase === undefined ? {} : { test_case: testCase }),
       status,
       ...(observedAt === undefined ? {} : { observed_at: observedAt }),
-      ...(note === undefined ? {} : { note })
+      ...(note === undefined ? {} : { note }),
+      ...(artifacts === undefined ? {} : { artifacts })
     };
     const key = qualityObservationIdentity(record);
     const seenIndex = seenKeys.get(key);
@@ -454,7 +532,14 @@ export function ingestObservationManifest(input: IngestObservationManifestInput)
     observed_at: entry.observed_at ?? manifest.observed_at,
     revision: input.revision ?? { ...manifest.revision },
     note: entry.note,
-    artifacts: artifact === undefined ? [] : [artifact]
+    artifacts: artifact === undefined ? [] : [artifact],
+    // The manifest's `artifacts` are evidence pointers; the `artifacts` above
+    // are the manifest's own provenance. Mapped field by field rather than
+    // spread, so the two never merge by accident.
+    evidence_refs: (entry.artifacts ?? []).map((entryArtifact) => ({
+      ref: entryArtifact.ref,
+      label: entryArtifact.label
+    }))
   }));
 
   const normalized = normalizeObservationBatches([

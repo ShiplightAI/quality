@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
   buildRecommendationExport,
+  createLocalReportsTransport,
   generateFixPrompts,
+  LOCAL_REPORTS_PROVIDER,
   type BuildRecommendationExportInput,
   type RecommendationFixPromptRecord
 } from "@shiplightai/quality-core";
@@ -230,6 +232,9 @@ export async function runAnalyzeCommand(argv: readonly string[]): Promise<Comman
       limit: args.limit,
       selection: args.selection,
       env: loadToolEnv(args.projectPath),
+      // The CLI serves the same bundled host transport Quality Explorer does, so
+      // a repo's local-reports profile evaluates identically in both.
+      hostTransports: { [LOCAL_REPORTS_PROVIDER]: createLocalReportsTransport() },
       fixPromptRecords: loadFixPromptRecords(args.projectPath)
     });
     mkdirSync(dirname(output.outputPath), { recursive: true });

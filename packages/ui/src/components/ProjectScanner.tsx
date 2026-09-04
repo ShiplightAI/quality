@@ -541,11 +541,16 @@ export function ProjectScanner({
       setCurrentResult(scanResponse.result);
       setObservationSourceEnv(scanResponse.observationSourceEnv);
       // Cache this scan under the current project so navigating away and back reuses it.
+      // Drop the cached runtime with it: an evaluation is only meaningful against the
+      // structure it was resolved onto, and this scan may have replaced that structure.
+      // Keeping it would let a feature page paint pass/fail from a run that never saw
+      // the checks now on screen — a claim about the wrong thing, attributed to a real set.
       if (projectKey !== null) {
         scanCache?.set(projectKey, {
           result: scanResponse.result,
           observationSourceEnv: scanResponse.observationSourceEnv,
         });
+        scanCache?.clearRuntime(projectKey);
       }
       setIsObservationAuditOpen(false);
       setLastAttemptDiagnostics(
@@ -635,6 +640,27 @@ export function ProjectScanner({
 
       const executionResponse = payload as ObservationSetExecutionResponse;
       setObservationExecution(executionResponse.result);
+      // Hand the evaluated result to the shared cache so a feature page shows
+      // proof for the set the viewer just ran, rather than running its own.
+      //
+      // Only when the run actually produced evaluations. A run with no usable
+      // proof — a local report that has not been generated yet, say — still
+      // answers 200 and returns an empty `evaluations`, and caching that would
+      // put "Runtime proof from <set>" above a feature whose checks carry no
+      // badges at all: a claim of proof that is really an absence of it.
+      if (projectKey !== null && executionResponse.result.evaluations.length > 0) {
+        const observationSet = observationSets.find(
+          (candidate) => candidate.id === selectedObservationSetId
+        );
+        scanCache?.setRuntime(projectKey, {
+          observationSetId: selectedObservationSetId,
+          observationSetName: observationSet?.name ?? selectedObservationSetId,
+          ...(selectedView?.id === undefined ? {} : { viewId: selectedView.id }),
+          evaluations: executionResponse.result.evaluations
+        });
+      } else if (projectKey !== null) {
+        scanCache?.clearRuntime(projectKey);
+      }
     } catch {
       setObservationExecutionDiagnostics([
         fallbackDiagnostic("The observation set could not be executed.")

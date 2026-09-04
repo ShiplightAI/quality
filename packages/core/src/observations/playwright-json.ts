@@ -3,6 +3,7 @@ import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 import { INTERNAL_OBSERVATION_CONTEXT } from "./types";
 import type {
   IngestPlaywrightJsonReportInput,
+  ObservationBatchInput,
   ObservationIngestionResult,
   ObservationRecordInput,
   ObservationRecordStatus
@@ -126,9 +127,14 @@ function observationIdFor(
   ].join(":");
 }
 
-export function ingestPlaywrightJsonReport(
-  input: IngestPlaywrightJsonReportInput
-): ObservationIngestionResult {
+// Parses the report into a canonical batch WITHOUT normalizing it. Split out so
+// a host transport can read a Playwright report and still hand the engine the
+// same un-normalized input a file-based transport would — there is no second,
+// softer path into a score.
+export function buildPlaywrightObservationBatch(input: IngestPlaywrightJsonReportInput): {
+  readonly batch?: ObservationBatchInput;
+  readonly diagnostics: readonly ScanDiagnostic[];
+} {
   const diagnostics: ScanDiagnostic[] = [];
   let parsed: PlaywrightJsonReport;
 
@@ -143,11 +149,7 @@ export function ingestPlaywrightJsonReport(
       })
     );
 
-    return {
-      status: "invalid",
-      observations: [],
-      diagnostics
-    };
+    return { diagnostics };
   }
 
   if (!Array.isArray(parsed.suites)) {
@@ -159,11 +161,7 @@ export function ingestPlaywrightJsonReport(
       })
     );
 
-    return {
-      status: "invalid",
-      observations: [],
-      diagnostics
-    };
+    return { diagnostics };
   }
 
   const reportFallbackObservedAt =
@@ -192,11 +190,7 @@ export function ingestPlaywrightJsonReport(
       })
     );
 
-    return {
-      status: "invalid",
-      observations: [],
-      diagnostics
-    };
+    return { diagnostics };
   }
 
   const artifact = normalizeArtifact(input.artifact, "playwright-json");
@@ -215,14 +209,26 @@ export function ingestPlaywrightJsonReport(
     });
   });
 
-  const normalized = normalizeObservationBatches([
-    {
+  return {
+    batch: {
       source: input.source,
       context: INTERNAL_OBSERVATION_CONTEXT,
       observations
-    }
-  ]);
-  const mergedDiagnostics = [...normalized.diagnostics, ...diagnostics];
+    },
+    diagnostics
+  };
+}
+
+export function ingestPlaywrightJsonReport(
+  input: IngestPlaywrightJsonReportInput
+): ObservationIngestionResult {
+  const built = buildPlaywrightObservationBatch(input);
+  if (built.batch === undefined) {
+    return { status: "invalid", observations: [], diagnostics: built.diagnostics };
+  }
+
+  const normalized = normalizeObservationBatches([built.batch]);
+  const mergedDiagnostics = [...normalized.diagnostics, ...built.diagnostics];
 
   return {
     status: statusFor(normalized.observations.length, mergedDiagnostics.length),

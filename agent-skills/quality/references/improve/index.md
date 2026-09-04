@@ -94,7 +94,8 @@ Classify each gap before editing:
 3. **Evidence strength:** a mapped method cannot establish the full claim or lacks
    the required execution context/gate.
 4. **Source acquisition:** credentials, repository/workflow selection, artifact
-   names, or local-folder path prevent results from loading.
+   names, local-folder path, or an unregistered host provider prevent results
+   from loading.
 5. **Artifact emission:** the workflow emits no canonical observation file or
    emits it at the wrong path.
 6. **Producer format:** the canonical file has an invalid version, envelope,
@@ -179,7 +180,7 @@ acquisition and resolution have been ruled out.
     <quality-observations.json>
   ```
 
-- Observation config: compare with the configuration schemas in `assets/`, then
+- Observation config: compare with the schemas the engine emits (see above), then
   run the relevant assessment. Engine diagnostics verify acquisition and graph
   joins.
 - Implementation or verification-method changes: run their owning verification command before
@@ -209,23 +210,39 @@ or requires a human decision.
 - `.quality/config/observation-sets.yaml`
 - `.quality/config/views.yaml`
 
-Use the configuration templates and schemas under `assets/`. Use
-`quality-observations.template.json` as the canonical output example; obtain its
-current schema from `quality-tools observations schema`, not a bundled copy.
+Use the configuration templates under `assets/`. Obtain the current schemas
+from the engine rather than a bundled copy, which cannot be checked against the
+contract and drifts the moment it moves:
+
+- observation manifest: `quality-tools observations schema`
+- observation sources: `quality-tools sources schema`
+- observation sets: `quality-tools sets schema`
+- saved views: `quality-tools views schema`
+
+Use `quality-observations.template.json` as the canonical output example.
 
 ### Sources
 
 One profile represents one acquisition integration, such as one GitHub Actions
-workflow or one local result folder. It answers only:
+workflow, one local result folder, or one provider the reading application
+supplies. It answers only:
 
-- which transport fetches results: `github-actions` or `local-folder`
-- which `observation_path` contains canonical `quality-observations.json`
-  content
+- which transport fetches results: `github-actions`, `local-folder`, or `host`
+- for the two file transports, which `observation_path` contains canonical
+  `quality-observations.json` content
+- for `host`, which `host.provider` the reading application resolves
 
-A source never selects a parser. Raw JUnit, Playwright, telemetry, or custom
-gate output must be converted by its producer before the source reads it. Do
-not create a source profile until the canonical file exists or its emit step is
-being added in the same authorized change.
+A file-based source never selects a parser. Raw JUnit, Playwright, telemetry,
+or custom gate output must be converted by its producer before the source reads
+it. Do not create a source profile until the canonical file exists or its emit
+step is being added in the same authorized change.
+
+A `host` profile is the exception, and only because the reading application —
+not this configuration — owns the fetch. Its provider may read a native report
+directly. The engine still normalizes, resolves, and diagnoses every record it
+returns, so a host provider gets no record past a check a canonical file must
+pass. Which providers resolve depends on who reads the repo; one that is not
+registered is reported as a diagnostic rather than read as nothing.
 
 A local-folder profile reads one file. A GitHub Actions profile may select
 several uploaded artifacts from one workflow run; every matching
@@ -329,6 +346,38 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    GitHub Actions metadata comes from `GITHUB_SHA`, `GITHUB_REF_NAME`, and
    `GITHUB_RUN_ID`. Outside GitHub Actions, supply `--commit`; `--branch`,
    `--run-id`, `--run-url`, and `--observed-at` are optional.
+
+   **Run evidence** (requires a `quality-tools` newer than 0.3.2; the published
+   validator rejects the field until then). A record may carry pointers to what
+   the run left behind, so a reviewer opening a check can see what the test did:
+
+   ```json
+   {
+     "path": "tests/e2e/checkout.test.yaml",
+     "test_case": "guest can pay",
+     "status": "pass",
+     "artifacts": [
+       { "ref": "https://app.example.test/runs/8412?test=99231",
+         "label": "Run 8412" }
+     ]
+   }
+   ```
+
+   Not to be confused with a workflow's uploaded artifacts, which are how the
+   canonical file travels. These are pointers INSIDE it.
+
+   - `ref` is opaque. Quality records and displays it; it never parses,
+     resolves, or validates it. An absolute `http(s)` ref is linked as it
+     stands; anything else is a path into the project, which only a reader that
+     has the project can open.
+   - Point at the report a person already knows how to read — the run page, the
+     HTML report — not at each video and screenshot. Quality is an index from
+     checks to evidence, not a viewer.
+   - Optional and additive. A record without it still counts exactly the same;
+     only the link to look at the result is missing.
+   - A malformed entry is reported and dropped without costing the record its
+     observed status. The status is the measurement; the ref is only how a
+     reviewer looks at it.
 4. **Schema-validate before upload.**
 
    ```bash
@@ -346,9 +395,10 @@ Follow this sequence. Do not ask the user to choose a parser or config shape.
    every one uses the same contract. Raw native reports may remain alongside
    the canonical file for diagnosis; the quality engine never parses them.
 6. **Configure the transport.** Copy
-   `assets/observation-sources.template.yaml`. Set `transport`,
-   `observation_path`, and either `github` or `local_folder`. Source
-   configuration contains no parser list or format selection.
+   `assets/observation-sources.template.yaml`. Set `transport`, then either
+   `observation_path` plus `github` or `local_folder` for a file transport, or
+   `host.provider` for a host transport. File-transport configuration contains
+   no parser list or format selection.
 7. **Add the profile to an observation set.**
 8. **Run `assess`.** Verify source acquisition first, then verify every
    observation resolves to the intended evidence identity. Use the engine's

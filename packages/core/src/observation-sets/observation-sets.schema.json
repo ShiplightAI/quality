@@ -4,7 +4,9 @@
   "title": "Quality Observation Sets",
   "type": "object",
   "additionalProperties": false,
-  "required": ["observation_sets"],
+  "required": [
+    "observation_sets"
+  ],
   "properties": {
     "observation_sets": {
       "type": "array",
@@ -22,29 +24,49 @@
     "profileReference": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profile_id"],
+      "required": [
+        "profile_id"
+      ],
       "properties": {
-        "profile_id": { "$ref": "#/definitions/nonEmptyString" }
+        "profile_id": {
+          "$ref": "#/definitions/nonEmptyString"
+        }
       }
     },
     "observationSet": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "profiles"],
+      "required": [
+        "id",
+        "name",
+        "profiles"
+      ],
       "properties": {
         "id": {
           "allOf": [
-            { "$ref": "#/definitions/nonEmptyString" },
-            { "not": { "pattern": "^[Ss][Tt][Aa][Tt][Ii][Cc]$" } }
+            {
+              "$ref": "#/definitions/nonEmptyString"
+            },
+            {
+              "not": {
+                "pattern": "^[Ss][Tt][Aa][Tt][Ii][Cc]$"
+              }
+            }
           ]
         },
-        "name": { "$ref": "#/definitions/nonEmptyString" },
-        "description": { "$ref": "#/definitions/nonEmptyString" },
+        "name": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
         "profiles": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/definitions/profileReference" }
+          "items": {
+            "$ref": "#/definitions/profileReference"
+          }
         }
       }
     }

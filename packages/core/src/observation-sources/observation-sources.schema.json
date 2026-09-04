@@ -4,7 +4,9 @@
   "title": "Quality Observation Source Profiles",
   "type": "object",
   "additionalProperties": false,
-  "required": ["profiles"],
+  "required": [
+    "profiles"
+  ],
   "properties": {
     "profiles": {
       "type": "array",
@@ -24,9 +26,15 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "path": { "$ref": "#/definitions/nonEmptyString" },
-        "url": { "$ref": "#/definitions/nonEmptyString" },
-        "label": { "$ref": "#/definitions/nonEmptyString" }
+        "path": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "url": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "label": {
+          "$ref": "#/definitions/nonEmptyString"
+        }
       }
     },
     "auth": {
@@ -35,72 +43,159 @@
       "properties": {
         "required_env": {
           "type": "array",
-          "items": { "$ref": "#/definitions/nonEmptyString" }
+          "items": {
+            "$ref": "#/definitions/nonEmptyString"
+          }
         }
       }
     },
     "github": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["repo", "workflow", "artifact_names"],
+      "required": [
+        "repo",
+        "workflow",
+        "artifact_names"
+      ],
       "properties": {
-        "repo": { "$ref": "#/definitions/nonEmptyString" },
-        "workflow": { "$ref": "#/definitions/nonEmptyString" },
+        "repo": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "workflow": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
         "artifact_names": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/definitions/nonEmptyString" }
+          "items": {
+            "$ref": "#/definitions/nonEmptyString"
+          }
         },
-        "branch": { "$ref": "#/definitions/nonEmptyString" }
+        "branch": {
+          "$ref": "#/definitions/nonEmptyString"
+        }
       }
     },
     "localFolder": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "properties": {
-        "path": { "$ref": "#/definitions/nonEmptyString" }
+        "path": {
+          "$ref": "#/definitions/nonEmptyString"
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider"
+      ],
+      "properties": {
+        "provider": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/nonEmptyString"
+          }
+        }
       }
     },
     "profile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "transport", "observation_path"],
+      "required": [
+        "id",
+        "name",
+        "transport"
+      ],
       "properties": {
-        "id": { "$ref": "#/definitions/nonEmptyString" },
-        "name": { "$ref": "#/definitions/nonEmptyString" },
-        "description": { "$ref": "#/definitions/nonEmptyString" },
-        "transport": {
-          "enum": ["github-actions", "local-folder"]
+        "id": {
+          "$ref": "#/definitions/nonEmptyString"
         },
-        "observation_path": { "$ref": "#/definitions/nonEmptyString" },
+        "name": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
+        "transport": {
+          "enum": [
+            "github-actions",
+            "local-folder",
+            "host"
+          ]
+        },
+        "observation_path": {
+          "$ref": "#/definitions/nonEmptyString"
+        },
         "source_refs": {
           "type": "array",
-          "items": { "$ref": "#/definitions/sourceRef" }
+          "items": {
+            "$ref": "#/definitions/sourceRef"
+          }
         },
-        "auth": { "$ref": "#/definitions/auth" },
-        "github": { "$ref": "#/definitions/github" },
-        "local_folder": { "$ref": "#/definitions/localFolder" }
+        "auth": {
+          "$ref": "#/definitions/auth"
+        },
+        "github": {
+          "$ref": "#/definitions/github"
+        },
+        "local_folder": {
+          "$ref": "#/definitions/localFolder"
+        },
+        "host": {
+          "$ref": "#/definitions/host"
+        }
       },
       "allOf": [
         {
           "if": {
             "properties": {
-              "transport": { "const": "github-actions" }
+              "transport": {
+                "const": "github-actions"
+              }
             }
           },
           "then": {
-            "required": ["github"]
+            "required": [
+              "github",
+              "observation_path"
+            ]
           }
         },
         {
           "if": {
             "properties": {
-              "transport": { "const": "local-folder" }
+              "transport": {
+                "const": "local-folder"
+              }
             }
           },
           "then": {
-            "required": ["local_folder"]
+            "required": [
+              "local_folder",
+              "observation_path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "transport": {
+                "const": "host"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "host"
+            ]
           }
         }
       ]

@@ -1,14 +1,15 @@
 "use client";
 
-import { useQcApi, useQcRoute } from "../host";
+import { useQcApi, useQcHost, useQcRoute } from "../host";
+import { useQcScanCache } from "./scan-cache";
 
 import { Breadcrumb } from "./Breadcrumb";
 import { MarkdownOverlay } from "./MarkdownOverlay";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronRight, Copy } from "lucide-react";
+import { CheckCircle2, ChevronRight, Copy, ExternalLink } from "lucide-react";
 import { Alert, Anchor, Badge, Button, Collapse, Group, Paper, Select, Stack, Text, TextInput, Title, Tooltip, UnstyledButton } from "@mantine/core";
-import type { ScanResult } from "@shiplightai/quality-core";
+import type { EvaluatedEvidenceObservation, NormalizedEvidenceRef, ScanResult } from "@shiplightai/quality-core";
 import { buildProjectIndex } from "@shiplightai/quality-core/project-index";
 import { buildGapTriage, type GapRecord } from "@shiplightai/quality-core/gap-triage";
 import { canonicalFixPromptForGap } from "../lib/fix-prompt";
@@ -128,6 +129,43 @@ function checkEvidence(graph: QualityGraph, expectation: QualityCheck): QualityG
   return graph.evidence.filter((entry) => expectation.linkedEvidenceIds.includes(entry.normalizedId));
 }
 
+// Same rule the audit panel applies: an absolute url is linked as it stands, a
+// project path is served by the host when it can, and anything else stays text
+// because resolving it needs a host that can and guessing would invent a
+// destination.
+function evidenceRefHref(
+  ref: string,
+  qcApi: (path: string) => string,
+  servesEvidenceFiles: boolean
+): string | undefined {
+  if (/^https?:\/\//i.test(ref)) {
+    return ref;
+  }
+  if (!servesEvidenceFiles) {
+    return undefined;
+  }
+  const segments = ref
+    .split("/")
+    .filter((segment) => segment.length > 0)
+    .map((segment) => encodeURIComponent(segment));
+  return segments.length === 0 ? undefined : qcApi(`/evidence-file/${segments.join("/")}`);
+}
+
+function observedStateColor(state: string): string {
+  switch (state) {
+    case "pass":
+      return "green";
+    case "fail":
+      return "red";
+    case "error":
+      return "orange";
+    case "skipped":
+      return "gray";
+    default:
+      return "gray";
+  }
+}
+
 // Only Markdown artifacts can be previewed inline (the artifact/markdown endpoint reads text).
 function canPreviewMarkdownPath(path: string): boolean {
   const normalized = path.toLowerCase();
@@ -154,6 +192,8 @@ export function FeaturePage({
 }): React.ReactElement {
   const qcApi = useQcApi();
   const qcRoute = useQcRoute();
+  const { servesEvidenceFiles = false } = useQcHost();
+  const scanCache = useQcScanCache();
   const [result, setResult] = useState<ScanResult>();
   const [isLoading, setIsLoading] = useState(false);
   // Set true in the effect body (not just useRef init): StrictMode/remount runs cleanup→setup, else a cleanup-only ref stays false and the loader discards its result.
@@ -233,6 +273,43 @@ export function FeaturePage({
     [result, qualityMapPath]
   );
   const expectations = graph?.expectations ?? [];
+
+  // Runtime proof for the observation set the viewer last ran on the scanner
+  // page. Inherited rather than re-run: this page has no picker, and running a
+  // set can mean a network fetch.
+  const runtime = projectKey === null ? undefined : scanCache?.getRuntime(projectKey);
+  const observed = useMemo(() => {
+    const byEvidenceId = new Map<string, EvaluatedEvidenceObservation>();
+    const targetId = graph?.target.normalizedId;
+    if (runtime === undefined || targetId === undefined) {
+      return { byEvidenceId, coversFeature: false, evaluatedAt: undefined as string | undefined };
+    }
+
+    // Whether the run evaluated THIS target at all. A view-scoped run evaluates
+    // only the targets inside its view, so an empty map here can mean the run
+    // never looked rather than that it looked and found nothing — two states
+    // the page must not present the same way.
+    let coversFeature = false;
+    let evaluatedAt: string | undefined;
+
+    for (const group of runtime.evaluations) {
+      for (const target of group.targets) {
+        if (target.targetId !== targetId) {
+          continue;
+        }
+        coversFeature = true;
+        evaluatedAt = target.evaluatedAt;
+        for (const expectation of target.expectations) {
+          for (const entry of expectation.evidence) {
+            byEvidenceId.set(entry.evidenceId, entry);
+          }
+        }
+      }
+    }
+
+    return { byEvidenceId, coversFeature, evaluatedAt };
+  }, [graph?.target.normalizedId, runtime]);
+  const observedEvidence = observed.byEvidenceId;
 
   // Gap records per check (spec 045): the classified gaps — category label ("Weak evidence"), the
   // residual-risk text, the recommended next proof, and the fix-prompt lookup — the same model the old
@@ -419,6 +496,23 @@ export function FeaturePage({
       ) : qualityMapPath === undefined || graph === undefined ? (
         <Alert color="yellow">This feature has no quality checks yet.</Alert>
       ) : (
+        <>
+        {/* Runtime state on this page is only as good as its attribution: a
+            check reading "pass" means nothing unless a reviewer can see which
+            run said so. With nothing loaded the page stays structural rather
+            than painting every check `unobserved`, which reads like a failure
+            when it is only a question nobody has asked yet. */}
+        <Text size="xs" c="dimmed" mb={6}>
+          {runtime === undefined
+            ? "No test results loaded. Run an observation set on the dashboard to see runtime proof here."
+            : observed.coversFeature
+              ? `Runtime proof from observation set: ${runtime.observationSetName}${
+                  observed.evaluatedAt === undefined ? "" : ` · evaluated ${observed.evaluatedAt}`
+                }`
+              : `Observation set ${runtime.observationSetName} did not cover this feature${
+                  runtime.viewId === undefined ? "" : ` — it ran scoped to the saved view ${runtime.viewId}`
+                }.`}
+        </Text>
         <Paper withBorder radius="md" className="feature-check-list" component="section" aria-label="Checks">
           {expectations.length === 0 ? (
             <Text size="sm" c="dimmed" p="md">No quality checks yet. Copy the add-check instruction below to have your agent add one.</Text>
@@ -483,12 +577,36 @@ export function FeaturePage({
                       ) : (
                         <Stack gap="sm">
                           {evidence.length > 0 ? (
-                            <Stack gap={2}>
-                              {evidence.map((entry) => (
-                                <Text key={entry.normalizedId} size="xs" c="dimmed" style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}>
-                                  {evidenceLabel(entry)}
-                                </Text>
-                              ))}
+                            <Stack gap={6}>
+                              {evidence.map((entry) => {
+                                const observed = observedEvidence.get(entry.normalizedId);
+                                return (
+                                  <Stack key={entry.normalizedId} gap={2}>
+                                    <Group gap={6} wrap="nowrap" align="baseline">
+                                      <Text size="xs" c="dimmed" style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}>
+                                        {evidenceLabel(entry)}
+                                      </Text>
+                                      {observed === undefined ? null : (
+                                        <Badge size="xs" variant="light" color={observedStateColor(observed.state)}>
+                                          {observed.state}
+                                        </Badge>
+                                      )}
+                                    </Group>
+                                    {observed?.evidenceRefs.map((ref: NormalizedEvidenceRef) => {
+                                      const href = evidenceRefHref(ref.ref, qcApi, servesEvidenceFiles);
+                                      return href === undefined ? (
+                                        <Text key={ref.ref} size="xs" c="dimmed" style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}>
+                                          {ref.label ?? "Run evidence"}: {ref.ref}
+                                        </Text>
+                                      ) : (
+                                        <Anchor key={ref.ref} href={href} target="_blank" rel="noopener noreferrer" size="xs">
+                                          {ref.label ?? "Run evidence"} <ExternalLink aria-hidden size={12} />
+                                        </Anchor>
+                                      );
+                                    })}
+                                  </Stack>
+                                );
+                              })}
                             </Stack>
                           ) : null}
                           {checkGaps.map((gap) => {
@@ -607,6 +725,7 @@ export function FeaturePage({
             </Group>
           </div>
         </Paper>
+        </>
       )}
 
       <Text size="xs" c="dimmed">

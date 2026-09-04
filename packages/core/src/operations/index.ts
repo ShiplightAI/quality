@@ -30,6 +30,7 @@ import {
   serializeHumanSources,
   serializeObservationSets,
   serializeObservationSources,
+  type HostObservationTransportRegistry,
   type HumanSource,
   type ObservationContextQualityRollup,
   type ObservationResolutionAuditRow,
@@ -220,6 +221,13 @@ export interface QcExecuteObservationSetInput {
    * injects the org's GitHub App installation token as GITHUB_TOKEN here; a client can't set it.
    */
   readonly env?: NodeJS.ProcessEnv;
+  /**
+   * Transports the embedding application supplies for `transport: host`
+   * profiles, keyed by the profile's `host.provider`. Absent in the OSS CLI and
+   * Explorer, which register none — a repo declaring a host provider they do
+   * not serve gets an explicit diagnostic rather than a silent empty result.
+   */
+  readonly hostTransports?: HostObservationTransportRegistry;
 }
 export interface QcExecuteObservationSourceInput {
   readonly projectPath: string;
@@ -227,6 +235,8 @@ export interface QcExecuteObservationSourceInput {
   readonly selection?: ObservationSetExecutionSelection;
   /** See QcExecuteObservationSetInput.env — the github-actions token env, injected by the box. */
   readonly env?: NodeJS.ProcessEnv;
+  /** See QcExecuteObservationSetInput.hostTransports. */
+  readonly hostTransports?: HostObservationTransportRegistry;
 }
 interface QcExecutionResolution {
   readonly status: ObservationResolutionResult["status"];
@@ -1078,6 +1088,7 @@ export async function executeObservationSetOp(
     projectRoot: scan.target.resolvedPath,
     selection: input.selection,
     env: input.env,
+    hostTransports: input.hostTransports,
   });
   const resolution = resolveObservations(scan, execution);
   const scopedScan = applySavedQcView(scan, input.viewId) ?? scan;
@@ -1134,6 +1145,7 @@ export async function executeObservationSourceOp(
     projectRoot: scan.target.resolvedPath,
     selection: input.selection,
     env: input.env,
+    hostTransports: input.hostTransports,
   });
   const resolution = resolveObservations(scan, execution);
   const usable = hasUsableProof({
