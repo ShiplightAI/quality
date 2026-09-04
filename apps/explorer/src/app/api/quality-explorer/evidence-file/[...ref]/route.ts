@@ -55,8 +55,18 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".ttf": "font/ttf",
 };
 
-// `.js` and `.css` are here because a report is a web page and needs its own
-// assets; they are served, never executed by this process.
+// `.js` and `.css` are here because a report is a web page that needs its own
+// assets: Playwright's trace viewer ships as `trace/*.js` and `trace/*.css`
+// beside the report, and dropping them would leave the trace — the most useful
+// evidence a run produces — unopenable.
+//
+// The cost, accepted knowingly: any `.js` anywhere in the scanned project is
+// reachable through this route as same-origin script, and the document CSP
+// allows `script-src 'self'`, so a hostile report could load it. Serving them
+// as downloads instead would break the viewer, and confining them to a report
+// subdirectory would need configuration the profile does not carry. The
+// boundary stays the one above — a project you would run tests from — and this
+// is the sharpest edge of it.
 const MAX_BYTES = 512 * 1024 * 1024;
 
 // Served HTML and SVG come from a scanned repo, which is not a trusted author,

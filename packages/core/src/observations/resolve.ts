@@ -4,6 +4,7 @@ import type {
   NormalizedQualityGraph
 } from "@shiplightai/quality-map";
 import { createDiagnostic } from "../diagnostics/diagnostic";
+import { countProblems } from "./ingest-helpers";
 import type { ScanResult } from "../discovery/types";
 import { OBSERVATION_SUITE_SEPARATOR } from "./types";
 import type {
@@ -384,7 +385,7 @@ export function resolveObservations(
   });
 
   return {
-    status: statusFor(resolved, diagnostics.filter((entry) => entry.severity !== "info").length),
+    status: statusFor(resolved, countProblems(diagnostics)),
     observations: resolved,
     auditRows,
     diagnostics

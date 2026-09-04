@@ -135,6 +135,12 @@ function resolveOption(
     // keeps its lexically-checked path — safe, because the caller's `readFile`
     // fails on it too, and reporting an unreadable file is a better message
     // than a containment complaint about a path that resolves to nothing.
+    //
+    // For `report` this also becomes an evidence ref. A dangling symlink could
+    // later be completed to point outside the project, so the ref alone is not
+    // a containment guarantee — it is safe because the route that serves it
+    // re-checks containment against real paths at request time, rather than
+    // trusting a ref recorded earlier.
     return { resolved };
   }
 }

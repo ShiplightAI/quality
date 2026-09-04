@@ -36,6 +36,19 @@ Quality Explorer can:
 - Show matched, unmatched, and ambiguous runtime results.
 - Generate text instructions that you can give to a coding agent.
 
+## Bind it to loopback only
+
+Quality Explorer has no sign-in: it is a single-user local tool, and the
+loopback address is the whole access boundary. It serves run-evidence files out
+of the opened project — reports, videos, traces — to any caller that can reach
+it.
+
+Do not run it with `--hostname 0.0.0.0`, and do not port-forward it out of a
+container or put it behind a reverse proxy. Doing either turns it into an
+endpoint that hands the opened project's files to anyone on the network. A
+deployment that needs to be reachable must put real authentication in front of
+it.
+
 ## Read-only boundaries
 
 Quality Explorer does not edit the selected repository. Actions such as
