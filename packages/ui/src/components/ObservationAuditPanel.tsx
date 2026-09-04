@@ -140,12 +140,12 @@ export function ObservationAuditPanel({
               {row.evidenceRefs.length > 0 ? (
                 <Stack gap={2} mt="xs" aria-label="Run evidence">
                   <Text size="xs" fw={600} tt="uppercase" c="dimmed">Run evidence</Text>
-                  {row.evidenceRefs.map((entry) => {
+                  {row.evidenceRefs.map((entry, entryIndex) => {
                     const href = evidenceRefHref(entry.ref, qcApi, servesEvidenceFiles);
                     const destination = evidenceRefDestination(entry.ref);
                     return href === undefined ? (
                       <Text
-                        key={entry.ref}
+                        key={`${entryIndex}:${entry.ref}`}
                         size="xs"
                         c="dimmed"
                         style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}
@@ -153,7 +153,7 @@ export function ObservationAuditPanel({
                         {evidenceLabel(entry)}: {entry.ref}
                       </Text>
                     ) : (
-                      <Group key={entry.ref} gap={6} wrap="nowrap">
+                      <Group key={`${entryIndex}:${entry.ref}`} gap={6} wrap="nowrap">
                         <Anchor href={href} target="_blank" rel="noopener noreferrer" size="sm">
                           {evidenceLabel(entry)} <ExternalLink aria-hidden size={14} />
                         </Anchor>

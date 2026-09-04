@@ -91,6 +91,10 @@ async function fixture(reportJson: string | undefined) {
   return createFixtureProject("local-reports-run-evidence", [
     { relativePath: ".quality/evidence/checkout/quality-map.yaml", contents: QUALITY_MAP },
     { relativePath: ".quality/config/observation-sources.yaml", contents: OBSERVATION_SOURCES },
+    // The HTML report must EXIST. Without it the ref path never resolves, and a
+    // ref that is wrong for an existing file looks correct against a missing
+    // one — which is how a broken `../../` ref passed this suite unnoticed.
+    { relativePath: "playwright-report/index.html", contents: "<h1>report</h1>" },
     ...(reportJson === undefined
       ? []
       : [{ relativePath: "playwright-report/report.json", contents: reportJson }])
@@ -138,6 +142,29 @@ describe("local-reports host transport", () => {
       expect(matched[0]?.evidenceRefs.map((entry) => entry.ref)).toEqual([
         "playwright-report/index.html"
       ]);
+    } finally {
+      await project.cleanup();
+    }
+  });
+
+  it("keeps the ref project-relative when the project root traverses a symlink", async () => {
+    // A temp dir on macOS is reached through /var -> /private/var, and any
+    // symlinked checkout behaves the same. Relativizing the realpath'd target
+    // against the un-realpath'd root produced `../../../private/var/...`, which
+    // the browser normalises away before the request is even sent.
+    const project = await fixture(playwrightReport());
+
+    try {
+      const execution = await executeObservationSourceProfile({
+        profile: profileFrom(project.root),
+        projectRoot: project.root,
+        hostTransports
+      });
+
+      const ref = execution.observations[0]?.evidenceRefs[0]?.ref ?? "";
+      expect(ref).toBe("playwright-report/index.html");
+      expect(ref.startsWith("..")).toBe(false);
+      expect(path.isAbsolute(ref)).toBe(false);
     } finally {
       await project.cleanup();
     }

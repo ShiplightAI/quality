@@ -100,9 +100,11 @@ const DOCUMENT_CSP = [
   "media-src 'self' data: blob:",
   "font-src 'self' data:",
   "connect-src 'self'",
-  // Covered by default-src's fallback already; stated outright so the intent of
-  // the two directives that matter most here is not left to be inferred.
-  "frame-src 'none'",
+  // `'self'`, not `'none'`: Playwright's trace viewer replays a captured page
+  // by framing it, so refusing frames outright would blank every snapshot pane
+  // in the viewer this route allows `.js` in order to serve. Remote framing
+  // stays blocked, which is the part that carries a URL somewhere else.
+  "frame-src 'self'",
   "worker-src 'self'",
   "form-action 'none'",
   "frame-ancestors 'none'",
@@ -111,6 +113,13 @@ const DOCUMENT_CSP = [
 ].join("; ");
 
 const SCRIPTABLE_TYPES = new Set([".html", ".htm", ".svg"]);
+
+// `relative === ".."` or a leading `../` segment. A prefix test would also
+// reject a contained directory literally named `..cache`, whose relative path
+// starts with two dots but never leaves the root.
+function escapesRoot(relative: string): boolean {
+  return relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+}
 
 export async function GET(
   _request: Request,
@@ -152,7 +161,7 @@ export async function GET(
   }
 
   const contained = path.relative(realRoot, realResolved);
-  if (contained.startsWith("..") || path.isAbsolute(contained)) {
+  if (escapesRoot(contained)) {
     return problem(403, "evidence-ref-outside-project", "That path is outside the opened project.");
   }
 

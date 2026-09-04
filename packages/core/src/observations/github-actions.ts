@@ -1,6 +1,7 @@
 import { createDiagnostic } from "../diagnostics/diagnostic";
 import { INTERNAL_OBSERVATION_CONTEXT } from "./types";
 import type { ObservationIngestionResult, ObservationRecordInput, ObservationRecordStatus } from "./types";
+import { countProblems } from "./ingest-helpers";
 import { normalizeObservationBatches } from "./normalize";
 
 export interface GitHubActionsStepInput {
@@ -282,7 +283,7 @@ export function ingestGitHubActionsRun(
   const mergedDiagnostics = [...diagnostics, ...normalized.diagnostics];
 
   return {
-    status: statusFor(normalized.observations.length, mergedDiagnostics.length),
+    status: statusFor(normalized.observations.length, countProblems(mergedDiagnostics)),
     observations: normalized.observations,
     diagnostics: mergedDiagnostics
   };

@@ -68,7 +68,7 @@ function resolveOption(
   profile: ObservationSourceProfile,
   option: "path" | "report",
   projectRoot: string | undefined
-): { readonly resolved?: string; readonly diagnostic?: ScanDiagnostic } {
+): { readonly resolved?: string; readonly root?: string; readonly diagnostic?: ScanDiagnostic } {
   const declared = profile.host?.options[option];
   if (declared === undefined || declared.length === 0) {
     return {
@@ -100,7 +100,10 @@ function resolveOption(
   // location rather than being refused.
   const escaped = (root: string, target: string): boolean => {
     const relative = path.relative(root, target);
-    return relative.startsWith("..") || path.isAbsolute(relative);
+    // Segment comparison, not a prefix test: a contained directory literally
+    // named `..cache` has a relative path starting with two dots and never
+    // leaves the root.
+    return relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
   };
   const outside = (): { readonly diagnostic: ScanDiagnostic } => ({
     diagnostic: invalid(
@@ -128,7 +131,7 @@ function resolveOption(
     if (escaped(realRoot, realResolved)) {
       return outside();
     }
-    return { resolved: realResolved };
+    return { resolved: realResolved, root: realRoot };
   } catch {
     // The target does not exist, so there is nothing to resolve and nothing to
     // read. A dangling symlink whose text sits inside the root reaches here and
@@ -141,7 +144,7 @@ function resolveOption(
     // a containment guarantee — it is safe because the route that serves it
     // re-checks containment against real paths at request time, rather than
     // trusting a ref recorded earlier.
-    return { resolved };
+    return { resolved, root: projectRoot };
   }
 }
 
@@ -167,11 +170,12 @@ function reportRef(
     return { refs: [], diagnostics: location.diagnostic === undefined ? [] : [location.diagnostic] };
   }
 
-  // Recorded project-root-relative rather than absolute, so the ref means the
-  // same thing to every reader of this repo instead of encoding one machine's
-  // checkout location. `resolveOption` has already refused anything that lands
-  // outside the root, so this is always a contained path.
-  const ref = path.relative(projectRoot ?? "", location.resolved);
+  // Relative to the ROOT `resolveOption` actually resolved against, not the one
+  // passed in. It realpaths the target, and relativizing a real path against a
+  // symlinked root yields an escaping `../../` chain — which then normalises
+  // away in the browser and 404s. Anywhere the root traverses a link (macOS
+  // `/var`, a symlinked checkout, a container workdir) this is not hypothetical.
+  const ref = path.relative(location.root ?? projectRoot ?? "", location.resolved);
   return { refs: [{ ref: ref.replaceAll("\\", "/"), label: REPORT_LABEL }], diagnostics: [] };
 }
 

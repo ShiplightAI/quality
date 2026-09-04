@@ -8,7 +8,7 @@ import type {
   ObservationRecordInput,
   ObservationRecordStatus
 } from "./types";
-import { isoTimestamp, normalizeArtifact, normalizePath, statusFor, stringValue } from "./ingest-helpers";
+import { countProblems, isoTimestamp, normalizeArtifact, normalizePath, statusFor, stringValue } from "./ingest-helpers";
 import { normalizeObservationBatches } from "./normalize";
 
 interface ParsedJunitCase {
@@ -246,7 +246,7 @@ export function ingestJunitXmlReport(
   const mergedDiagnostics = [...normalized.diagnostics, ...diagnostics];
 
   return {
-    status: statusFor(normalized.observations.length, mergedDiagnostics.length),
+    status: statusFor(normalized.observations.length, countProblems(mergedDiagnostics)),
     observations: normalized.observations,
     diagnostics: mergedDiagnostics
   };

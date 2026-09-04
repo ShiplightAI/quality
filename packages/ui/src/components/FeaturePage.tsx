@@ -571,14 +571,14 @@ export function FeaturePage({
                                         </Badge>
                                       )}
                                     </Group>
-                                    {observed?.evidenceRefs.map((ref: NormalizedEvidenceRef) => {
+                                    {observed?.evidenceRefs.map((ref: NormalizedEvidenceRef, refIndex: number) => {
                                       const href = evidenceRefHref(ref.ref, qcApi, servesEvidenceFiles);
                                       return href === undefined ? (
-                                        <Text key={ref.ref} size="xs" c="dimmed" style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}>
+                                        <Text key={`${refIndex}:${ref.ref}`} size="xs" c="dimmed" style={{ fontFamily: "var(--mantine-font-family-monospace)", wordBreak: "break-all" }}>
                                           {ref.label ?? "Run evidence"}: {ref.ref}
                                         </Text>
                                       ) : (
-                                        <Anchor key={ref.ref} href={href} target="_blank" rel="noopener noreferrer" size="xs">
+                                        <Anchor key={`${refIndex}:${ref.ref}`} href={href} target="_blank" rel="noopener noreferrer" size="xs">
                                           {ref.label ?? "Run evidence"} <ExternalLink aria-hidden size={12} />
                                         </Anchor>
                                       );
