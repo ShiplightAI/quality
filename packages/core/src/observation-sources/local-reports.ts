@@ -130,6 +130,11 @@ function resolveOption(
     }
     return { resolved: realResolved };
   } catch {
+    // The target does not exist, so there is nothing to resolve and nothing to
+    // read. A dangling symlink whose text sits inside the root reaches here and
+    // keeps its lexically-checked path — safe, because the caller's `readFile`
+    // fails on it too, and reporting an unreadable file is a better message
+    // than a containment complaint about a path that resolves to nothing.
     return { resolved };
   }
 }

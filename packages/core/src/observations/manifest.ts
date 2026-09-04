@@ -13,7 +13,7 @@ import type {
   QualityObservationManifestRevision,
   QualityObservationManifestRun
 } from "./types";
-import { isoTimestamp, normalizeArtifact, normalizePath, statusFor, stringValue } from "./ingest-helpers";
+import { countProblems, isoTimestamp, normalizeArtifact, normalizePath, statusFor, stringValue } from "./ingest-helpers";
 import { normalizeObservationBatches } from "./normalize";
 
 export const QUALITY_OBSERVATION_SCHEMA_VERSION = 1 as const;
@@ -552,7 +552,7 @@ export function ingestObservationManifest(input: IngestObservationManifestInput)
   const diagnostics = [...normalized.diagnostics, ...parsed.diagnostics];
 
   return {
-    status: statusFor(normalized.observations.length, diagnostics.length),
+    status: statusFor(normalized.observations.length, countProblems(diagnostics)),
     observations: normalized.observations,
     diagnostics
   };

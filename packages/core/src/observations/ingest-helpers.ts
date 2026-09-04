@@ -1,3 +1,4 @@
+import type { ScanDiagnostic } from "../diagnostics/diagnostic";
 import type { ObservationArtifactInput, ObservationIngestionResult } from "./types";
 
 // Shared helpers for the observation ingest adapters (junit, playwright-json,
@@ -20,6 +21,14 @@ export function isoTimestamp(value: unknown): string | undefined {
   }
 
   return new Date(parsed).toISOString();
+}
+
+// Counts only diagnostics that report something going wrong. An `info` note is
+// context for the reader, not a degraded read, and the source-execution and
+// resolution paths already exclude it — an adapter that counted it would make
+// the status depend on which ingestion path ran rather than on the inputs.
+export function countProblems(diagnostics: readonly ScanDiagnostic[]): number {
+  return diagnostics.filter((entry) => entry.severity !== "info").length;
 }
 
 export function statusFor(
