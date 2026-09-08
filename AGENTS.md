@@ -23,6 +23,22 @@ Quality evaluates evidence independently of the systems that produce it.
 Do not introduce dependencies from the engine into evidence producers or from
 open-source packages into the Shiplight platform monorepo.
 
+## Version bumps
+
+Bump the **patch** version by default: if `0.3.0` is published, the next release
+is `0.3.1`. This holds even when the release adds API. Use a minor or major only
+when the maintainer says so for that release.
+
+Count from the **published** version, never from what `package.json` currently
+says. Between releases the manifest sits on the last published number with
+unreleased work on top, so it is not the base — and a number that was set in the
+repo but never published (`quality-core` `0.2.0`) is a dead end that nothing
+counts from. Read the base with `npm view @shiplightai/<package> version`.
+
+A bump moves the size approval with it: `approvedIncrease.version` in
+`packages/quality-tools/package-size.json` must equal the new `package.json`
+version, or the gate rejects the recorded approval and the build fails.
+
 ## Release size gate
 
 The `quality-tools` release artifact may grow by at most 1% in both packed and

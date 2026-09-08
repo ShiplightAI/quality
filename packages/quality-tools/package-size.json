@@ -1,8 +1,8 @@
 {
   "maxIncreasePercent": 1,
   "approvedIncrease": {
-    "version": "0.3.2",
-    "packedBytes": 46290,
+    "version": "0.3.3",
+    "packedBytes": 46291,
     "unpackedBytes": 168548,
     "approvedBy": "Feng Qian",
     "reason": "new features"
