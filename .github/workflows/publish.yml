@@ -1,0 +1,145 @@
+name: Publish packages
+
+# Manual release. npm authenticates this workflow by OIDC (trusted publishing),
+# so there is no NPM_TOKEN anywhere in this repository and no maintainer 2FA
+# prompt in the loop. Each package must have a trusted publisher configured on
+# npmjs.com pointing at `ShiplightAI/quality` and this workflow file name; see
+# docs/how-to/publish-a-release.md.
+#
+# Unlike shiplight-cli's publish workflows, this one does NOT compute or push a
+# version bump. Versions are decided in a reviewed `chore: release` commit on
+# main, because `packages/quality-tools/package-size.json` records a
+# version-specific `approvedIncrease` that only a human maintainer may write. A
+# workflow that bumped the version by itself would invalidate that approval on
+# every run.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run every gate and `pnpm publish --dry-run`, but publish nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # REQUIRED. npm authenticates this workflow by OIDC and there is no
+      # NPM_TOKEN to fall back on, so without an id-token every publish step
+      # fails with a bare ENEEDAUTH at the very end of the run.
+      id-token: write
+    steps:
+      # Releases come from main only. The version being published is whatever
+      # the reviewed release commit put in package.json.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          # Writes the registry into .npmrc. No NODE_AUTH_TOKEN: pnpm mints a
+          # short-lived npm credential from the job's OIDC token instead.
+          registry-url: https://registry.npmjs.org
+
+      # Catches the commonest misconfiguration — a job without `id-token: write`
+      # — before the gates below spend their time, instead of letting it surface
+      # as an unexplained auth failure after the whole suite has run.
+      - name: Assert the OIDC id-token is available to this job
+        run: |
+          set -euo pipefail
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            printf '::%s::%s\n' error "No OIDC id-token in this job — trusted publishing needs 'permissions: id-token: write'"
+            exit 1
+          fi
+          echo "OIDC id-token endpoint present. Releasing $(git rev-parse HEAD)."
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The same three gates CI runs on every pull request, repeated here
+      # because a release publishes main as it stands now, not as it stood when
+      # the last pull request was green.
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Check quality-tools package size
+        run: pnpm --filter @shiplightai/quality-tools check:size
+
+      - name: Check quality-ui package size
+        run: pnpm --filter @shiplightai/quality-ui check:size
+
+      # Dependency order: quality-map, then quality-core, then the two packages
+      # that consume it. pnpm rewrites the `workspace:` ranges to real versions
+      # while packing, so publishing a consumer before its dependency would put
+      # a tarball on npm that nobody can install until the next step finishes.
+      #
+      # A package whose repo version is already on npm is skipped, not failed:
+      # most releases move some of these four and leave the rest alone, and a
+      # re-run after a mid-release failure has to be able to finish the job.
+      - name: Publish
+        id: publish
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          published=()
+          skipped=()
+
+          for dir in packages/quality-map packages/core packages/quality-tools packages/ui; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "Skipping $name@$version — already on npm."
+              skipped+=("$name@$version")
+              continue
+            fi
+
+            # --no-git-checks: actions/checkout leaves a detached HEAD, which
+            # pnpm's publish-branch check rejects. The branch is pinned by the
+            # `ref: main` checkout above instead.
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run: $name@$version"
+              (cd "$dir" && pnpm publish --dry-run --no-git-checks --access public)
+            else
+              echo "Publishing $name@$version"
+              (cd "$dir" && pnpm publish --no-git-checks --access public)
+            fi
+            published+=("$name@$version")
+          done
+
+          if [ ${#published[@]} -eq 0 ]; then
+            printf '::%s::%s\n' error "Every package version on main is already on npm — nothing to publish. Land a release commit first."
+            exit 1
+          fi
+
+          {
+            echo "published=${published[*]}"
+            echo "skipped=${skipped[*]-}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Step summary
+        if: always()
+        run: |
+          {
+            echo "## Release from \`$(git rev-parse --short HEAD)\`"
+            echo ""
+            echo "- Dry run: \`${{ inputs.dry_run }}\`"
+            echo "- Published: \`${{ steps.publish.outputs.published }}\`"
+            echo "- Already on npm, skipped: \`${{ steps.publish.outputs.skipped }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

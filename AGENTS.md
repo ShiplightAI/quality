@@ -39,6 +39,26 @@ A bump moves the size approval with it: `approvedIncrease.version` in
 `packages/quality-tools/package-size.json` must equal the new `package.json`
 version, or the gate rejects the recorded approval and the build fails.
 
+## Publishing
+
+Releases go out through the **Publish packages** workflow
+(`.github/workflows/publish.yml`), run manually from the Actions tab against
+`main`. npm authenticates it by OIDC (trusted publishing), so this repository
+holds no npm token and a maintainer's 2FA never enters the loop. Each package
+carries a trusted publisher on npmjs.com naming `ShiplightAI/quality` and that
+workflow file; renaming the file breaks publishing until the npm side is
+updated to match.
+
+The workflow does not decide versions. It publishes exactly what `package.json`
+says on `main` and skips any package already at that version on npm, so the
+release is whatever the reviewed `chore: release` commit landed. This is
+deliberate: a workflow that bumped versions itself would move
+`approvedIncrease.version` away from the number a human approved.
+
+Publishing by hand is the fallback, not the path. It needs a long-lived npm
+token or an interactive 2FA prompt, and it publishes a working tree rather than
+a reviewed commit.
+
 ## Release size gate
 
 The `quality-tools` release artifact may grow by at most 1% in both packed and
