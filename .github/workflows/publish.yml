@@ -20,6 +20,14 @@ on:
         type: boolean
         default: false
 
+# One release at a time. The already-on-npm skip below is a check, not a lock:
+# two simultaneous dispatches would both read "not published yet" and then race,
+# and the loser dies mid-release with a 403 having published some packages but
+# not others. No cancel-in-progress — interrupting a publish is worse than
+# making the second dispatch wait.
+concurrency:
+  group: publish-npm
+
 permissions:
   contents: read
 
