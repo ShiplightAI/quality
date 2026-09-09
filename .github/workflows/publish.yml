@@ -127,6 +127,14 @@ jobs:
             # --no-git-checks: actions/checkout leaves a detached HEAD, which
             # pnpm's publish-branch check rejects. The branch is pinned by the
             # `ref: main` checkout above instead.
+            #
+            # No --provenance. pnpm's OIDC path already attaches a provenance
+            # attestation on its own: it only consults the flag when one was
+            # passed, and otherwise asks npm whether the package is public and
+            # signs when it is (both are, and this repository is public). The
+            # flag would only change the failure mode — without it pnpm warns
+            # and publishes when visibility cannot be read, with it the publish
+            # dies.
             if [ "$DRY_RUN" = "true" ]; then
               echo "Dry run: $name@$version"
               (cd "$dir" && pnpm publish --dry-run --no-git-checks --access public)
@@ -138,8 +146,12 @@ jobs:
           done
 
           if [ ${#published[@]} -eq 0 ]; then
-            printf '::%s::%s\n' error "Every package version on main is already on npm — nothing to publish. Land a release commit first."
-            exit 1
+            if [ "$DRY_RUN" = "true" ]; then
+              printf '::%s::%s\n' notice "Every package version on main is already on npm. The gates and the npm credential were still exercised."
+            else
+              printf '::%s::%s\n' error "Every package version on main is already on npm — nothing to publish. Land a release commit first."
+              exit 1
+            fi
           fi
 
           {
@@ -149,11 +161,16 @@ jobs:
 
       - name: Step summary
         if: always() && steps.preflight.outcome == 'success'
+        env:
+          RELEASE_SHA: ${{ steps.preflight.outputs.sha }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          PUBLISHED: ${{ steps.publish.outputs.published }}
+          SKIPPED: ${{ steps.publish.outputs.skipped }}
         run: |
           {
-            echo "## Release from \`${{ steps.preflight.outputs.sha }}\`"
+            echo "## Release from \`$RELEASE_SHA\`"
             echo ""
-            echo "- Dry run: \`${{ inputs.dry_run }}\`"
-            echo "- Published: \`${{ steps.publish.outputs.published || '(none — the run ended before publishing)' }}\`"
-            echo "- Already on npm, skipped: \`${{ steps.publish.outputs.skipped || '(none)' }}\`"
+            echo "- Dry run: \`$DRY_RUN\`"
+            echo "- Published: \`${PUBLISHED:-(none — the run ended before publishing)}\`"
+            echo "- Already on npm, skipped: \`${SKIPPED:-(none)}\`"
           } >> "$GITHUB_STEP_SUMMARY"
