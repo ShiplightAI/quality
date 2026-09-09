@@ -3,8 +3,8 @@ name: Publish packages
 # Manual release. npm authenticates this workflow by OIDC (trusted publishing),
 # so there is no NPM_TOKEN anywhere in this repository and no maintainer 2FA
 # prompt in the loop. Each package must have a trusted publisher configured on
-# npmjs.com pointing at `ShiplightAI/quality` and this workflow file name; see
-# docs/how-to/publish-a-release.md.
+# npmjs.com pointing at `ShiplightAI/quality` and this workflow file name.
+# `AGENTS.md` ("Publishing") carries the procedure and the version rule.
 #
 # Unlike shiplight-cli's publish workflows, this one does NOT compute or push a
 # version bump. Versions are decided in a reviewed `chore: release` commit on
@@ -32,16 +32,19 @@ jobs:
       # NPM_TOKEN to fall back on, so without an id-token every publish step
       # fails with a bare ENEEDAUTH at the very end of the run.
       id-token: write
+    # Every action below is SHA-pinned, unlike ci.yml: a tag can be force-moved
+    # at the upstream org, and this is the only job in the repository whose
+    # credential can push code to every consumer. Bump them deliberately.
     steps:
       # Releases come from main only. The version being published is whatever
       # the reviewed release commit put in package.json.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: pnpm
@@ -53,13 +56,16 @@ jobs:
       # — before the gates below spend their time, instead of letting it surface
       # as an unexplained auth failure after the whole suite has run.
       - name: Assert the OIDC id-token is available to this job
+        id: preflight
         run: |
           set -euo pipefail
           if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
             printf '::%s::%s\n' error "No OIDC id-token in this job — trusted publishing needs 'permissions: id-token: write'"
             exit 1
           fi
-          echo "OIDC id-token endpoint present. Releasing $(git rev-parse HEAD)."
+          sha=$(git rev-parse HEAD)
+          echo "OIDC id-token endpoint present. Releasing $sha."
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -134,12 +140,12 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Step summary
-        if: always()
+        if: always() && steps.preflight.outcome == 'success'
         run: |
           {
-            echo "## Release from \`$(git rev-parse --short HEAD)\`"
+            echo "## Release from \`${{ steps.preflight.outputs.sha }}\`"
             echo ""
             echo "- Dry run: \`${{ inputs.dry_run }}\`"
-            echo "- Published: \`${{ steps.publish.outputs.published }}\`"
-            echo "- Already on npm, skipped: \`${{ steps.publish.outputs.skipped }}\`"
+            echo "- Published: \`${{ steps.publish.outputs.published || '(none — the run ended before publishing)' }}\`"
+            echo "- Already on npm, skipped: \`${{ steps.publish.outputs.skipped || '(none)' }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
