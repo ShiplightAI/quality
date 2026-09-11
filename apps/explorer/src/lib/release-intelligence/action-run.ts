@@ -549,12 +549,13 @@ async function extractArchive(
   checkoutPath: string,
   stripComponents = 0,
 ): Promise<void> {
-  const { stdout } = await execFileAsync("tar", ["-tzf", archivePath]);
-  const unsafeEntry = stdout
-    .split("\n")
-    .filter(Boolean)
-    .find((entry) => entry.startsWith("/") || entry.split("/").includes(".."));
-  if (unsafeEntry) throw new Error("Refusing to extract an archive with an unsafe path.");
+  const [{ stdout: entries }, { stdout: verboseEntries }] = await Promise.all([
+    execFileAsync("tar", ["-tzf", archivePath]),
+    execFileAsync("tar", ["-tvzf", archivePath]),
+  ]);
+  if (archiveListingHasUnsafePath(entries, verboseEntries)) {
+    throw new Error("Refusing to extract an archive with an unsafe path.");
+  }
 
   await execFileAsync("tar", [
     "-xzf",
@@ -563,6 +564,20 @@ async function extractArchive(
     checkoutPath,
     ...(stripComponents > 0 ? [`--strip-components=${stripComponents}`] : []),
   ]);
+}
+
+export function archiveListingHasUnsafePath(entries: string, verboseEntries: string): boolean {
+  const pathIsUnsafe = (path: string): boolean =>
+    path.startsWith("/") || path.split("/").includes("..");
+  if (entries.split("\n").filter(Boolean).some(pathIsUnsafe)) return true;
+
+  return verboseEntries
+    .split("\n")
+    .filter((entry) => entry.startsWith("l"))
+    .some((entry) => {
+      const separator = entry.lastIndexOf(" -> ");
+      return separator >= 0 && pathIsUnsafe(entry.slice(separator + 4));
+    });
 }
 
 async function gitOutput(projectPath: string, args: readonly string[]): Promise<string> {

@@ -143,6 +143,8 @@ export function ReleaseDetail({
           </Tabs.Panel>
         </div>
       </Tabs>
+      {/* FeatureBrowser owns direct assessment selection; Summary owns issue selection and
+          therefore renders its separate issue-driven drawer inside that tab. */}
       <IssueEvidenceDrawer
         detail={detail}
         assessmentId={assessmentId}
