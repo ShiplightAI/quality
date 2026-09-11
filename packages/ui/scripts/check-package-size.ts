@@ -84,8 +84,8 @@ const allowedFilePatterns = [
   /^package\.json$/u,
   /^dist\/[^/]+\.js$/u,
   /^dist\/[^/]+\.d\.ts$/u,
-  // The stylesheet, shipped as a resolvable asset (exports["./styles.css"]).
-  /^dist\/styles\.css$/u,
+  // Stylesheets shipped as explicit package exports.
+  /^dist\/(?:styles|release-intelligence)\.css$/u,
 ];
 
 for (const file of pack.files) {

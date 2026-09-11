@@ -27,6 +27,12 @@
       "import": "./dist/helpers.js",
       "default": "./dist/helpers.js"
     },
+    "./release-intelligence": {
+      "types": "./dist/release-intelligence.d.ts",
+      "import": "./dist/release-intelligence.js",
+      "default": "./dist/release-intelligence.js"
+    },
+    "./release-intelligence.css": "./dist/release-intelligence.css",
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },

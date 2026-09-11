@@ -12,6 +12,8 @@ export default defineConfig({
     observations: "src/observations/index.ts",
     operations: "src/operations/index.ts",
     "recommendation-export": "src/recommendation-export/index.ts",
+    "release-intelligence": "src/release-intelligence/index.ts",
+    "release-intelligence-operations": "src/release-intelligence/operations.ts",
     "owner-view": "src/owner-view/index.ts",
     "project-map": "src/project-map/index.ts",
     "project-index": "src/project-index/index.ts",

@@ -57,6 +57,16 @@
       "import": "./dist/recommendation-export.js",
       "default": "./dist/recommendation-export.js"
     },
+    "./release-intelligence": {
+      "types": "./dist/release-intelligence.d.ts",
+      "import": "./dist/release-intelligence.js",
+      "default": "./dist/release-intelligence.js"
+    },
+    "./release-intelligence/operations": {
+      "types": "./dist/release-intelligence-operations.d.ts",
+      "import": "./dist/release-intelligence-operations.js",
+      "default": "./dist/release-intelligence-operations.js"
+    },
     "./owner-view": {
       "types": "./dist/owner-view.d.ts",
       "import": "./dist/owner-view.js",
@@ -131,7 +141,8 @@
     "@shiplightai/quality-map": "workspace:^",
     "adm-zip": "0.5.16",
     "fast-xml-parser": "4.5.3",
-    "yaml": "2.9.0"
+    "yaml": "2.9.0",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/adm-zip": "0.5.7",
