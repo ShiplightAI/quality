@@ -36,6 +36,9 @@ describe("release fact compilation helpers", () => {
       observationProfileTargetsRepository("ShiplightAI/private", "ShiplightAI/shipyard"),
     ).toBe(false);
     expect(observationProfileTargetsRepository("invalid", "ShiplightAI/shipyard")).toBe(false);
+    expect(
+      observationProfileTargetsRepository("ShiplightAI/shipyard/extra", "ShiplightAI/shipyard"),
+    ).toBe(false);
   });
 
   it("pins the analyzed workflow profile to its immutable run", () => {

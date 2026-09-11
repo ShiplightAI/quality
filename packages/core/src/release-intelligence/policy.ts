@@ -33,12 +33,14 @@ export function evaluateReleasePolicy(input: {
   readonly assessments: readonly BehaviorAssessment[];
   readonly systemFacts?: readonly ReleaseSystemFact[];
   readonly exceptions?: readonly ReleaseException[];
-  readonly now?: Date;
+  /** Evaluation time is an explicit fact so identical inputs always produce identical decisions. */
+  readonly now: Date;
 }): ReleasePolicyDecision {
-  const now = input.now ?? new Date();
   const excepted = new Set(
     (input.exceptions ?? [])
-      .filter((item) => item.revokedAt === null && item.expiresAt.getTime() > now.getTime())
+      .filter(
+        (item) => item.revokedAt === null && item.expiresAt.getTime() > input.now.getTime(),
+      )
       .map((item) => item.behaviorId),
   );
   const active = input.assessments.filter(

@@ -30,11 +30,12 @@ pnpm --filter @shiplightai/quality-explorer dev
 
 Open <http://127.0.0.1:4173/release-intelligence>. The adapter resolves the run,
 analyzes its exact commit in a temporary checkout, and removes that checkout
-after rendering. It uses a detached worktree when the commit is available
-locally and otherwise downloads a private, token-authenticated GitHub archive;
-it does not fetch into or modify the selected repository. Optional
-`RELEASE_ENVIRONMENT` values are `staging` and `production` (the default);
-`RELEASE_COMPONENTS` accepts a comma-separated component list.
+after rendering. It uses `git archive` when the commit is available locally and
+otherwise downloads a private, token-authenticated GitHub archive. Both paths
+write only beneath the system temporary directory; they do not fetch into,
+modify tracked files in, or write Git metadata to the selected repository.
+Optional `RELEASE_ENVIRONMENT` values are `staging` and `production` (the
+default); `RELEASE_COMPONENTS` accepts a comma-separated component list.
 
 The server binds to `127.0.0.1:4173`. API handlers ignore client-supplied project
 paths and always operate on `QUALITY_PROJECT_ROOT`. Repository authoring remains

@@ -400,7 +400,9 @@ function highestPriority(values: readonly BehaviorPriority[]): BehaviorPriority 
 
 
 function parseRepoFullName(value: string): { readonly owner: string; readonly name: string } | null {
-  const [owner, name] = value.split("/");
+  const segments = value.split("/");
+  if (segments.length !== 2) return null;
+  const [owner, name] = segments;
   if (!owner || !name) return null;
   return { owner, name };
 }

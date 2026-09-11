@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -100,6 +101,7 @@ export async function loadReleasePreview(): Promise<ReleasePreviewModel> {
   const cacheKey = JSON.stringify([
     projectPath,
     configuredRun,
+    createHash("sha256").update(token).digest("hex"),
     process.env.RELEASE_ENVIRONMENT ?? "production",
     process.env.RELEASE_COMPONENTS ?? "",
   ]);
@@ -259,6 +261,7 @@ function buildPreviewModel(input: {
       input.environment === "production" ? DEFAULT_PRODUCTION_POLICY : DEFAULT_STAGING_POLICY,
     assessments,
     systemFacts,
+    now: new Date(),
   });
   const assessmentViews = assessments.map((assessment) => ({
     id: assessment.behaviorId,
@@ -482,36 +485,35 @@ async function withCommitCheckout<T>(
 ): Promise<T> {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "quality-release-preview-"));
   const worktreePath = join(temporaryRoot, "checkout");
-  let registeredWorktree = false;
   try {
     if (await hasCommit(projectPath, commitSha)) {
-      await execFileAsync("git", [
-        "-C",
-        projectPath,
-        "worktree",
-        "add",
-        "--detach",
-        worktreePath,
-        commitSha,
-      ]);
-      registeredWorktree = true;
+      await materializeLocalArchive(temporaryRoot, worktreePath, projectPath, commitSha);
     } else {
       await materializeGitHubArchive(temporaryRoot, worktreePath, repository, commitSha, token);
     }
     return await operation(worktreePath);
   } finally {
-    if (registeredWorktree) {
-      await execFileAsync("git", [
-        "-C",
-        projectPath,
-        "worktree",
-        "remove",
-        "--force",
-        worktreePath,
-      ]).catch(() => undefined);
-    }
     await rm(temporaryRoot, { recursive: true, force: true });
   }
+}
+
+async function materializeLocalArchive(
+  temporaryRoot: string,
+  checkoutPath: string,
+  projectPath: string,
+  commitSha: string,
+): Promise<void> {
+  const archivePath = join(temporaryRoot, "source.tar.gz");
+  await mkdir(checkoutPath);
+  await execFileAsync("git", [
+    "-C",
+    projectPath,
+    "archive",
+    "--format=tar.gz",
+    `--output=${archivePath}`,
+    commitSha,
+  ]);
+  await execFileAsync("tar", ["-xzf", archivePath, "-C", checkoutPath]);
 }
 
 async function hasCommit(projectPath: string, commitSha: string): Promise<boolean> {

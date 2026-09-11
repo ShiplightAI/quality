@@ -21,6 +21,8 @@ function assessment(overrides: Partial<BehaviorAssessment> = {}): BehaviorAssess
 }
 
 describe('evaluateReleasePolicy', () => {
+  const evaluationTime = new Date('2026-09-09T00:00:00.000Z');
+
   it('validates a frozen rule set before evaluation', () => {
     expect(parseReleasePolicy(DEFAULT_PRODUCTION_POLICY)).toEqual(DEFAULT_PRODUCTION_POLICY);
     expect(() =>
@@ -31,7 +33,7 @@ describe('evaluateReleasePolicy', () => {
     const input = {
       policy: DEFAULT_PRODUCTION_POLICY,
       assessments: [assessment({ status: 'failed', runtimeStatus: 'failed' })],
-      now: new Date(),
+      now: evaluationTime,
     };
     expect(evaluateReleasePolicy(input)).toEqual(evaluateReleasePolicy(input));
     expect(evaluateReleasePolicy(input).decision).toBe('BLOCK');
@@ -41,6 +43,7 @@ describe('evaluateReleasePolicy', () => {
     const result = evaluateReleasePolicy({
       policy: DEFAULT_PRODUCTION_POLICY,
       assessments: [],
+      now: evaluationTime,
       systemFacts: [
         {
           key: 'repository-facts-complete',
@@ -70,6 +73,7 @@ describe('evaluateReleasePolicy', () => {
     const result = evaluateReleasePolicy({
       policy: DEFAULT_PRODUCTION_POLICY,
       assessments: [assessment({ origin: 'recommended', status: 'insufficient_proof' })],
+      now: evaluationTime,
     });
     expect(result.decision).toBe('ALLOW');
     expect(result.warningAssessmentIds).toEqual(['checkout']);
@@ -134,10 +138,18 @@ describe('evaluateReleasePolicy', () => {
     });
 
     expect(
-      evaluateReleasePolicy({ policy: DEFAULT_PRODUCTION_POLICY, assessments: [gap] }).decision,
+      evaluateReleasePolicy({
+        policy: DEFAULT_PRODUCTION_POLICY,
+        assessments: [gap],
+        now: evaluationTime,
+      }).decision,
     ).toBe('BLOCK');
     expect(
-      evaluateReleasePolicy({ policy: DEFAULT_STAGING_POLICY, assessments: [gap] }).decision,
+      evaluateReleasePolicy({
+        policy: DEFAULT_STAGING_POLICY,
+        assessments: [gap],
+        now: evaluationTime,
+      }).decision,
     ).toBe('ALLOW');
   });
 
@@ -147,6 +159,7 @@ describe('evaluateReleasePolicy', () => {
       const result = evaluateReleasePolicy({
         policy: DEFAULT_PRODUCTION_POLICY,
         assessments: [assessment({ status, runtimeStatus: 'errored' })],
+        now: evaluationTime,
       });
 
       expect(result.decision).toBe('BLOCK');
