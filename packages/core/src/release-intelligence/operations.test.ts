@@ -75,16 +75,17 @@ describe("release fact compilation helpers", () => {
 
   it("redacts injected and provider-shaped secrets without mutating diagnostics", () => {
     const token = "github_pat_abcdefghijklmnopqrstuvwxyz123456";
+    const cliToken = "ghc_abcdefghijklmnopqrstuvwxyz123456";
     const diagnostics = [
       {
-        message: `Request failed with secret-token and ${token}`,
+        message: `Request failed with secret-token, ${token}, and ${cliToken}`,
         context: { authorization: "Bearer secret-token" },
       },
     ];
 
     expect(redactDiagnosticSecrets(diagnostics, ["secret-token"])).toEqual([
       {
-        message: "Request failed with [REDACTED] and [REDACTED]",
+        message: "Request failed with [REDACTED], [REDACTED], and [REDACTED]",
         context: { authorization: "Bearer [REDACTED]" },
       },
     ]);

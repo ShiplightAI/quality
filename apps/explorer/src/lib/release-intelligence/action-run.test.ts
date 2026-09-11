@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseGitHubRemote, resolveActionRunReference } from "./action-run";
+import {
+  archiveListingHasUnsafePath,
+  parseGitHubRemote,
+  resolveActionRunReference,
+} from "./action-run";
 
 describe("release action run configuration", () => {
   it("accepts a workflow run URL with an attempt", () => {
@@ -35,5 +39,22 @@ describe("release action run configuration", () => {
     expect(() => resolveActionRunReference("42", "https://example.com/repo.git")).toThrow(
       /GitHub origin remote/u,
     );
+  });
+
+  it("rejects archive paths and symlink targets that escape the temporary checkout", () => {
+    expect(archiveListingHasUnsafePath("safe/file\n", "-rw-r--r-- safe/file\n")).toBe(false);
+    expect(archiveListingHasUnsafePath("../outside\n", "-rw-r--r-- ../outside\n")).toBe(true);
+    expect(
+      archiveListingHasUnsafePath(
+        "safe/link\n",
+        "lrwxr-xr-x safe/link -> /etc/passwd\n",
+      ),
+    ).toBe(true);
+    expect(
+      archiveListingHasUnsafePath(
+        "safe/link\n",
+        "lrwxr-xr-x safe/link -> ../../outside\n",
+      ),
+    ).toBe(true);
   });
 });
