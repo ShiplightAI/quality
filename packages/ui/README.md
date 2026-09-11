@@ -55,12 +55,53 @@ return <ProjectScanner view="explorer" project={project} localAllowed={localProj
 Rendering any component outside `QcUiHostProvider` throws by design — that guard
 is what stops a host from mounting the UI without wiring its prefixes.
 
+### Release Intelligence
+
+Release Intelligence uses the same composition-root pattern without importing
+platform authentication, database, GitHub, or queue code. The host serializes
+its records to the public read models from
+`@shiplightai/quality-core/release-intelligence`, then mounts the provider and
+shared presentation:
+
+```tsx
+import {
+  AnalyzeExistingWorkflow,
+  AnalyzeWorkflowModal,
+  ReleaseDetail,
+  ReleaseRecordsTable,
+  ReleaseUiHostProvider,
+} from "@shiplightai/quality-ui/release-intelligence";
+import "@shiplightai/quality-ui/release-intelligence.css";
+
+<ReleaseUiHostProvider
+  host={{
+    routeBase: "/release-intelligence",
+    apiBase: "/api/release-intelligence",
+  }}
+>
+  <ReleaseRecordsTable records={records} nextCursor={nextCursor} />
+  <AnalyzeExistingWorkflow repos={repos} />
+  <ReleaseDetail detail={detail} canApproveExceptions={canApproveExceptions} />
+  <AnalyzeWorkflowModal
+    releaseId={detail.release.id}
+    workflowUrl={detail.release.workflowUrl}
+    components={detail.release.components}
+  />
+</ReleaseUiHostProvider>;
+```
+
+The route and API prefixes are host-owned so Quality Explorer and Shiplight can
+mount the same UI under different paths. Rendering outside the provider fails
+fast, matching the Quality Center integration guard. Exception controls are
+disabled unless the host explicitly supplies human approval authority through
+`canApproveExceptions`; the shared UI never decides or manufactures approval.
+
 ## Packaging
 
-Published as **TypeScript source**, not a bundle: 19 of the 26 components carry
-`"use client"`, and a bundled build would have to re-emit those directives per
-chunk. Consumers add it to `transpilePackages` and compile it like first-party
-code:
+Published as bundled ESM with dedicated JavaScript, declarations, and stylesheet
+entries. The build restores `"use client"` on each public React entry after
+bundling. Workspace consumers may still add it to `transpilePackages` while
+developing against the package:
 
 ```ts
 // next.config.ts

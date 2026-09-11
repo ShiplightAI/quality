@@ -1,0 +1,41 @@
+.ri-drawer-header {
+  min-height: 44px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+
+.ri-drawer-title {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ri-drawer-body {
+  padding-top: var(--mantine-spacing-sm);
+}
+
+.ri-drawer-section {
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.ri-drawer-row + .ri-drawer-row {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.ri-drawer-technical-details {
+  margin-top: var(--mantine-spacing-md);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+}
+
+.ri-drawer-technical-summary {
+  padding: var(--mantine-spacing-sm);
+  cursor: pointer;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.ri-drawer-technical-body {
+  padding: 0 var(--mantine-spacing-sm) var(--mantine-spacing-sm);
+}

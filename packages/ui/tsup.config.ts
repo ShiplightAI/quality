@@ -10,7 +10,12 @@ import { defineConfig } from "tsup";
 //   client module. A pure helper added here in future must NOT be called from a Server Component.
 // - `sourcemap: false`: source maps must never ship (enforced by scripts/check-package-size.ts).
 export default defineConfig({
-  entry: { index: "src/index.ts", host: "src/host.tsx", helpers: "src/helpers.ts" },
+  entry: {
+    index: "src/index.ts",
+    host: "src/host.tsx",
+    helpers: "src/helpers.ts",
+    "release-intelligence": "src/release-intelligence/index.ts",
+  },
   format: ["esm"],
   target: "es2022",
   platform: "browser",

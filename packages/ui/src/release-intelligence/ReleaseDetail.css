@@ -1,0 +1,43 @@
+.ri-detail-workspace {
+  flex: 1;
+  min-height: 0;
+}
+
+.ri-detail-release-context,
+.ri-detail-tab-list {
+  flex-shrink: 0;
+}
+
+.ri-detail-tabs {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.ri-detail-tab-content {
+  flex: 1;
+  min-height: 0;
+  margin-inline-end: calc(0px - var(--mantine-spacing-md));
+  padding-inline-end: var(--mantine-spacing-md);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.ri-detail-feature-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+.ri-detail-decision-row {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+@media (max-width: 61.99em) {
+  .ri-detail-feature-panel {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+}

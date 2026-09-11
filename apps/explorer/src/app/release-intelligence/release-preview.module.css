@@ -1,0 +1,17 @@
+.workspace {
+  display: flex;
+  height: 100dvh;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 61.99em) {
+  .workspace {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+}

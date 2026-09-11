@@ -12,10 +12,12 @@ import { describe, expect, it } from "vitest";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const componentsDir = fileURLToPath(new URL("../components/", import.meta.url));
+const releaseIntelligenceDir = fileURLToPath(new URL("../release-intelligence/", import.meta.url));
 
 const sources = [
   ...readdirSync(dir).filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f)).map((f) => `${dir}${f}`),
   ...readdirSync(componentsDir).filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f)).map((f) => `${componentsDir}${f}`),
+  ...readdirSync(releaseIntelligenceDir).filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f)).map((f) => `${releaseIntelligenceDir}${f}`),
 ];
 
 const staticValueBarrel = /import\s+(?!type\b)[^;]*?from\s+["']@shiplightai\/quality-core["']/g;
