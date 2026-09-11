@@ -3,7 +3,11 @@ import { z } from 'zod';
 export const releaseComponentsSchema = z
   .array(z.string().trim().min(1).max(100))
   .max(50)
-  .transform((components) => [...new Set(components)].sort());
+  .transform((components) =>
+    [...new Set(components)].sort((left, right) =>
+      left < right ? -1 : left > right ? 1 : 0,
+    ),
+  );
 
 interface ComponentView {
   readonly id: string;

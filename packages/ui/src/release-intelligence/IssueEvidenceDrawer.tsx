@@ -265,9 +265,14 @@ function evidenceProviderLink(providerRef: string | null): { href: string; label
   if (/^\/runs\/\d+$/.test(providerRef)) {
     return { href: providerRef, label: "Open test run" };
   }
-  return providerRef.startsWith("https://")
-    ? { href: providerRef, label: "Open evidence" }
-    : null;
+  try {
+    const url = new URL(providerRef);
+    return url.protocol === "https:" && url.hostname === "github.com"
+      ? { href: url.href, label: "Open evidence" }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function ruleAssessmentIds(inputs: Readonly<Record<string, unknown>>): readonly string[] {

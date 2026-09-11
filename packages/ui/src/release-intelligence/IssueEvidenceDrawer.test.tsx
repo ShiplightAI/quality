@@ -110,4 +110,28 @@ describe("IssueEvidenceDrawer", () => {
       "/runs/101?test=1001",
     );
   });
+
+  it("does not render untrusted external evidence links", () => {
+    const untrustedDetail = {
+      ...detail,
+      evidence: [
+        {
+          ...detail.evidence[0]!,
+          providerRef: "https://malicious.example/phishing",
+        },
+      ],
+    };
+
+    render(
+      <MantineProvider>
+        <IssueEvidenceDrawer
+          detail={untrustedDetail}
+          assessmentId="assessment-1"
+          onClose={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.queryByRole("link", { name: "Open evidence ↗" })).not.toBeInTheDocument();
+  });
 });

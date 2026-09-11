@@ -34,5 +34,10 @@ describe('release component resolution', () => {
   it('allows an empty component list and normalizes selected components', () => {
     expect(releaseComponentsSchema.parse([])).toEqual([]);
     expect(releaseComponentsSchema.parse([' api ', 'web', 'api'])).toEqual(['api', 'web']);
+    expect(releaseComponentsSchema.parse(['éclair', 'zebra', 'Ångström'])).toEqual([
+      'zebra',
+      'Ångström',
+      'éclair',
+    ]);
   });
 });
