@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -22,26 +22,10 @@ describe("release intelligence UI public contract", () => {
   });
 
   it("keeps platform infrastructure outside the shared UI", () => {
-    const source = [
-      "AnalysisAutoRefresh.tsx",
-      "AnalysisHealth.tsx",
-      "AnalysisHistory.tsx",
-      "AnalyzeExistingWorkflow.tsx",
-      "AnalyzeWorkflowModal.tsx",
-      "CopyFixPromptButton.tsx",
-      "FeatureBrowser.tsx",
-      "IssueEvidenceDrawer.tsx",
-      "ReleaseDetail.tsx",
-      "ReleaseRecordsTable.tsx",
-      "ReleaseRules.tsx",
-      "RepositoryFilter.tsx",
-      "RunsArtifacts.tsx",
-      "SystemFactDrawer.tsx",
-      "host.tsx",
-    ]
-      .map((file) =>
-        readFileSync(resolve("packages/ui/src/release-intelligence", file), "utf8"),
-      )
+    const directory = resolve("packages/ui/src/release-intelligence");
+    const source = readdirSync(directory)
+      .filter((file) => /\.tsx?$/u.test(file) && !file.endsWith(".test.tsx"))
+      .map((file) => readFileSync(resolve(directory, file), "utf8"))
       .join("\n");
 
     expect(source).not.toMatch(/@shipyard\//u);

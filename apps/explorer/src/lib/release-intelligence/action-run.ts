@@ -261,7 +261,7 @@ function buildPreviewModel(input: {
       input.environment === "production" ? DEFAULT_PRODUCTION_POLICY : DEFAULT_STAGING_POLICY,
     assessments,
     systemFacts,
-    now: new Date(),
+    now: new Date(input.run.updated_at),
   });
   const assessmentViews = assessments.map((assessment) => ({
     id: assessment.behaviorId,
@@ -513,7 +513,7 @@ async function materializeLocalArchive(
     `--output=${archivePath}`,
     commitSha,
   ]);
-  await execFileAsync("tar", ["-xzf", archivePath, "-C", checkoutPath]);
+  await extractArchive(archivePath, checkoutPath);
 }
 
 async function hasCommit(projectPath: string, commitSha: string): Promise<boolean> {
@@ -541,12 +541,27 @@ async function materializeGitHubArchive(
     mkdir(checkoutPath),
     writeFile(archivePath, Buffer.from(await response.arrayBuffer())),
   ]);
+  await extractArchive(archivePath, checkoutPath, 1);
+}
+
+async function extractArchive(
+  archivePath: string,
+  checkoutPath: string,
+  stripComponents = 0,
+): Promise<void> {
+  const { stdout } = await execFileAsync("tar", ["-tzf", archivePath]);
+  const unsafeEntry = stdout
+    .split("\n")
+    .filter(Boolean)
+    .find((entry) => entry.startsWith("/") || entry.split("/").includes(".."));
+  if (unsafeEntry) throw new Error("Refusing to extract an archive with an unsafe path.");
+
   await execFileAsync("tar", [
     "-xzf",
     archivePath,
     "-C",
     checkoutPath,
-    "--strip-components=1",
+    ...(stripComponents > 0 ? [`--strip-components=${stripComponents}`] : []),
   ]);
 }
 
