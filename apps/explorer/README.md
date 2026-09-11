@@ -23,7 +23,7 @@ The numeric-ID form is equivalent:
 
 ```bash
 GITHUB_TOKEN="$(gh auth token)" \
-QUALITY_PROJECT_ROOT=/Users/jinfeng/loggia/shipyard \
+QUALITY_PROJECT_ROOT=/absolute/path/to/project \
 RELEASE_ACTION_RUN_ID=123 \
 pnpm --filter @shiplightai/quality-explorer dev
 ```
